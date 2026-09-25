@@ -9,8 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import androidx.xr.compose.material3.ExperimentalMaterial3XrApi
 import androidx.xr.compose.material3.NavigationSuiteScaffold
+import com.dreamteam.breakloop.R
 
+@OptIn(ExperimentalMaterial3XrApi::class)
 @Composable
 fun NavBar(
     navController: NavController
@@ -39,4 +42,13 @@ fun NavBar(
             )
         }
     }
+}
+
+enum class AppDestinations (
+    val label: String,
+    val icon: Int,
+) {
+    HOME("Home", R.drawable.ic_home),
+    PROFILE("Profile", R.drawable.ic_home),
+    FOCUS("Focus", R.drawable.ic_home)
 }

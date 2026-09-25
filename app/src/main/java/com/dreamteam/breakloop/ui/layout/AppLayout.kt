@@ -12,7 +12,7 @@ import androidx.navigation.NavHostController
 
 @Composable
 fun AppLayout(
-    navController: NavHostController,
+    navController: NavController,
     content: @Composable () -> Unit
 ) {
     var showBottomBar by remember { mutableStateOf(true) }

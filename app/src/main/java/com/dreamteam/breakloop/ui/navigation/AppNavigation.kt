@@ -1,12 +1,15 @@
 package com.dreamteam.breakloop.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.dreamteam.breakloop.ui.account.navigation.AuthRoutes
 import com.dreamteam.breakloop.ui.account.navigation.authGraph
+import com.dreamteam.breakloop.R
+
 
 object Routes {
     const val AUTH_GRAPH = "auth_graph"
@@ -17,12 +20,12 @@ object Routes {
     const val FOCUS = "focus"
 }
 
-fun NavHostController.safeNavigate(route: String, baseRoute: String) {
-    if (currentBackStackEntry?.destination?.route != route) {
-        navigate(route) {
-            popUpTo(baseRoute) { inclusive = false }
-            launchSingleTop = true
-        }
+fun NavController.navigateAsTab(route: String, baseRoute: String) {
+    if (currentDestination?.route == route) return
+    navigate(route) {
+        popUpTo(baseRoute) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 
