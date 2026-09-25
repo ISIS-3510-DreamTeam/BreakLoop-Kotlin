@@ -10,24 +10,19 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = ColorPalette.Neutral.t500,
-    secondary = ColorPalette.Fern.t500,
-    tertiary = ColorPalette.GoldenOrange.t700
-)
+
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
+    primary = ColorPalette.SpicyPaprika.t700,
+    secondary = ColorPalette.GoldenOrange.t500,
+    tertiary = ColorPalette.Fern.t500
 )
 
 @Composable
 fun BreakLoopTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -36,7 +31,7 @@ fun BreakLoopTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
+        darkTheme -> LightColorScheme
         else -> LightColorScheme
     }
 
