@@ -7,8 +7,5 @@ import androidx.navigation.NavController
 @Composable
 fun TopBar(navController: NavController,
            title: String) {
-    TopAppBar(
-        title = { Text(title) },
-        colors = TopAppBarDefaults.smal
-    )
+
 }

@@ -4,9 +4,11 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
-import com.dreamteam.breakloop.ui.navigation.AppNavigation
+import com.dreamteam.breakloop.BreakLoopApp
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,9 +17,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             BreakLoopTheme {
-                AppNavigation(navController = navController, isLoggedIn = false)
+                BreakLoopApp( )
             }
         }
     }
 }
+// TODO: acá debe vivir el splash
 

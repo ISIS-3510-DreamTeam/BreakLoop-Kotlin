@@ -1,54 +1,42 @@
 package com.dreamteam.breakloop.ui.layout
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.navigation.NavController
-import androidx.xr.compose.material3.ExperimentalMaterial3XrApi
-import androidx.xr.compose.material3.NavigationSuiteScaffold
-import com.dreamteam.breakloop.R
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import com.dreamteam.breakloop.ui.navigation.TopLevelDestination
+import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 
-@OptIn(ExperimentalMaterial3XrApi::class)
 @Composable
 fun NavBar(
-    navController: NavController
+    currentTab: TopLevelDestination?,
+    onTabSelected: (TopLevelDestination) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
-            AppDestinations.entries.forEach {
-                item(
-                    icon = {
-                        Icon(
-                            painterResource(it.icon),
-                            contentDescription = it.label
-                        )
-                    },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
-                )
-            }
-        }
-    ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Greeting(
-                name = "Android",
-                modifier = Modifier.padding(innerPadding)
+    NavigationBar(modifier) {
+        TopLevelDestination.entries.forEach { tab ->
+            NavigationBarItem(
+                selected = tab == currentTab,
+                onClick = { onTabSelected(tab) },
+                icon = { Icon(painterResource(tab.icon), contentDescription = null) },
+                label = { Text(stringResource(tab.label)) }
             )
         }
     }
 }
 
-enum class AppDestinations (
-    val label: String,
-    val icon: Int,
-) {
-    HOME("Home", R.drawable.ic_home),
-    PROFILE("Profile", R.drawable.ic_home),
-    FOCUS("Focus", R.drawable.ic_home)
+@Preview(showBackground = true)
+@Composable
+fun NavBarPreview() {
+    BreakLoopTheme {
+        NavBar(
+            currentTab = TopLevelDestination.HOME,
+            onTabSelected = {}
+        )
+    }
 }
