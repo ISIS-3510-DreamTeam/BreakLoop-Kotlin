@@ -9,7 +9,9 @@ enum class TopLevelDestination(
     @StringRes val label: Int,
     @DrawableRes val icon: Int,
 ) {
-    HOME(Home, R.string.home, R.drawable.ic_home),
-    FOCUS(Focus, R.string.focus, R.drawable.ic_home),
-    PROFILE(Profile, R.string.profile, R.drawable.ic_home),
+    HOME(Home, R.string.home, R.drawable.ic_nav_hearth),
+    FOCUS(Focus, R.string.focus, R.drawable.ic_nav_focus),
+    STATS(Stats, R.string.stats, R.drawable.ic_nav_stats),
+    OFFLINE(Offline, R.string.offline, R.drawable.ic_nav_offline),
+    FRIENDS(Friends, R.string.friends, R.drawable.ic_nav_friends)
 }

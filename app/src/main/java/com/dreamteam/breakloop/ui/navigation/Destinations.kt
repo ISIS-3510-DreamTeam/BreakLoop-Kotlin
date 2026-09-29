@@ -11,3 +11,12 @@ import kotlinx.serialization.Serializable
 @Serializable data object Profile
 @Serializable data object Focus
 //@Serializable data class ProfileDetail(val name: String)
+@Serializable data object Stats {
+
+}
+@Serializable data object Offline {
+
+}
+@Serializable data object Friends {
+
+}
