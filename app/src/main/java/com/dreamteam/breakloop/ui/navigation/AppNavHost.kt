@@ -29,6 +29,15 @@ fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: 
             composable<Focus> {
                 // TODO: focus screen
             }
+            composable<Stats> {
+                // TODO: stats screen
+            }
+            composable<Offline> {
+                // TODO: offline screen
+            }
+            composable<Friends> {
+                // TODO: friends screen
+            }
         }
     }
 }
