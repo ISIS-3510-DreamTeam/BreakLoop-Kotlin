@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.domain
 
+import com.dreamteam.breakloop.domain.enums.PickupType
 import java.util.UUID
 
 data class PickupEvent(
@@ -7,9 +8,3 @@ data class PickupEvent(
     val timestamp: Long,
     val type: PickupType
 )
-
-enum class PickupType {
-    PICKUP,
-    WAKE_ON_TABLE,
-    UNLOCK_ONLY
-}

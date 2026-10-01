@@ -4,7 +4,7 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import com.dreamteam.breakloop.domain.UsageEvent
-import com.dreamteam.breakloop.domain.UsageEventType
+import com.dreamteam.breakloop.domain.enums.UsageEventType
 
 //Su único trabajo es: pedirle a Android los eventos de un rango de tiempo y devolverlos como una lista de tus UsageEvent
 // importante: para esta vaina necesito permisos, sino me salen en 0 los eventos
