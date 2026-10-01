@@ -4,14 +4,19 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import com.dreamteam.breakloop.domain.UsageEvent
+import com.dreamteam.breakloop.domain.UsageEventsResult
 import com.dreamteam.breakloop.domain.enums.UsageEventType
 
 //Su único trabajo es: pedirle a Android los eventos de un rango de tiempo y devolverlos como una lista de tus UsageEvent
 // importante: para esta vaina necesito permisos, sino me salen en 0 los eventos
 class UsageEventsDataSource (
-    private val context: Context
+    private val context: Context,
+    private val permissionsDataSource: PermissionsDataSource
 ){
-    fun obtainEvents(startTime: Long, endTime: Long): List<UsageEvent> {
+    fun obtainEvents(startTime: Long, endTime: Long): UsageEventsResult {
+        if (!permissionsDataSource.hasUseAccess()){
+            return UsageEventsResult.NoPermission
+        }
         val events = mutableListOf<UsageEvent>()
         val usageStatsManager: UsageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
         val eventsRaw = usageStatsManager.queryEvents(startTime, endTime)
@@ -29,6 +34,6 @@ class UsageEventsDataSource (
                 events.add(UsageEvent(event.packageName, event.timeStamp, eventType))
             }
         }
-        return events
+        return UsageEventsResult.Success(events)
     }
 }
