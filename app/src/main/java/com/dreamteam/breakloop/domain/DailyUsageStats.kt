@@ -8,5 +8,5 @@ data class DailyUsageStats (
     val pickups: Int,
     val unlocks: Int,
     val isPartial: Boolean,
-    val updatedAt: Date
+    val updatedAt: Long
 )
