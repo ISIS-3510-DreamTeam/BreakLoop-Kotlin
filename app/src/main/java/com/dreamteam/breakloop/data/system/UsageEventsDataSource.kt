@@ -14,7 +14,7 @@ class UsageEventsDataSource (
     private val permissionsDataSource: PermissionsDataSource
 ){
     fun obtainEvents(startTime: Long, endTime: Long): UsageEventsResult {
-        if (!permissionsDataSource.hasUseAccess()){
+        if (!permissionsDataSource.hasUsageAccess()){
             return UsageEventsResult.NoPermission
         }
         val events = mutableListOf<UsageEvent>()

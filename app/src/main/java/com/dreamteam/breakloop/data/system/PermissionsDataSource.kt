@@ -9,7 +9,7 @@ import android.os.Process
 class PermissionsDataSource (
     private val context: Context
 ){
-    fun hasUseAccess(): Boolean {
+    fun hasUsageAccess(): Boolean {
         val appsOpsManager = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
         var mode = AppOpsManager.MODE_ERRORED
         if (Build.VERSION.SDK_INT >=29){
