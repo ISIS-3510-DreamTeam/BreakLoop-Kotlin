@@ -1,7 +1,7 @@
 package com.dreamteam.breakloop.domain.usecase
 
 import com.dreamteam.breakloop.domain.UsageEvent
-import com.dreamteam.breakloop.domain.UsageEventType
+import com.dreamteam.breakloop.domain.enums.UsageEventType
 
 class AggregateUsageEventsUseCase {
     fun getScreenTimePerPackage(
