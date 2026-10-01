@@ -20,7 +20,7 @@ interface AppUsageDao {
     @Query("SELECT * FROM app_usage WHERE date = :date")
     fun getAppUsageByDate(date: String): Flow<List<AppUsageEntity>>
 
-    @Query("SELECT * FROM app_usage WHERE date > :dateStart AND date < :dateEnd")
+    @Query("SELECT * FROM app_usage WHERE date >= :dateStart AND date <= :dateEnd ORDER BY date ASC")
     fun getAppUsageByDateRange(dateStart: String, dateEnd: String): Flow<List<AppUsageEntity>>
 
     @Transaction

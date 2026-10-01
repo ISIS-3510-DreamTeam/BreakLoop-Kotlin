@@ -8,10 +8,10 @@ import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface DailyUsageDao {
+interface DailyUsageStatsDao {
 
     @Query("SELECT * FROM daily_usage_stats WHERE date = :date")
-    fun getDailyUsageStats(date: String): Flow<List<DailyUsageStatsEntity>>
+    fun getDailyUsageStats(date: String): Flow<DailyUsageStatsEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE, entity = DailyUsageStatsEntity::class)
     suspend fun saveDailyUsageStats(dailyUsageStats: DailyUsageStatsEntity)
