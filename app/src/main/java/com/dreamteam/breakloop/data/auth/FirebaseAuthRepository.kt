@@ -6,6 +6,10 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -63,5 +67,17 @@ class FirebaseAuthRepository (private val auth: FirebaseAuth = FirebaseAuth.getI
 
     override fun signOut() {
         auth.signOut()
+    }
+
+    override fun authState(): Flow<AuthUser?> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener {
+            firebaseAuth ->
+                val user = firebaseAuth.currentUser?.let { AuthUser(it.uid, it.email) }
+                trySend(user)
+        }
+        auth.addAuthStateListener(listener)
+        awaitClose {
+            auth.removeAuthStateListener(listener)
+        }
     }
 }

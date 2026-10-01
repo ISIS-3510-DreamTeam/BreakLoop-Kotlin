@@ -1,5 +1,7 @@
 package com.dreamteam.breakloop.data.auth
 
+import kotlinx.coroutines.flow.Flow
+
 interface AuthRepository {
 
     val currentUser: AuthUser?
@@ -12,4 +14,5 @@ interface AuthRepository {
 
     fun signOut()
 
+    fun authState(): Flow<AuthUser?>
 }
