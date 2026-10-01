@@ -1,0 +1,32 @@
+package com.dreamteam.breakloop.data.system
+
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
+import android.content.Context
+import com.dreamteam.breakloop.domain.UsageEvent
+import com.dreamteam.breakloop.domain.UsageEventType
+
+//Su único trabajo es: pedirle a Android los eventos de un rango de tiempo y devolverlos como una lista de tus UsageEvent
+class UsageEventsDataSource (
+    private val context: Context
+){
+    fun obtainEvents(startTime: Long, endTime: Long): List<UsageEvent> {
+        val events = mutableListOf<UsageEvent>()
+        val usageStatsManager: UsageStatsManager = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val eventsRaw = usageStatsManager.queryEvents(startTime, endTime)
+        val event: UsageEvents.Event = UsageEvents.Event()
+        while (eventsRaw.hasNextEvent()) {
+            eventsRaw.getNextEvent(event)
+
+            val eventType: UsageEventType? = when (event.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> UsageEventType.FOREGROUND
+                UsageEvents.Event.ACTIVITY_PAUSED -> UsageEventType.BACKGROUND
+                else -> null
+            }
+            if (eventType!=null){
+                events.add(UsageEvent(event.packageName, event.timeStamp, eventType))
+            }
+        }
+        return events
+    }
+}
