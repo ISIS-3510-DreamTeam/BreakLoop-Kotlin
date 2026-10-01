@@ -6,6 +6,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.dreamteam.breakloop.ui.main.focus.FocusScreen
+import com.dreamteam.breakloop.ui.main.friends.FriendsScreen
+import com.dreamteam.breakloop.ui.main.home.HomeScreen
+import com.dreamteam.breakloop.ui.main.offline.OfflineScreen
+import com.dreamteam.breakloop.ui.main.stats.StatsScreen
 
 @Composable
 fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: Modifier = Modifier) {
@@ -24,10 +29,19 @@ fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: 
         }
         navigation<MainGraph>(startDestination = Home) {
             composable<Home> {
-                // TODO: home screen
+                HomeScreen()
             }
             composable<Focus> {
-                // TODO: focus screen
+                FocusScreen()
+            }
+            composable<Stats> {
+                StatsScreen()
+            }
+            composable<Offline> {
+                OfflineScreen()
+            }
+            composable<Friends> {
+                FriendsScreen()
             }
         }
     }

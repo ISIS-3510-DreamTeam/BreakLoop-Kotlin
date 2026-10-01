@@ -3,4 +3,7 @@
     <string name="home">Home</string>
     <string name="focus">Focus</string>
     <string name="profile">Profile</string>
+    <string name="friends"> Friends</string>
+    <string name="stats">Stats</string>
+    <string name="offline">Offline</string>
 </resources>

@@ -17,7 +17,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             BreakLoopTheme {
-                BreakLoopApp( )
+                BreakLoopApp( isLoggedId = true)
+                // TODO: hay que quitar el true acá cuando se valide el tema de auth
             }
         }
     }
