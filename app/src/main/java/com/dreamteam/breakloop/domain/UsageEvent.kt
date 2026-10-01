@@ -8,5 +8,6 @@ data class UsageEvent (
 
 enum class UsageEventType {
     FOREGROUND,
-    BACKGROUND
+    BACKGROUND,
+    SCREEN_OFF
 }

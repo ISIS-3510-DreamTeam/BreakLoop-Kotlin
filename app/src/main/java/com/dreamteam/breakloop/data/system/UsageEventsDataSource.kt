@@ -7,6 +7,7 @@ import com.dreamteam.breakloop.domain.UsageEvent
 import com.dreamteam.breakloop.domain.UsageEventType
 
 //Su único trabajo es: pedirle a Android los eventos de un rango de tiempo y devolverlos como una lista de tus UsageEvent
+// importante: para esta vaina necesito permisos, sino me salen en 0 los eventos
 class UsageEventsDataSource (
     private val context: Context
 ){
@@ -21,6 +22,7 @@ class UsageEventsDataSource (
             val eventType: UsageEventType? = when (event.eventType) {
                 UsageEvents.Event.ACTIVITY_RESUMED -> UsageEventType.FOREGROUND
                 UsageEvents.Event.ACTIVITY_PAUSED -> UsageEventType.BACKGROUND
+                UsageEvents.Event.SCREEN_NON_INTERACTIVE -> UsageEventType.SCREEN_OFF
                 else -> null
             }
             if (eventType!=null){
