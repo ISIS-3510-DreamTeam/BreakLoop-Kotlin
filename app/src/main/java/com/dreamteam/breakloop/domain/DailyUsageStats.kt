@@ -3,7 +3,7 @@ package com.dreamteam.breakloop.domain
 import java.util.Date
 
 data class DailyUsageStats (
-    val date: Date,
+    val date: String,
     val screenTimeMs: Long,
     val pickups: Int,
     val unlocks: Int,

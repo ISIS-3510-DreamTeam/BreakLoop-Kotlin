@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.domain.usecase
 
+import com.dreamteam.breakloop.domain.AppUsage
 import com.dreamteam.breakloop.domain.UsageEvent
 import com.dreamteam.breakloop.domain.enums.UsageEventType
 
@@ -10,7 +11,7 @@ class AggregateUsageEventsUseCase {
         rangeEnd: Long,
         date: String,
         includedPackages: Set<String>
-    ): Map<String, Long> {
+    ): List<AppUsage> {
         val openPackages: MutableMap<String, Long> = mutableMapOf()
         val allPackages: MutableMap<String, Long> = mutableMapOf()
         val seenPackages: MutableSet<String> = mutableSetOf()
@@ -62,7 +63,11 @@ class AggregateUsageEventsUseCase {
             val current = allPackages[packageName] ?: 0L
             allPackages[packageName] = current + (rangeEnd - startTime)
         }
+        val listPackages: MutableList<AppUsage> = mutableListOf()
+        for ((packageName, foregroundMs) in allPackages) {
+            listPackages.add(AppUsage(date, packageName, foregroundMs))
+        }
 
-        return allPackages
+        return listPackages
     }
 }
