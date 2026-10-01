@@ -1,8 +1,10 @@
 package com.dreamteam.breakloop.domain.usecase
 
+import com.dreamteam.breakloop.domain.AppUsage
 import com.dreamteam.breakloop.domain.UsageEvent
 import com.dreamteam.breakloop.domain.enums.UsageEventType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -10,76 +12,145 @@ class AggregateUsageEventsUseCaseTest {
 
     private lateinit var useCase: AggregateUsageEventsUseCase
 
+    private val rangeStart = 0L
+    private val rangeEnd = 10000L
+    private val date = "2026-10-01"
+    private val includedPackages = setOf("A", "B")
+
     @Before
     fun setUp() {
         useCase = AggregateUsageEventsUseCase()
     }
 
+    private fun executeUseCase(events: List<UsageEvent>): Map<String, Long> {
+        val result: List<AppUsage> = useCase.getScreenTimePerPackage(
+            usageEvents = events,
+            rangeStart = rangeStart,
+            rangeEnd = rangeEnd,
+            date = date,
+            includedPackages = includedPackages
+        )
+        return result.associate { it.packageName to it.foregroundMs }
+    }
+
     @Test
-    fun `Caso 1 - BACKGROUND despues de SCREEN_OFF es ignorado`() {
-        // App A entra a los 1000 ms
-        // La pantalla se apaga a los 4000 ms -> App A suma 3000 ms y se limpia openPackages
-        // App A sale (BACKGROUND) a los 4050 ms -> Debe ser ignorado, no debe sumar desde rangeStart=0
+    fun `1 Sesion simple - A entra 1000, A sale 5000`() {
         val events = listOf(
-            UsageEvent("com.app.a", 1000, UsageEventType.FOREGROUND),
+            UsageEvent("A", 1000, UsageEventType.FOREGROUND),
+            UsageEvent("A", 5000, UsageEventType.BACKGROUND)
+        )
+
+        val result = executeUseCase(events)
+
+        assertEquals(4000L, result["A"])
+    }
+
+    @Test
+    fun `2 Venia de antes - A sale 3000`() {
+        val events = listOf(
+            UsageEvent("A", 3000, UsageEventType.BACKGROUND)
+        )
+
+        val result = executeUseCase(events)
+
+        assertEquals(3000L, result["A"])
+    }
+
+    @Test
+    fun `3 Queda abierta - A entra 7000`() {
+        val events = listOf(
+            UsageEvent("A", 7000, UsageEventType.FOREGROUND)
+        )
+
+        val result = executeUseCase(events)
+
+        assertEquals(3000L, result["A"])
+    }
+
+    @Test
+    fun `4 Solapamiento - B entra 100, A entra 200, B sale 300, A sale 500`() {
+        val events = listOf(
+            UsageEvent("B", 100, UsageEventType.FOREGROUND),
+            UsageEvent("A", 200, UsageEventType.FOREGROUND),
+            UsageEvent("B", 300, UsageEventType.BACKGROUND),
+            UsageEvent("A", 500, UsageEventType.BACKGROUND)
+        )
+
+        val result = executeUseCase(events)
+
+        assertEquals(300L, result["A"])
+        assertEquals(200L, result["B"])
+    }
+
+    @Test
+    fun `5 Excluida - C entra 1000, C sale 2000`() {
+        val events = listOf(
+            UsageEvent("C", 1000, UsageEventType.FOREGROUND),
+            UsageEvent("C", 2000, UsageEventType.BACKGROUND)
+        )
+
+        val result = executeUseCase(events)
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `6 Pantalla apagada - A entra 1000, pantalla 4000`() {
+        val events = listOf(
+            UsageEvent("A", 1000, UsageEventType.FOREGROUND),
+            UsageEvent("", 4000, UsageEventType.SCREEN_OFF)
+        )
+
+        val result = executeUseCase(events)
+
+        assertEquals(3000L, result["A"])
+    }
+
+    @Test
+    fun `7 BACKGROUND despues de apagar - A entra 1000, pantalla 4000, A sale 4050`() {
+        val events = listOf(
+            UsageEvent("A", 1000, UsageEventType.FOREGROUND),
             UsageEvent("", 4000, UsageEventType.SCREEN_OFF),
-            UsageEvent("com.app.a", 4050, UsageEventType.BACKGROUND)
+            UsageEvent("A", 4050, UsageEventType.BACKGROUND)
         )
 
-        val result = useCase.getScreenTimePerPackage(
-            usageEvents = events,
-            rangeStart = 0L,
-            rangeEnd = 10000L,
-            date = "2026-10-01",
-            includedPackages = setOf("com.app.a")
-        )
+        val result = executeUseCase(events)
 
-        // Debe sumar exactamente 3000 ms (4000 - 1000), ignorando el BACKGROUND de las 4050 ms.
-        assertEquals(3000L, result["com.app.a"])
+        assertEquals(3000L, result["A"])
     }
 
     @Test
-    fun `Caso 2 - Actividades superpuestas de una misma app ignora el segundo BACKGROUND`() {
-        // App A (Pantalla 1) entra a los 1000 ms
-        // App A (Pantalla 2) entra a los 2000 ms -> ya en openPackages, se ignora
-        // App A (Pantalla 1) sale a los 2100 ms -> suma 1100 ms (2100 - 1000), remueve de openPackages
-        // App A (Pantalla 2) sale a los 5000 ms -> ya no esta en openPackages y ya fue vista -> se ignora
+    fun `8 Dos pantallas internas - A entra 1000, A entra 2000, A sale 2100, A sale 5000`() {
         val events = listOf(
-            UsageEvent("com.app.a", 1000, UsageEventType.FOREGROUND),
-            UsageEvent("com.app.a", 2000, UsageEventType.FOREGROUND),
-            UsageEvent("com.app.a", 2100, UsageEventType.BACKGROUND),
-            UsageEvent("com.app.a", 5000, UsageEventType.BACKGROUND)
+            UsageEvent("A", 1000, UsageEventType.FOREGROUND),
+            UsageEvent("A", 2000, UsageEventType.FOREGROUND),
+            UsageEvent("A", 2100, UsageEventType.BACKGROUND),
+            UsageEvent("A", 5000, UsageEventType.BACKGROUND)
         )
 
-        val result = useCase.getScreenTimePerPackage(
-            usageEvents = events,
-            rangeStart = 0L,
-            rangeEnd = 10000L,
-            date = "2026-10-01",
-            includedPackages = setOf("com.app.a")
-        )
+        val result = executeUseCase(events)
 
-        // Debe sumar 1100 ms (2100 - 1000), ignorando el segundo BACKGROUND.
-        assertEquals(1100L, result["com.app.a"])
+        assertEquals(1100L, result["A"])
     }
 
     @Test
-    fun `Caso 3 - App abierta antes de medianoche aplica regla de rangeStart`() {
-        // La app estaba abierta antes de rangeStart=0.
-        // Llega un BACKGROUND a los 1000 ms sin FOREGROUND previo, sin SCREEN_OFF y sin haber visto la app antes.
+    fun `9 Lista vacia - ninguno`() {
+        val events = emptyList<UsageEvent>()
+
+        val result = executeUseCase(events)
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `10 Desordenados - A sale 5000, A entra 1000 (desordenados en lista)`() {
         val events = listOf(
-            UsageEvent("com.app.a", 1000, UsageEventType.BACKGROUND)
+            UsageEvent("A", 5000, UsageEventType.BACKGROUND),
+            UsageEvent("A", 1000, UsageEventType.FOREGROUND)
         )
 
-        val result = useCase.getScreenTimePerPackage(
-            usageEvents = events,
-            rangeStart = 0L,
-            rangeEnd = 10000L,
-            date = "2026-10-01",
-            includedPackages = setOf("com.app.a")
-        )
+        val result = executeUseCase(events)
 
-        // Aplica la regla rangeStart: suma 1000 ms (1000 - 0).
-        assertEquals(1000L, result["com.app.a"])
+        assertEquals(4000L, result["A"])
     }
 }
