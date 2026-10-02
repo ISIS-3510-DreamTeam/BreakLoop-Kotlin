@@ -9,6 +9,7 @@ import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
 
+
 @Database(
     entities = [DailyUsageStatsEntity::class, AppUsageEntity::class],
     version = 1,
