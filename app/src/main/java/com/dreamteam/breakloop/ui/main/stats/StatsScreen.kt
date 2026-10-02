@@ -2,6 +2,7 @@ package com.dreamteam.breakloop.ui.main.stats
 
 import android.content.Intent
 import android.provider.Settings
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,7 +25,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dreamteam.breakloop.ui.components.BreakLoopCard
+import com.dreamteam.breakloop.ui.main.stats.components.MetricCard
 import com.dreamteam.breakloop.ui.main.stats.components.WeeklyBars
+import com.dreamteam.breakloop.ui.theme.ColorPalette.Neutral.Snow
+import com.dreamteam.breakloop.ui.theme.Typography
 import com.dreamteam.breakloop.ui.util.formatDuration
 
 @Composable
@@ -86,6 +90,7 @@ fun StatsContent(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Snow)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -113,107 +118,87 @@ fun StatsContent(
         }
 
         // Tarjetas
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Today's screen time",
-                    style = MaterialTheme.typography.labelLarge
-                )
-                Text(
-                    text = formatDuration(content.totalMs),
-                    style = MaterialTheme.typography.headlineLarge
-                )
-                val percentChange = content.weeklySummary.changeVsLastWeekPercent
-                val changeText = if (percentChange == null) {
-                    "—"
-                } else {
-                    "${percentChange}% vs last week"
-                }
-                Text(
-                    text = changeText,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+        val percentChange = content.weeklySummary.changeVsLastWeekPercent
+        val changeText = if (percentChange == null) "good start!" else "${percentChange}% vs last week"
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            MetricCard(
+                label = "Today's screen time",
+                value = formatDuration(content.totalMs),
+                supportingText = changeText,
+                modifier = Modifier.weight(1f)
+            )
+            MetricCard(
+                label = "Focus minutes",
+                value = "—",
+                supportingText = "sprint 3**",
+                modifier = Modifier.weight(1f)
+            )
         }
 
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Focus minutes",
-                    style = MaterialTheme.typography.labelLarge
-                )
-                Text(
-                    text = "—",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-        }
-
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Current streak",
-                    style = MaterialTheme.typography.labelLarge
-                )
-                Text(
-                    text = "—",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-        }
-
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Best streak",
-                    style = MaterialTheme.typography.labelLarge
-                )
-                Text(
-                    text = "—",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            MetricCard(
+                label = "Current streak",
+                value = "—",
+                supportingText = "days under target",
+                modifier = Modifier.weight(1f)
+            )
+            MetricCard(
+                label = "Best streak",
+                value = "—",
+                supportingText = "your record, congrats!",
+                modifier = Modifier.weight(1f)
+            )
         }
 
         // Gráfica semanal
-        Text(
-            text = "Weekly Screen Rhythm",
-            style = MaterialTheme.typography.titleLarge
-        )
-        WeeklyBars(weeklySummary = content.weeklySummary)
+        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Weekly Screen Rhythm",
+                style = Typography.displaySmall
+            )
+            WeeklyBars(weeklySummary = content.weeklySummary)
 
-        val averageMs = content.weeklySummary.weeklyAverageMs
-        val averageText = if (averageMs != null) formatDuration(averageMs) else "—"
-        Text(
-            text = "Average: $averageText",
-            style = MaterialTheme.typography.bodyMedium
-        )
+            val averageMs = content.weeklySummary.weeklyAverageMs
+            val averageText = if (averageMs != null) formatDuration(averageMs) else "—"
+            Text(
+                text = "Average: $averageText",
+                style = Typography.bodyMedium
+            )
 
-        // Reducción vs. baseline
-        Text(
-            text = "Reduction vs. baseline: —",
-            style = MaterialTheme.typography.bodyMedium
-        )
+            // Reducción vs. baseline
+            Text(
+                text = "Reduction vs. baseline: —",
+                style = Typography.bodyMedium
+            )
+        }
 
         // Tamed Distraction Loops
-        Text(
-            text = "Tamed Distraction Loops",
-            style = MaterialTheme.typography.titleLarge
-        )
-        Text(
-            text = "Disponible cuando marques tus apps distractoras",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Tamed Distraction Loops",
+                style = Typography.displaySmall
+            )
+            Text(
+                text = "Available when you mark your special apps",
+                style = Typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-        for (app in content.apps) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = app.packageName)
-                Text(text = formatDuration(app.foregroundMs))
+            for (app in content.apps) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = app.packageName)
+                    Text(text = formatDuration(app.foregroundMs))
+                }
             }
         }
     }
