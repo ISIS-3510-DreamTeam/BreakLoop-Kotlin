@@ -7,10 +7,18 @@ import androidx.room.PrimaryKey
 data class FocusSessionEntity(
     @PrimaryKey
     val id: String,
+
+    val uid: String,
+
     val startTime: Long,
+
     val duration: Int,
+
     val type: String,
+
     val status: String,
+
     val xpEarned: Int,
+
     val synced: Boolean = false
 )

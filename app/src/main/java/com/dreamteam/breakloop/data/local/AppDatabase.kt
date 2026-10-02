@@ -17,7 +17,7 @@ import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
         AppUsageEntity::class,
         FocusSessionEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -29,11 +29,15 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun focusSessionDao(): FocusSessionDao
 
     companion object {
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        fun getInstance(context: Context): AppDatabase {
+        fun getInstance(
+            context: Context
+        ): AppDatabase {
             return INSTANCE ?: synchronized(this) {
+
                 val instance = INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,

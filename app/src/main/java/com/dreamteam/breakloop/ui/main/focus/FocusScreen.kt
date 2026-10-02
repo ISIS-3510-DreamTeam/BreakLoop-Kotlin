@@ -73,12 +73,16 @@ fun FocusScreen(
 
     val repository = remember {
         FocusSessionRepository(
-            database.focusSessionDao()
+            focusSessionDao = database.focusSessionDao(),
+            focusApi = RetrofitInstance.focusApi
         )
     }
 
     val factory = remember {
-        FocusViewModelFactory(repository)
+        FocusViewModelFactory(
+            focusSessionRepository = repository,
+            context = context
+        )
     }
 
     val viewModel: FocusViewModel = viewModel(
@@ -86,6 +90,18 @@ fun FocusScreen(
     )
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    FocusContent(
+        state = state,
+        onDurationChange = viewModel::onDurationChange,
+        onCustomDurationSelected = viewModel::onCustomDurationSelected,
+        onCustomDurationChange = viewModel::onCustomDurationChange,
+        onFocusGoalChange = viewModel::onFocusGoalChange,
+        onSoundscapeChange = viewModel::onSoundscapeChange,
+        onAppShieldChange = viewModel::onAppShieldChange,
+        onStartFocus = viewModel::startFocus,
+        onStopFocus = viewModel::stopFocus,
+        modifier = modifier
+    )
 
     val scope = rememberCoroutineScope()
 
