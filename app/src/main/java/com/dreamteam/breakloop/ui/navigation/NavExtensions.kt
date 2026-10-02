@@ -6,6 +6,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.dreamteam.breakloop.ui.main.offline.components.ActivityDetailScreen
 
 fun NavController.navigateToTopLevel(tab: TopLevelDestination){
     navigate(tab.route){
@@ -18,7 +19,12 @@ fun NavController.navigateToTopLevel(tab: TopLevelDestination){
 @Composable
 fun NavController.currentTopLevelDestination(): TopLevelDestination? {
     val destination = currentBackStackEntryAsState().value?.destination ?: return null
-    return TopLevelDestination.entries.firstOrNull { tab ->
+    return (TopLevelDestination.entries.firstOrNull { tab ->
         destination.hierarchy.any { it.hasRoute(tab.route::class) }
-    }
+    }?: when{
+        destination.hasRoute(OfflineActivityDetail::class) -> TopLevelDestination.OFFLINE
+        destination.hasRoute(DeepStats::class) -> TopLevelDestination.STATS
+        else -> null
+
+    }) as TopLevelDestination?
 }

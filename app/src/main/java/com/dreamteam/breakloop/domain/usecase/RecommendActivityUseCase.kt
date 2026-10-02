@@ -15,7 +15,7 @@ class RecommendActivityUseCase(
         val candidates = catalog.filter { activity -> activity.durationMin <= context.availableMin && !(activity.isOutdoor && (context.weather == WeatherCondition.RAIN || context.weather ==WeatherCondition.SNOW || context.timeOfDay == TimeOfDay.NIGHT)) }
         for( candidate in candidates){
             val scores = rules.sumOf { rule -> rule.score(candidate, context)*rule.weight }
-            val reasons = rules.filter { rule -> rule.score(candidate, context) ==1.0 }.map { rule -> rule.reason }
+            val reasons = rules.filter { rule -> rule.score(candidate, context) ==1.0 }.mapNotNull{ rule -> rule.reason }
             val recommendation = Recommendation(
                 activity = candidate,
                 score = scores,

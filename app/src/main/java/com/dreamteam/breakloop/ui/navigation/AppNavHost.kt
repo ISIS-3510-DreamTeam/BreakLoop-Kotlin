@@ -38,18 +38,24 @@ fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: 
             }
             composable<Stats> {
                 StatsScreen(
-                    onDeepStatsClick = { navController.navigate(DeepStatsScreen()) }
+                    onDeepStatsClick = { navController.navigate(DeepStats) }
                 )
             }
             composable<Offline> {
                 OfflineScreen(
                     onActivityClick = {
-                        id -> navController.navigate(ActivityDetailScreen(id))
+                        id -> navController.navigate(OfflineActivityDetail(id))
                     }
                 )
             }
             composable<Friends> {
                 FriendsScreen()
+            }
+            composable<OfflineActivityDetail>{
+                ActivityDetailScreen(onBack = { navController.popBackStack() })
+            }
+            composable<DeepStats> {
+                DeepStatsScreen()
             }
         }
     }

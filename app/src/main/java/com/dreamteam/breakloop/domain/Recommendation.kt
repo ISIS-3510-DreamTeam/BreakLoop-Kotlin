@@ -5,6 +5,6 @@ import com.dreamteam.breakloop.domain.enums.ReasonTag
 data class Recommendation (
     val activity: OfflineActivity,
     val score: Double,
-    val reasons: List<ReasonTag?>,
+    val reasons: List<ReasonTag>,
 ){
 }

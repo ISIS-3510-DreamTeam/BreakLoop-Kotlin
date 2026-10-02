@@ -42,7 +42,7 @@ import kotlin.math.abs
 fun StatsScreen(
     modifier: Modifier = Modifier,
     viewModel: StatsViewModel = viewModel(),
-    onDeepStatsClick: @Composable () -> Unit = {}
+    onDeepStatsClick: () -> Unit = {}
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -55,7 +55,7 @@ fun StatsScreen(
         StatsUiState.NoPermission -> NoPermissionContent(modifier = modifier)
         is StatsUiState.Content -> StatsContent(
             content = state,
-            onDeepStatsClick = onDeepStatsClick as () -> Unit,
+            onDeepStatsClick = onDeepStatsClick,
             modifier = modifier
         )
     }

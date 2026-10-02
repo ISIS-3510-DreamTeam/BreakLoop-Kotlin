@@ -1,6 +1,5 @@
 package com.dreamteam.breakloop.ui.navigation
 
-import android.R
 import kotlinx.serialization.Serializable
 
 @Serializable data object AuthGraph
