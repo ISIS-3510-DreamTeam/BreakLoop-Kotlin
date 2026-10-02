@@ -307,12 +307,12 @@ private fun FocusHeader() {
                 Text(
                     text = "BREAKLOOP",
                     style = Typography.headlineSmall,
-                    color = ColorPalette.SpicyPaprika.t500
+                    color = ColorPalette.Neutral.t850
                 )
 
                 Text(
                     text = "FOCUS SETUP",
-                    style = Typography.titleMedium,
+                    style = Typography.headlineMedium,
                     color = ColorPalette.Neutral.t850
                 )
             }
