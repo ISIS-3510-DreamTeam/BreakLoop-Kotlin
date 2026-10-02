@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             BreakLoopTheme {
-                AuthScreen()
+                BreakLoopApp( )
             }
         }
     }
