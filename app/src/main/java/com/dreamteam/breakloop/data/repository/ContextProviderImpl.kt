@@ -1,4 +1,4 @@
-package com.dreamteam.breakloop.data.local.repository
+package com.dreamteam.breakloop.data.repository
 
 import com.dreamteam.breakloop.data.system.InterestsDataSource
 import com.dreamteam.breakloop.domain.ContextSnapshot

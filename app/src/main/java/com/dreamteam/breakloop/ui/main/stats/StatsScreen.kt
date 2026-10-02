@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
+import com.dreamteam.breakloop.ui.components.LoadingContent
 import com.dreamteam.breakloop.ui.main.stats.components.MetricCard
 import com.dreamteam.breakloop.ui.main.stats.components.WeeklyBars
 import com.dreamteam.breakloop.ui.theme.ColorPalette
@@ -60,15 +61,6 @@ fun StatsScreen(
     }
 }
 
-@Composable
-fun LoadingContent(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
-    }
-}
 @Composable
 fun NoPermissionContent(modifier: Modifier = Modifier) {
 

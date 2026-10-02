@@ -1,12 +1,11 @@
 package com.dreamteam.breakloop.ui.main.stats
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.combine
 import com.dreamteam.breakloop.data.local.AppDatabase
-import com.dreamteam.breakloop.data.local.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
