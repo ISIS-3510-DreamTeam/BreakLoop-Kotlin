@@ -10,6 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.dreamteam.breakloop.BreakLoopApp
 import com.dreamteam.breakloop.data.auth.FirebaseAuthRepository
+import com.dreamteam.breakloop.ui.account.auth.AuthScreen
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -22,7 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             BreakLoopTheme {
-                BreakLoopApp( )
+                AuthScreen()
             }
         }
     }

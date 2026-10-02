@@ -22,15 +22,35 @@ class AuthViewModel(
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
     fun onEmailChange(value: String) {
-        _uiState.update { it.copy(email = value, emailError = null) }
+        _uiState.update { it.copy(email = value.trim(), emailError = null) }
     }
 
     fun onPasswordChange(value: String) {
         _uiState.update { it.copy(password = value, passwordError = null) }
     }
 
-    fun toggleMode(aMode: AuthMode) {
-        _uiState.update { it.copy(mode = aMode, emailError = null, passwordError = null, ) }
+    fun onConfirmPasswordChange(value: String) {
+        _uiState.update { it.copy(confirmPassword = value, confirmPasswordError = null) }
+    }
+
+    fun toggleMode() {
+        val mode : AuthMode = uiState.value.mode
+        var aMode : AuthMode = AuthMode.LOGIN
+        if (mode == AuthMode.LOGIN) {
+            aMode = AuthMode.SIGNUP
+        }
+        if (mode == AuthMode.SIGNUP) {
+            aMode = AuthMode.LOGIN
+        }
+        _uiState.update { it.copy(mode = aMode, emailError = null, passwordError = null, confirmPasswordError = null, error = null) }
+    }
+
+    fun showRecover() {
+        _uiState.update { it.copy(mode = AuthMode.RECOVER, emailError = null, passwordError = null, confirmPasswordError = null, error = null) }
+    }
+
+    fun showLogin() {
+        _uiState.update { it.copy(mode = AuthMode.LOGIN, emailError = null, passwordError = null, confirmPasswordError = null, error = null, resetEmailSent = false) }
     }
 
     private fun validate(): Boolean {
@@ -42,11 +62,22 @@ class AuthViewModel(
             _uiState.update { it.copy(passwordError = "This password is not strong enough") }
             return false
         }
+        val isSignUp : Boolean = (uiState.value.mode == AuthMode.SIGNUP)
+        if (isSignUp) {
+            if (! (uiState.value.password == uiState.value.confirmPassword)){
+                _uiState.update { it.copy(confirmPasswordError = "Passwords are not identical") }
+                return false
+            }
+        }
         return true
 
     }
 
     fun submit() {
+        if (uiState.value.mode == AuthMode.RECOVER) {
+            sendPasswordReset()
+            return
+        }
         if (! validate()) { return }
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
@@ -63,6 +94,27 @@ class AuthViewModel(
             }
                     _uiState.update { it.copy(isLoading = false, error = errorMsg) }
         }
+    }
+
+    fun sendPasswordReset() {
+        if (!(android.util.Patterns.EMAIL_ADDRESS.matcher(uiState.value.email).matches())) {
+            _uiState.update { it.copy(emailError = "This email is not valid") }
+            return
+        }
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            var result : Result<Unit>? = null
+            result = repository.sendPasswordReset(uiState.value.email)
+            val error = (result.exceptionOrNull() as? AuthException)?.error //casts to authException
+            var errorMsg : String? = null
+            if (error != null) {
+                errorMsg = error.ToMessage()
+            } else {
+                _uiState.update { it.copy(isLoading = false, resetEmailSent = true) }
+            }
+            _uiState.update { it.copy(isLoading = false, error = errorMsg) }
+        }
+
     }
 
     private fun AuthError.ToMessage(): String {//WEAK_PASSWORD, NETWORK, TOO_MANY_REQUESTS, UNKNOWN, EMAIL_IN_USE, INVALID_CREDENTIALS
