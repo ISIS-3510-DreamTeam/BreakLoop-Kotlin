@@ -8,17 +8,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.dreamteam.breakloop.R
 
-// 1. Familia SpaceMono
+// 1. Familia SpaceMono (Archivos estáticos individuales)
 val SpaceMono = FontFamily(
     Font(R.font.space_mono_regular, FontWeight.Normal),
     Font(R.font.space_mono_bold, FontWeight.Bold)
 )
 
-// 2. Familia PlusJakartaSans
+// 2. Familia PlusJakartaSans (Fuente variable: una sola declaración para soportar todos los pesos)
 val PlusJakartaSans = FontFamily(
-    Font(R.font.plus_jakarta_sans_variable_font_wght, FontWeight.Normal),
-    Font(R.font.plus_jakarta_sans_variable_font_wght, FontWeight.Medium),
-    Font(R.font.plus_jakarta_sans_variable_font_wght, FontWeight.Bold)
+    Font(R.font.plus_jakarta_sans_variable_font_wght)
 )
 
 // 3. Typography configurada para MaterialTheme
@@ -34,35 +32,35 @@ val Typography = Typography(
     displayMedium = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
-        fontSize = 45.sp,
-        lineHeight = 52.sp,
+        fontSize = 40.sp,
+        lineHeight = 48.sp,
         letterSpacing = 0.sp
     ),
     displaySmall = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Normal,
-        fontSize = 36.sp,
-        lineHeight = 44.sp,
+        fontSize = 25.sp,
+        lineHeight = 15.sp,
         letterSpacing = 0.sp
     ),
 
     // Headline
     headlineLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
         lineHeight = 40.sp,
         letterSpacing = 0.sp
     ),
     headlineMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
     headlineSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = SpaceMono,
         fontWeight = FontWeight.Medium,
         fontSize = 24.sp,
         lineHeight = 32.sp,
