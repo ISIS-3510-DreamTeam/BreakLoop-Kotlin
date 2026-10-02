@@ -78,10 +78,6 @@ private fun FocusContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        FocusHeader()
-
-        Spacer(modifier = Modifier.height(4.dp))
-
         BreakLoopCard(
             modifier = Modifier.padding(horizontal = 24.dp)
         ) {
@@ -274,97 +270,6 @@ private fun FocusContent(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun FocusHeader() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 24.dp,
-                vertical = 4.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-
-            Image(
-                painter = painterResource(R.drawable.breakloop_logo),
-                contentDescription = "BreakLoop logo",
-                modifier = Modifier.size(105.dp)
-            )
-
-            Spacer(modifier = Modifier.size(10.dp))
-
-            Column {
-                Text(
-                    text = "BREAKLOOP",
-                    style = Typography.headlineSmall,
-                    color = ColorPalette.Neutral.t850
-                )
-
-                Text(
-                    text = "FOCUS SETUP",
-                    style = Typography.headlineMedium,
-                    color = ColorPalette.Neutral.t850
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(3.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            HeaderBadge(
-                text = "🛡️ Shield Test"
-            )
-
-            HeaderBadge(
-                text = "🔥 18d"
-            )
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(ColorPalette.Neutral.t1000)
-        )
-    }
-}
-
-@Composable
-private fun HeaderBadge(
-    text: String
-) {
-    Box(
-        modifier = Modifier
-            .border(
-                width = 2.dp,
-                color = ColorPalette.Neutral.t1000,
-                shape = RoundedCornerShape(8.dp)
-            )
-            .padding(
-                horizontal = 14.dp,
-                vertical = 5.dp
-            )
-    ) {
-        Text(
-            text = text,
-            style = Typography.labelLarge,
-            color = ColorPalette.Neutral.t1000,
-            textAlign = TextAlign.Center
-        )
     }
 }
 

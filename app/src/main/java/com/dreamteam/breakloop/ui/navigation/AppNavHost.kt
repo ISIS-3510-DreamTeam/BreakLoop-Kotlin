@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.dreamteam.breakloop.ui.account.auth.AuthScreen
 import com.dreamteam.breakloop.ui.main.focus.FocusScreen
 import com.dreamteam.breakloop.ui.main.friends.FriendsScreen
 import com.dreamteam.breakloop.ui.main.home.HomeScreen
@@ -19,12 +20,12 @@ fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: 
         startDestination = if (isLoggedIn) MainGraph else AuthGraph,
         modifier = modifier
     ) {
-        navigation<AuthGraph>(startDestination = Splash) {
+        navigation<AuthGraph>(startDestination = Login) {
             composable<Splash> {
                 // TODO: splash screen
             }
             composable<Login> {
-                // TODO: login screen
+                AuthScreen()
             }
         }
         navigation<MainGraph>(startDestination = Home) {
