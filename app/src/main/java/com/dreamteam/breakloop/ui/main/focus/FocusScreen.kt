@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.ui.main.focus
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -29,9 +31,12 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,12 +46,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.R
+import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.local.repository.FocusSessionRepository
+import com.dreamteam.breakloop.remote.FocusSessionRequest
+import com.dreamteam.breakloop.remote.RetrofitInstance
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.Typography
-
+import kotlinx.coroutines.launch
 
 // -----------------------------------------------------------------------------
 // Main Screen
@@ -54,25 +63,94 @@ import com.dreamteam.breakloop.ui.theme.Typography
 
 @Composable
 fun FocusScreen(
-    modifier: Modifier = Modifier,
-    viewModel: FocusViewModel = viewModel()
+    modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
+    val database = remember {
+        AppDatabase.getInstance(context)
+    }
+
+    val repository = remember {
+        FocusSessionRepository(
+            database.focusSessionDao()
+        )
+    }
+
+    val factory = remember {
+        FocusViewModelFactory(repository)
+    }
+
+    val viewModel: FocusViewModel = viewModel(
+        factory = factory
+    )
+
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    FocusContent(
-        state = state,
-        onDurationChange = viewModel::onDurationChange,
-        onCustomDurationSelected = viewModel::onCustomDurationSelected,
-        onCustomDurationChange = viewModel::onCustomDurationChange,
-        onFocusGoalChange = viewModel::onFocusGoalChange,
-        onSoundscapeChange = viewModel::onSoundscapeChange,
-        onAppShieldChange = viewModel::onAppShieldChange,
-        onStartFocus = viewModel::startFocus,
-        onStopFocus = viewModel::stopFocus,
-        modifier = modifier
-    )
-}
+    val scope = rememberCoroutineScope()
 
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        Button(
+            onClick = {
+                scope.launch {
+                    try {
+                        val session = FocusSessionRequest(
+                            id = "test-session-001",
+                            startTime = System.currentTimeMillis(),
+                            duration = 25,
+                            type = "FOCUS",
+                            status = "COMPLETED",
+                            xpEarned = 0
+                        )
+
+                        val response = RetrofitInstance.focusApi.saveSession(
+                            uid = "test-user",
+                            session = session
+                        )
+
+                        Log.d(
+                            "FocusApiTest",
+                            "POST HTTP ${response.code()} - success=${response.isSuccessful}"
+                        )
+
+                    } catch (e: Exception) {
+                        Log.e(
+                            "FocusApiTest",
+                            "POST Request failed",
+                            e
+                        )
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ColorPalette.SpicyPaprika.t500
+            )
+        ) {
+            Text(
+                text = "Test Backend",
+                color = ColorPalette.Neutral.Snow
+            )
+        }
+
+        FocusContent(
+            state = state,
+            onDurationChange = viewModel::onDurationChange,
+            onCustomDurationSelected = viewModel::onCustomDurationSelected,
+            onCustomDurationChange = viewModel::onCustomDurationChange,
+            onFocusGoalChange = viewModel::onFocusGoalChange,
+            onSoundscapeChange = viewModel::onSoundscapeChange,
+            onAppShieldChange = viewModel::onAppShieldChange,
+            onStartFocus = viewModel::startFocus,
+            onStopFocus = viewModel::stopFocus,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
 
 // -----------------------------------------------------------------------------
 // Content
@@ -111,7 +189,6 @@ private fun FocusContent(
         )
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Focus Setup
@@ -158,7 +235,6 @@ private fun FocusSetupScreen(
         )
     }
 }
-
 
 @Composable
 private fun FocusSetupContent(
@@ -239,7 +315,6 @@ private fun FocusSetupContent(
     )
 }
 
-
 // -----------------------------------------------------------------------------
 // Setup Cards
 // -----------------------------------------------------------------------------
@@ -277,7 +352,6 @@ private fun FocusIntroCard() {
         )
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Duration Selector
@@ -389,25 +463,19 @@ private fun DurationSelector(
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = ColorPalette.Neutral.Snow,
                 unfocusedContainerColor = ColorPalette.Neutral.Snow,
-
                 focusedTextColor = ColorPalette.Neutral.t1000,
                 unfocusedTextColor = ColorPalette.Neutral.t1000,
-
                 focusedLabelColor = ColorPalette.SpicyPaprika.t500,
                 unfocusedLabelColor = ColorPalette.Neutral.t700,
-
                 focusedPlaceholderColor = ColorPalette.Neutral.t700,
                 unfocusedPlaceholderColor = ColorPalette.Neutral.t700,
-
                 focusedIndicatorColor = ColorPalette.SpicyPaprika.t500,
                 unfocusedIndicatorColor = ColorPalette.Neutral.t500,
-
                 cursorColor = ColorPalette.SpicyPaprika.t500
             )
         )
     }
 }
-
 
 @Composable
 private fun FocusGoalCard(
@@ -453,7 +521,6 @@ private fun FocusGoalCard(
         )
     }
 }
-
 
 @Composable
 private fun SoundscapeCard(
@@ -507,7 +574,6 @@ private fun SoundscapeCard(
     }
 }
 
-
 @Composable
 private fun AppShieldCard(
     enabled: Boolean,
@@ -551,7 +617,6 @@ private fun AppShieldCard(
         }
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Active Focus Session
@@ -658,7 +723,6 @@ private fun ActiveFocusContent(
     }
 }
 
-
 // -----------------------------------------------------------------------------
 // Active Focus Top Bar
 // -----------------------------------------------------------------------------
@@ -712,7 +776,6 @@ private fun ActiveFocusTopBar() {
     }
 }
 
-
 // -----------------------------------------------------------------------------
 // Focus Goal
 // -----------------------------------------------------------------------------
@@ -741,7 +804,6 @@ private fun FocusGoalBadge(
         )
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Progress Bar
@@ -774,7 +836,6 @@ private fun FocusProgressBar(
         )
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Header
@@ -852,7 +913,6 @@ private fun FocusHeader() {
     }
 }
 
-
 @Composable
 private fun HeaderBadge(
     text: String
@@ -877,7 +937,6 @@ private fun HeaderBadge(
         )
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Focus Icon
@@ -930,7 +989,6 @@ private fun FocusIcon(
     }
 }
 
-
 // -----------------------------------------------------------------------------
 // Duration Button
 // -----------------------------------------------------------------------------
@@ -978,7 +1036,6 @@ private fun DurationButton(
     }
 }
 
-
 // -----------------------------------------------------------------------------
 // Soundscape Button
 // -----------------------------------------------------------------------------
@@ -1008,7 +1065,6 @@ private fun SoundscapeButton(
         )
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Focus Sprint Pet
@@ -1070,7 +1126,6 @@ private fun FocusSprintPet() {
     }
 }
 
-
 // -----------------------------------------------------------------------------
 // Helper Functions
 // -----------------------------------------------------------------------------
@@ -1084,7 +1139,6 @@ private fun getSoundscapeName(
         Soundscape.SILENCE -> "Silence"
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Setup Preview
@@ -1123,7 +1177,6 @@ private fun FocusScreenPreview() {
         )
     }
 }
-
 
 // -----------------------------------------------------------------------------
 // Active Focus Preview

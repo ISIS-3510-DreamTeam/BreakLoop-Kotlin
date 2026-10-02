@@ -2,6 +2,8 @@ package com.dreamteam.breakloop.ui.main.focus
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
+import com.dreamteam.breakloop.data.local.repository.FocusSessionRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,13 +11,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 
-class FocusViewModel : ViewModel() {
+class FocusViewModel(
+    private val focusSessionRepository: FocusSessionRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FocusSessionUiState())
     val uiState: StateFlow<FocusSessionUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
+
+    private var sessionId: String? = null
+    private var sessionStartTime: Long? = null
 
     fun onDurationChange(duration: Int) {
         _uiState.update {
@@ -87,6 +95,9 @@ class FocusViewModel : ViewModel() {
 
         timerJob?.cancel()
 
+        sessionId = UUID.randomUUID().toString()
+        sessionStartTime = System.currentTimeMillis()
+
         val totalSeconds = duration * 60
 
         _uiState.update {
@@ -107,7 +118,6 @@ class FocusViewModel : ViewModel() {
         timerJob?.cancel()
 
         timerJob = viewModelScope.launch {
-
             while (_uiState.value.remainingSeconds > 0) {
 
                 delay(1000)
@@ -171,27 +181,70 @@ class FocusViewModel : ViewModel() {
                 elapsedSeconds = 0
             )
         }
+
+        sessionId = null
+        sessionStartTime = null
     }
 
     private fun completeSession() {
         timerJob?.cancel()
         timerJob = null
 
-        _uiState.update {
-            it.copy(
-                isSessionActive = false,
-                isPaused = false,
-                remainingSeconds = 0
+        val currentSessionId = sessionId
+        val currentStartTime = sessionStartTime
+        val currentState = _uiState.value
+
+        if (currentSessionId != null && currentStartTime != null) {
+            val session = FocusSessionEntity(
+                id = currentSessionId,
+                startTime = currentStartTime,
+                duration = currentState.selectedDuration,
+                type = "FOCUS",
+                status = "COMPLETED",
+                xpEarned = 0,
+                synced = false
             )
+
+            viewModelScope.launch {
+                try {
+                    focusSessionRepository.saveSession(session)
+
+                    _uiState.update {
+                        it.copy(
+                            isSessionActive = false,
+                            isPaused = false,
+                            remainingSeconds = 0,
+                            error = null
+                        )
+                    }
+                } catch (e: Exception) {
+                    _uiState.update {
+                        it.copy(
+                            isSessionActive = false,
+                            isPaused = false,
+                            remainingSeconds = 0,
+                            error = "Could not save focus session"
+                        )
+                    }
+                }
+            }
+        } else {
+            _uiState.update {
+                it.copy(
+                    isSessionActive = false,
+                    isPaused = false,
+                    remainingSeconds = 0
+                )
+            }
         }
 
-        // Later: Save the completed session through repository.
+        sessionId = null
+        sessionStartTime = null
     }
 
     override fun onCleared() {
         timerJob?.cancel()
         timerJob = null
-
         super.onCleared()
     }
 }

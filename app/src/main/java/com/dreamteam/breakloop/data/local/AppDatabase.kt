@@ -6,18 +6,27 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.dreamteam.breakloop.data.local.dao.AppUsageDao
 import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao
+import com.dreamteam.breakloop.data.local.dao.FocusSessionDao
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
+import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
 
 @Database(
-    entities = [DailyUsageStatsEntity::class, AppUsageEntity::class],
-    version = 1,
+    entities = [
+        DailyUsageStatsEntity::class,
+        AppUsageEntity::class,
+        FocusSessionEntity::class
+    ],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun dailyUsageStatsDao(): DailyUsageStatsDao
+
     abstract fun appUsageDao(): AppUsageDao
+
+    abstract fun focusSessionDao(): FocusSessionDao
 
     companion object {
         @Volatile
@@ -29,9 +38,13 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "breakloop.db"
-                ).build().also {
-                    INSTANCE = it
-                }
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also {
+                        INSTANCE = it
+                    }
+
                 instance
             }
         }
