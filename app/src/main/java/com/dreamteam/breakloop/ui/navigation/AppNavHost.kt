@@ -10,6 +10,8 @@ import com.dreamteam.breakloop.ui.main.focus.FocusScreen
 import com.dreamteam.breakloop.ui.main.friends.FriendsScreen
 import com.dreamteam.breakloop.ui.main.home.HomeScreen
 import com.dreamteam.breakloop.ui.main.offline.OfflineScreen
+import com.dreamteam.breakloop.ui.main.offline.components.ActivityDetailScreen
+import com.dreamteam.breakloop.ui.main.offline.components.DeepStatsScreen
 import com.dreamteam.breakloop.ui.main.stats.StatsScreen
 
 @Composable
@@ -35,10 +37,16 @@ fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: 
                 FocusScreen()
             }
             composable<Stats> {
-                StatsScreen()
+                StatsScreen(
+                    onDeepStatsClick = { navController.navigate(DeepStatsScreen()) }
+                )
             }
             composable<Offline> {
-                OfflineScreen()
+                OfflineScreen(
+                    onActivityClick = {
+                        id -> navController.navigate(ActivityDetailScreen(id))
+                    }
+                )
             }
             composable<Friends> {
                 FriendsScreen()

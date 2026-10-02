@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.ui.navigation
 
+import android.R
 import kotlinx.serialization.Serializable
 
 @Serializable data object AuthGraph
@@ -14,9 +15,11 @@ import kotlinx.serialization.Serializable
 @Serializable data object Stats {
 
 }
+@Serializable data object DeepStats
 @Serializable data object Offline {
 
 }
+@Serializable data class OfflineActivityDetail(val activityId: String)
 @Serializable data object Friends {
 
 }
