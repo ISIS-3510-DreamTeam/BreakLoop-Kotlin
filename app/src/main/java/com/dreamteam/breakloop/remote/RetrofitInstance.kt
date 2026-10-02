@@ -13,7 +13,9 @@ object RetrofitInstance {
 
     val focusApi: FocusApi by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.0.6:8080/")
+            .baseUrl(
+                "https://breakloop-backend-14746672383.southamerica-west1.run.app/"
+            )
             .addConverterFactory(
                 json.asConverterFactory(
                     "application/json".toMediaType()

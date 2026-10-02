@@ -109,7 +109,16 @@ class FocusViewModel(
             return
         }
 
-        val uid = "test-user"
+        val uid = firebaseAuth.currentUser?.uid
+
+        if (uid == null) {
+            _uiState.update {
+                it.copy(
+                    error = "You must be logged in to start a focus session"
+                )
+            }
+            return
+        }
 
         timerJob?.cancel()
 
@@ -226,7 +235,9 @@ class FocusViewModel(
         timerJob?.cancel()
         timerJob = null
 
-        saveSession(status = "COMPLETED")
+        saveSession(
+            status = "COMPLETED"
+        )
     }
 
     private fun saveSession(
@@ -234,13 +245,16 @@ class FocusViewModel(
     ) {
 
         val currentSessionId = sessionId
-
         val currentStartTime = sessionStartTime
-
         val currentState = _uiState.value
 
-        val uid = "test-user"
-        println("FOCUS DEBUG: id=$currentSessionId uid=$uid " + "duration=${currentState.selectedDuration}"        )
+        val uid = firebaseAuth.currentUser?.uid
+
+        println(
+            "FOCUS DEBUG: id=$currentSessionId " +
+                    "uid=$uid " +
+                    "duration=${currentState.selectedDuration}"
+        )
 
         if (
             currentSessionId == null ||

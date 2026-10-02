@@ -1,6 +1,5 @@
 package com.dreamteam.breakloop.ui.main.focus
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,7 +20,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -32,7 +30,6 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,14 +45,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.R
 import com.dreamteam.breakloop.data.local.AppDatabase
 import com.dreamteam.breakloop.data.local.repository.FocusSessionRepository
-import com.dreamteam.breakloop.remote.FocusSessionRequest
 import com.dreamteam.breakloop.remote.RetrofitInstance
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.Typography
-import kotlinx.coroutines.launch
 
 // -----------------------------------------------------------------------------
 // Main Screen
@@ -90,6 +85,7 @@ fun FocusScreen(
     )
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     FocusContent(
         state = state,
         onDurationChange = viewModel::onDurationChange,
@@ -102,70 +98,6 @@ fun FocusScreen(
         onStopFocus = viewModel::stopFocus,
         modifier = modifier
     )
-
-    val scope = rememberCoroutineScope()
-
-    Column(
-        modifier = modifier.fillMaxSize()
-    ) {
-        Button(
-            onClick = {
-                scope.launch {
-                    try {
-                        val session = FocusSessionRequest(
-                            id = "test-session-001",
-                            startTime = System.currentTimeMillis(),
-                            duration = 25,
-                            type = "FOCUS",
-                            status = "COMPLETED",
-                            xpEarned = 0
-                        )
-
-                        val response = RetrofitInstance.focusApi.saveSession(
-                            uid = "test-user",
-                            session = session
-                        )
-
-                        Log.d(
-                            "FocusApiTest",
-                            "POST HTTP ${response.code()} - success=${response.isSuccessful}"
-                        )
-
-                    } catch (e: Exception) {
-                        Log.e(
-                            "FocusApiTest",
-                            "POST Request failed",
-                            e
-                        )
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = ColorPalette.SpicyPaprika.t500
-            )
-        ) {
-            Text(
-                text = "Test Backend",
-                color = ColorPalette.Neutral.Snow
-            )
-        }
-
-        FocusContent(
-            state = state,
-            onDurationChange = viewModel::onDurationChange,
-            onCustomDurationSelected = viewModel::onCustomDurationSelected,
-            onCustomDurationChange = viewModel::onCustomDurationChange,
-            onFocusGoalChange = viewModel::onFocusGoalChange,
-            onSoundscapeChange = viewModel::onSoundscapeChange,
-            onAppShieldChange = viewModel::onAppShieldChange,
-            onStartFocus = viewModel::startFocus,
-            onStopFocus = viewModel::stopFocus,
-            modifier = Modifier.weight(1f)
-        )
-    }
 }
 
 // -----------------------------------------------------------------------------
@@ -229,12 +161,6 @@ private fun FocusSetupScreen(
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        FocusHeader()
-
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
-
         FocusSetupContent(
             state = state,
             onDurationChange = onDurationChange,
@@ -493,6 +419,10 @@ private fun DurationSelector(
     }
 }
 
+// -----------------------------------------------------------------------------
+// Focus Goal
+// -----------------------------------------------------------------------------
+
 @Composable
 private fun FocusGoalCard(
     focusGoal: String,
@@ -537,6 +467,10 @@ private fun FocusGoalCard(
         )
     }
 }
+
+// -----------------------------------------------------------------------------
+// Soundscape
+// -----------------------------------------------------------------------------
 
 @Composable
 private fun SoundscapeCard(
@@ -589,6 +523,10 @@ private fun SoundscapeCard(
         }
     }
 }
+
+// -----------------------------------------------------------------------------
+// App Shield
+// -----------------------------------------------------------------------------
 
 @Composable
 private fun AppShieldCard(
@@ -667,20 +605,21 @@ private fun ActiveFocusContent(
             .background(ColorPalette.Neutral.Snow)
             .padding(
                 horizontal = 24.dp,
-                vertical = 20.dp
+                vertical = 16.dp
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         ActiveFocusTopBar()
 
         Spacer(
-            modifier = Modifier.height(295.dp)
+            modifier = Modifier.height(45.dp)
         )
 
         FocusSprintPet()
 
         Spacer(
-            modifier = Modifier.height(24.dp)
+            modifier = Modifier.height(18.dp)
         )
 
         Text(
@@ -691,25 +630,25 @@ private fun ActiveFocusContent(
         )
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier = Modifier.height(10.dp)
         )
 
         if (state.focusGoal.isNotBlank()) {
             FocusGoalBadge(
                 focusGoal = state.focusGoal
             )
-        }
 
-        Spacer(
-            modifier = Modifier.height(22.dp)
-        )
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
+        }
 
         FocusProgressBar(
             progress = progress
         )
 
         Spacer(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.height(14.dp)
         )
 
         BreakLoopButton(
@@ -717,11 +656,11 @@ private fun ActiveFocusContent(
             onClick = onStopFocus,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(70.dp)
+                .height(58.dp)
         )
 
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier = Modifier.height(8.dp)
         )
 
         Text(
@@ -731,10 +670,6 @@ private fun ActiveFocusContent(
             style = Typography.bodySmall,
             color = ColorPalette.Neutral.t700,
             textAlign = TextAlign.Center
-        )
-
-        Spacer(
-            modifier = Modifier.height(8.dp)
         )
     }
 }
@@ -849,107 +784,6 @@ private fun FocusProgressBar(
                 .fillMaxSize()
                 .clip(RoundedCornerShape(10.dp))
                 .background(ColorPalette.SpicyPaprika.t500)
-        )
-    }
-}
-
-// -----------------------------------------------------------------------------
-// Header
-// -----------------------------------------------------------------------------
-
-@Composable
-private fun FocusHeader() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                horizontal = 24.dp,
-                vertical = 4.dp
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(
-                    R.drawable.breakloop_logo
-                ),
-                contentDescription = "BreakLoop logo",
-                modifier = Modifier.size(105.dp)
-            )
-
-            Spacer(
-                modifier = Modifier.width(10.dp)
-            )
-
-            Column {
-                Text(
-                    text = "BREAKLOOP",
-                    style = Typography.headlineSmall,
-                    color = ColorPalette.Neutral.t850
-                )
-
-                Text(
-                    text = "FOCUS SETUP",
-                    style = Typography.headlineMedium,
-                    color = ColorPalette.Neutral.t850
-                )
-            }
-        }
-
-        Spacer(
-            modifier = Modifier.height(3.dp)
-        )
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            HeaderBadge(
-                text = "🛡️ Shield Test"
-            )
-
-            HeaderBadge(
-                text = "🔥 18d"
-            )
-        }
-
-        Spacer(
-            modifier = Modifier.height(6.dp)
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(ColorPalette.Neutral.t1000)
-        )
-    }
-}
-
-@Composable
-private fun HeaderBadge(
-    text: String
-) {
-    Box(
-        modifier = Modifier
-            .border(
-                width = 2.dp,
-                color = ColorPalette.Neutral.t1000,
-                shape = RoundedCornerShape(8.dp)
-            )
-            .padding(
-                horizontal = 14.dp,
-                vertical = 5.dp
-            )
-    ) {
-        Text(
-            text = text,
-            style = Typography.labelLarge,
-            color = ColorPalette.Neutral.t1000,
-            textAlign = TextAlign.Center
         )
     }
 }
