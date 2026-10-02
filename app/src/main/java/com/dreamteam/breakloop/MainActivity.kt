@@ -13,6 +13,8 @@ class MainActivity : ComponentActivity() {
         UsageWorkScheduler.schedule(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+
         setContent {
             val navController = rememberNavController()
             BreakLoopTheme {
