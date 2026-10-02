@@ -14,12 +14,19 @@ interface DailyUsageStatsDao {
     fun getDailyUsageStats(date: String): Flow<DailyUsageStatsEntity>
 
     @Query("SELECT * FROM daily_usage_stats WHERE date = :date")
-    fun getDailyUsageStatsOnce(date: String): DailyUsageStatsEntity?
+    suspend fun getDailyUsageStatsOnce(date: String): DailyUsageStatsEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE, entity = DailyUsageStatsEntity::class)
     suspend fun saveDailyUsageStats(dailyUsageStats: DailyUsageStatsEntity)
 
     @Query("SELECT * FROM daily_usage_stats WHERE date >= :dateStart AND date <= :dateEnd ORDER BY date ASC")
     fun getDailyUsageStatsByRange(dateStart: String, dateEnd: String): Flow<List<DailyUsageStatsEntity>>
+
+    @Query("SELECT MIN(date) FROM daily_usage_stats WHERE isPartial = 0")
+    suspend fun getEarliestCompleteDate(): String?
+
+    @Query("SELECT * FROM daily_usage_stats WHERE date >= :dateStart AND date <= :dateEnd ORDER BY date ASC")
+    suspend fun getDailyUsageStatsByRangeOnce(dateStart: String, dateEnd: String): List<DailyUsageStatsEntity>
+
 
 }

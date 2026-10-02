@@ -30,7 +30,6 @@ class BuildWeeklySummaryUseCase{
             }
         }
         val averageLastWeek = lastWeekStats.filter{ !it.isPartial}.map { it.screenTimeMs }.average()
-        val averageLastWeekMs = if (averageLastWeek.isNaN()) null else averageLastWeek.toLong()
         val averageThisWeek = thisWeekStats.filter{ it.date != todayDate && !it.isPartial }.map { it.screenTimeMs }.average()
         val change : Int?
         if(averageLastWeek.isNaN() || averageThisWeek.isNaN()|| averageLastWeek ==0.0){
@@ -41,7 +40,7 @@ class BuildWeeklySummaryUseCase{
         }
         val weeklySummary = WeeklySummary(
             bars = bars,
-            weeklyAverageMs = averageLastWeekMs,
+            weeklyAverageMs = averageThisWeek.toLong(),
             changeVsLastWeekPercent = change,
             mondayDate = mondayDate
         )

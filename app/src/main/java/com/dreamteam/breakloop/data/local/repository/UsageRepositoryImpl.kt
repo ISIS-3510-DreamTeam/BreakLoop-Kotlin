@@ -12,6 +12,7 @@ import com.dreamteam.breakloop.domain.DailyUsageStats
 import com.dreamteam.breakloop.domain.UsageEventsResult
 import com.dreamteam.breakloop.domain.repository.UsageRepository
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -24,7 +25,8 @@ class UsageRepositoryImpl (
     val installedAppsDataSource: InstalledAppsDataSource,
     val aggregateUsageEventsUseCase: AggregateUsageEventsUseCase,
     private val appUsageDao: AppUsageDao,
-    private val dailyUsageStatsDao: DailyUsageStatsDao
+    private val dailyUsageStatsDao: DailyUsageStatsDao,
+    private val calculateBaselineUseCase: CalculateBaselineUseCase
 ): UsageRepository {
     override suspend fun refreshDay(date: String): Boolean {
         return withContext(Dispatchers.IO) {
@@ -54,7 +56,7 @@ class UsageRepositoryImpl (
                         screenTimeMs = foregroundMsTotal,
                         pickups = previous?.pickups?:0,
                         unlocks = previous?.unlocks?:0,
-                        isPartial = false, // TODO: comparar con fecha de instalación
+                        isPartial = result.usageEvents.isEmpty() && date != LocalDate.now().toString(),
                         updatedAt = System.currentTimeMillis()
                     )
                     dailyUsageStatsDao.saveDailyUsageStats(stats.toEntity())
@@ -74,6 +76,28 @@ class UsageRepositoryImpl (
         val result = dailyUsageStatsDao.getDailyUsageStatsByRange(startDate, endDate)
         val domainResultFlow = result.map { list -> list.map { it.toDomain() } }
         return domainResultFlow
+    }
+
+    override suspend fun backfillMissingDays(startDate: LocalDate, endDate: LocalDate) {
+        var date = startDate
+        while (!date.isAfter(endDate)){
+            if(dailyUsageStatsDao.getDailyUsageStatsOnce(date.toString()) == null){
+                refreshDay(date.toString())
+            }
+            date = date.plusDays(1)
+        }
+    }
+    override suspend fun getBaselineMs(): Long? {
+        val firstDay = dailyUsageStatsDao.getEarliestCompleteDate()
+        if (firstDay == null){
+            return null
+        }
+        val firstDateLocalDate = LocalDate.parse(firstDay)
+        val lastDay = firstDateLocalDate.plusDays(6).toString()
+        val days = dailyUsageStatsDao.getDailyUsageStatsByRangeOnce(firstDay, lastDay)
+        val daysMode = days.map { list -> list.toDomain() }
+        return calculateBaselineUseCase.calculate(daysMode)
+
     }
 }
 

@@ -39,28 +39,28 @@ val Typography = Typography(
     displaySmall = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
+        fontSize = 25.sp,
         lineHeight = 15.sp,
         letterSpacing = 0.sp
     ),
 
     // Headline
     headlineLarge = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
         lineHeight = 40.sp,
         letterSpacing = 0.sp
     ),
     headlineMedium = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
         letterSpacing = 0.sp
     ),
     headlineSmall = TextStyle(
-        fontFamily = PlusJakartaSans,
+        fontFamily = SpaceMono,
         fontWeight = FontWeight.Medium,
         fontSize = 24.sp,
         lineHeight = 32.sp,

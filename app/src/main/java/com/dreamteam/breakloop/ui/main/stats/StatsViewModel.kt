@@ -1,6 +1,7 @@
 package com.dreamteam.breakloop.ui.main.stats
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.combine
@@ -11,6 +12,8 @@ import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.BuildWeeklySummaryUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateReductionUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,10 +34,12 @@ class StatsViewModel(
         installedAppsDataSource = InstalledAppsDataSource(application.applicationContext),
         aggregateUsageEventsUseCase = AggregateUsageEventsUseCase(),
         appUsageDao = db.appUsageDao(),
-        dailyUsageStatsDao = db.dailyUsageStatsDao()
+        dailyUsageStatsDao = db.dailyUsageStatsDao(),
+        calculateBaselineUseCase = CalculateBaselineUseCase()
     )
 
     private val buildWeeklySummaryUseCase = BuildWeeklySummaryUseCase()
+    private val calculateReductionUseCase = CalculateReductionUseCase()
 
     private val _uiState = MutableStateFlow<StatsUiState>(StatsUiState.Loading)
     private var refreshJob: Job? = null
@@ -55,7 +60,9 @@ class StatsViewModel(
 
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
+            repository.backfillMissingDays( today.minusDays(7), today.minusDays(1))
             val refresh = repository.refreshDay(todayStr)
+            val baseline = repository.getBaselineMs()
             if (!refresh) {
                 _uiState.value = StatsUiState.NoPermission
                 return@launch
@@ -66,12 +73,15 @@ class StatsViewModel(
                 repository.observeDailyStats(monday.toString(), sunday.toString()),
                 repository.observeDailyStats(lastMonday.toString(), lastSunday.toString())
             ) { apps, thisWeek, lastWeek ->
+                val  summary = buildWeeklySummaryUseCase.buildSummary(
+                    thisWeek, lastWeek, monday, todayStr
+                )
+                val reduction = calculateReductionUseCase.calculate(baseline, summary.weeklyAverageMs)
                 StatsUiState.Content(
                     totalMs = apps.sumOf { it.foregroundMs },
                     apps = apps.sortedByDescending { it.foregroundMs },
-                    weeklySummary = buildWeeklySummaryUseCase.buildSummary(
-                        thisWeek, lastWeek, monday, todayStr
-                    )
+                    weeklySummary = summary,
+                    reduction = reduction
                 )
             }.collect { state ->
                 _uiState.value = state

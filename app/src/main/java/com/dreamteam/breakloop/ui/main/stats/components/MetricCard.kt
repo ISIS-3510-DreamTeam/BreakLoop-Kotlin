@@ -26,7 +26,7 @@ fun MetricCard(
         val valueColor = if (value == "—") ColorPalette.Neutral.t500 else ColorPalette.Neutral.t1000
         Text(
             text = value,
-            style = Typography.displayMedium,
+            style = Typography.displaySmall,
             color = valueColor
         )
         if (supportingText != null) {

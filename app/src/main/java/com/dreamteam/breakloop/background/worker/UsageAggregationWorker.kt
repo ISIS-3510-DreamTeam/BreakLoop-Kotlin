@@ -10,6 +10,7 @@ import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -27,7 +28,8 @@ class UsageAggregationWorker(
                 installedAppsDataSource = InstalledAppsDataSource(this.applicationContext),
                 aggregateUsageEventsUseCase = AggregateUsageEventsUseCase(),
                 appUsageDao =db.appUsageDao(),
-                dailyUsageStatsDao =db.dailyUsageStatsDao()
+                dailyUsageStatsDao =db.dailyUsageStatsDao(),
+                calculateBaselineUseCase = CalculateBaselineUseCase()
             )
             val today = LocalDate.now()
             val yesterday = today.minusDays(1)
