@@ -1,13 +1,22 @@
 package com.dreamteam.breakloop.ui.main.offline
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ListAlt
+import androidx.compose.material.icons.outlined.WifiOff
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,15 +67,47 @@ fun OfflineContent(
             .background(Snow)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         BreakLoopCard(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxWidth()
         ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(ColorPalette.SpicyPaprika.t100, RoundedCornerShape(12.dp))
+                        .border(2.dp, ColorPalette.Neutral.t1000, RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.WifiOff,
+                        contentDescription = null,
+                        tint = ColorPalette.SpicyPaprika.t700,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "OFFLINE MODE",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ColorPalette.SpicyPaprika.t700
+                    )
+                    Text(
+                        text = "What will you do offline?",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = ColorPalette.Neutral.t1000
+                    )
+                }
+            }
             Text(
-                text="What will you do offline?",
-                style = MaterialTheme.typography.headlineMedium,
-                color = ColorPalette.Neutral.t1000
+                text = "Pick something screen-free to recharge.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = ColorPalette.Neutral.t700,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
         SuggestedCard(
@@ -80,13 +121,29 @@ fun OfflineContent(
             selectedCategory = state.selectedCategory,
             onCategorySelected = onCategorySelected
         )
-        for (activity in state.activities){
-            ActivityCard(
-                activity = activity,
-                onClick = { onActivityClick(activity.id) }
-            )
-
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.ListAlt,
+                    contentDescription = null,
+                    tint = ColorPalette.Neutral.t700,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = "ALL ACTIVITIES",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ColorPalette.Neutral.t700
+                )
+            }
+            for (activity in state.activities) {
+                ActivityCard(
+                    activity = activity,
+                    onClick = { onActivityClick(activity.id) }
+                )
+            }
         }
-
     }
 }

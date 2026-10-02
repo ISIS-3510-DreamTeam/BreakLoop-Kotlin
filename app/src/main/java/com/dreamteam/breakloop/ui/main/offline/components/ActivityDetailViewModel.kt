@@ -17,9 +17,10 @@ import kotlinx.coroutines.launch
 
 class ActivityDetailViewModel(
     application: Application,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
 ) : AndroidViewModel(application) {
     private val activityId = savedStateHandle.toRoute<OfflineActivityDetail>().activityId
+
     private val activityRepository =
         ActivityRepositoryImpl(ActivityCatalogDataSource(application.applicationContext))
     private val _uiState = MutableStateFlow<ActivityDetailUiState>(ActivityDetailUiState.Loading)
@@ -44,9 +45,9 @@ class ActivityDetailViewModel(
     }
 
     fun start() {
-        val content = currentContent() ?: return
         timerJob?.cancel() // por si tocan Start dos veces
-        _uiState.value = content.copy(phase = ActivityPhase.RUNNING)
+        val current = _uiState.value as? ActivityDetailUiState.Content ?: return
+        _uiState.value = current.copy(phase = ActivityPhase.RUNNING)
 
         timerJob = viewModelScope.launch {
             while ((currentContent()?.remainingSeconds ?: 0) > 0) {

@@ -19,9 +19,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dreamteam.breakloop.domain.enums.ActivityPhase
+import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.components.LoadingContent
 import com.dreamteam.breakloop.ui.main.stats.components.MetricCard
@@ -118,8 +121,91 @@ fun ActivityDetailScreen(
                          )
                     }
 
-                    // TODO paso 2: temporizador y botón "Start & Log"
-                    // (usa state.phase, state.remainingSeconds, viewModel.start() y viewModel.finish())
+                    // Acción / temporizador según la fase de la actividad
+                    when (state.phase) {
+                         ActivityPhase.READY -> {
+                              Column(
+                                   verticalArrangement = Arrangement.spacedBy(8.dp)
+                              ) {
+                                   Text(
+                                        text = "Put your phone away and give this your full attention.",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = ColorPalette.Neutral.t700
+                                   )
+                                   BreakLoopButton(
+                                        text = "Start & Log Activity",
+                                        onClick = viewModel::start
+                                   )
+                              }
+                         }
+
+                         ActivityPhase.RUNNING -> {
+                              Column(
+                                   verticalArrangement = Arrangement.spacedBy(12.dp)
+                              ) {
+                                   BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+                                        Column(
+                                             modifier = Modifier.fillMaxWidth(),
+                                             horizontalAlignment = Alignment.CenterHorizontally,
+                                             verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                             Text(
+                                                  text = "IN PROGRESS",
+                                                  style = MaterialTheme.typography.labelSmall,
+                                                  color = ColorPalette.Neutral.t700
+                                             )
+                                             Text(
+                                                  text = "%02d:%02d".format(
+                                                       state.remainingSeconds / 60,
+                                                       state.remainingSeconds % 60
+                                                  ),
+                                                  style = MaterialTheme.typography.displayMedium,
+                                                  color = categoryColor(activity.category)
+                                             )
+                                             Text(
+                                                  text = "Put your phone face down. You've got this.",
+                                                  style = MaterialTheme.typography.bodyMedium,
+                                                  color = ColorPalette.Neutral.t700,
+                                                  textAlign = TextAlign.Center
+                                             )
+                                        }
+                                   }
+                                   BreakLoopButton(
+                                        text = "I'm done",
+                                        onClick = viewModel::finish
+                                   )
+                              }
+                         }
+
+                         ActivityPhase.COMPLETED -> {
+                              Column(
+                                   verticalArrangement = Arrangement.spacedBy(12.dp)
+                              ) {
+                                   BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+                                        Column(
+                                             modifier = Modifier.fillMaxWidth(),
+                                             horizontalAlignment = Alignment.CenterHorizontally,
+                                             verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                             Text(
+                                                  text = "NICE WORK",
+                                                  style = MaterialTheme.typography.labelSmall,
+                                                  color = ColorPalette.Fern.t500
+                                             )
+                                             Text(
+                                                  text = "+${activity.xp} XP earned!",
+                                                  style = MaterialTheme.typography.headlineSmall,
+                                                  color = ColorPalette.Fern.t500
+                                             )
+                                        }
+                                   }
+                                   BreakLoopButton(
+                                        text = "Back to activities",
+                                        onClick = onBack
+                                   )
+                              }
+                         }
+                    }
                }
           }
      }

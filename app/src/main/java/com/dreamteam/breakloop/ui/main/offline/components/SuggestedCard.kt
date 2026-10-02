@@ -4,9 +4,16 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.domain.Recommendation
@@ -28,13 +35,25 @@ fun SuggestedCard(
     BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "SUGGESTED FOR RIGHT NOW ",
-                style = Typography.labelSmall,
-                color = ColorPalette.SpicyPaprika.t700
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome,
+                    contentDescription = null,
+                    tint = ColorPalette.SpicyPaprika.t700,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = "SUGGESTED FOR RIGHT NOW",
+                    style = Typography.labelSmall,
+                    color = ColorPalette.SpicyPaprika.t700
+                )
+            }
             if (!isWeatherAvailable) {
                 Text(
                     text = "OFFLINE-BASED",
@@ -84,11 +103,33 @@ fun SuggestedCard(
                 style = Typography.bodySmall,
                 color = ColorPalette.Fern.t500
             )
-            Text(
-                text = "${suggestion.activity.durationMin} MIN · +${suggestion.activity.xp} XP",
-                style = Typography.labelSmall,
-                color = ColorPalette.Neutral.t700
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Timer,
+                    contentDescription = null,
+                    tint = ColorPalette.Neutral.t700,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = "${suggestion.activity.durationMin} MIN ·",
+                    style = Typography.labelSmall,
+                    color = ColorPalette.Neutral.t700
+                )
+                Icon(
+                    imageVector = Icons.Outlined.Bolt,
+                    contentDescription = null,
+                    tint = ColorPalette.Fern.t500,
+                    modifier = Modifier.size(14.dp)
+                )
+                Text(
+                    text = "+${suggestion.activity.xp} XP",
+                    style = Typography.labelSmall,
+                    color = ColorPalette.Fern.t500
+                )
+            }
             BreakLoopButton(
                 text = "Do this now",
                 onClick = { onActivityClick(suggestion.activity.id) }
