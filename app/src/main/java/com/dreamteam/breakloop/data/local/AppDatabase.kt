@@ -7,14 +7,20 @@ import androidx.room.RoomDatabase
 import com.dreamteam.breakloop.data.local.dao.ActivityLogDao
 import com.dreamteam.breakloop.data.local.dao.AppUsageDao
 import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao
+import com.dreamteam.breakloop.data.local.dao.FocusSessionDao
 import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
-
+import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
 
 @Database(
-    entities = [DailyUsageStatsEntity::class, AppUsageEntity::class, ActivityLogEntity::class],
-    version = 2,
+    entities = [
+        DailyUsageStatsEntity::class,
+        AppUsageEntity::class,
+        ActivityLogEntity::class,
+        FocusSessionEntity::class
+    ],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -23,19 +29,29 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun appUsageDao(): AppUsageDao
     abstract fun activityLogDao(): ActivityLogDao
 
+    abstract fun focusSessionDao(): FocusSessionDao
+
     companion object {
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        fun getInstance(context: Context): AppDatabase {
+        fun getInstance(
+            context: Context
+        ): AppDatabase {
             return INSTANCE ?: synchronized(this) {
+
                 val instance = INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "breakloop.db"
-                ).fallbackToDestructiveMigration(true).build().also {
-                    INSTANCE = it
-                }
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also {
+                        INSTANCE = it
+                    }
+
                 instance
             }
         }
