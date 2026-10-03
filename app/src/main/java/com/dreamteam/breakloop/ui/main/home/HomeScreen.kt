@@ -24,9 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
+import com.dreamteam.breakloop.ui.components.LoadingContent
 import com.dreamteam.breakloop.ui.main.home.components.GoalDialog
 import com.dreamteam.breakloop.ui.main.home.components.ScreenTimeGoalCard
-import com.dreamteam.breakloop.ui.main.stats.LoadingContent
 import com.dreamteam.breakloop.ui.main.stats.NoPermissionContent
 
 @Composable

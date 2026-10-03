@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dreamteam.breakloop.data.goal.DataStoreGoalRepository
 import com.dreamteam.breakloop.data.local.AppDatabase
-import com.dreamteam.breakloop.data.local.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
