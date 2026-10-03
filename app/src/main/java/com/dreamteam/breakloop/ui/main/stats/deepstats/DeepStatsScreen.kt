@@ -48,10 +48,6 @@ fun DeepStatsScreen(
             .fillMaxSize()
             .background(Snow)
     ) {
-        TopBar(
-            title = "Deep Stats",
-            onSignOut = onSignOut
-        )
 
         when (val state = uiState) {
             DeepStatsUiState.Loading -> {
