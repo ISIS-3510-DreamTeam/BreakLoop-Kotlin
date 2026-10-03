@@ -1,10 +1,13 @@
 package com.dreamteam.breakloop.data.system
 
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Build
 import android.os.Process
+import androidx.core.content.ContextCompat
 
 class PermissionsDataSource (
     private val context: Context
@@ -24,5 +27,9 @@ class PermissionsDataSource (
             else -> false
         }
         return answer
+    }
+    fun hasLocationAccess(): Boolean{
+        return ContextCompat.checkSelfPermission(context, ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
+
     }
 }

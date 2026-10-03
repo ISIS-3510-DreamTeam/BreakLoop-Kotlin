@@ -1,23 +1,11 @@
 package com.dreamteam.breakloop
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
 import com.dreamteam.breakloop.background.worker.UsageWorkScheduler
-import com.dreamteam.breakloop.data.system.ActivityCatalogDataSource
-import com.dreamteam.breakloop.domain.ContextSnapshot
-import com.dreamteam.breakloop.domain.enums.ActivityCategory
-import com.dreamteam.breakloop.domain.enums.TimeOfDay
-import com.dreamteam.breakloop.domain.enums.WeatherCondition
-import com.dreamteam.breakloop.domain.recommendation.DurationRule
-import com.dreamteam.breakloop.domain.recommendation.InterestRule
-import com.dreamteam.breakloop.domain.recommendation.RecentRepeatRule
-import com.dreamteam.breakloop.domain.recommendation.TimeOfDayRule
-import com.dreamteam.breakloop.domain.recommendation.WeatherRule
-import com.dreamteam.breakloop.domain.usecase.RecommendActivityUseCase
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 
 class MainActivity : ComponentActivity() {
@@ -25,7 +13,6 @@ class MainActivity : ComponentActivity() {
         UsageWorkScheduler.schedule(this)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
 
         setContent {
             val navController = rememberNavController()
