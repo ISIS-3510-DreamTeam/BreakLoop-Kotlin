@@ -37,7 +37,7 @@ fun ScreenTimeGoalCard(
         is GoalProgress.NearLimit -> { val percent = progress.usedMs * 100 / progress.goalMs
             "$percent% of your goal · ${formatDuration(progress.remainingMs)} left" to ColorPalette.GoldenOrange.t500 }
         is GoalProgress.Exceeded -> { val percent = progress.usedMs * 100 / progress.goalMs
-            "$percent% over your goal · ${formatDuration(progress.exceededMs)} left" to ColorPalette.SpicyPaprika.t500 }
+            "$percent% over your goal · ${formatDuration(progress.exceededMs)}" to ColorPalette.SpicyPaprika.t500 }
     }
 
     BreakLoopCard(modifier = modifier) {
