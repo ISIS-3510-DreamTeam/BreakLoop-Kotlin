@@ -1,47 +1,60 @@
 package com.dreamteam.breakloop
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.rememberNavController
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.dreamteam.breakloop.background.worker.UsageAggregationWorker
+import com.dreamteam.breakloop.background.worker.UsageWorkScheduler
+import com.dreamteam.breakloop.data.remote.WeatherApiFactory
+import com.dreamteam.breakloop.data.system.LocationDataSource
+import com.dreamteam.breakloop.data.system.PermissionsDataSource
+import com.dreamteam.breakloop.domain.enums.WeatherCondition
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        UsageWorkScheduler.schedule(this)
+        WorkManager.getInstance(this).enqueueUniqueWork("usage_aggregation_on_open",
+            ExistingWorkPolicy.KEEP,OneTimeWorkRequestBuilder<UsageAggregationWorker>().build(),)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            BreakLoopTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+
+        lifecycleScope.launch {
+            val permissionsDataSource = PermissionsDataSource(applicationContext)
+            val locationDataSource = LocationDataSource(applicationContext, permissionsDataSource)
+
+            val coords = locationDataSource.getApproximateLocation()
+            Log.d("LocationTest", "Coordenadas obtenidas: $coords")
+
+            if (coords != null) {
+                try {
+                    val weatherApi = WeatherApiFactory.create()
+                    val response = weatherApi.getCurrentWeather(coords.latitude, coords.longitude)
+                    val code = response.current.weatherCode
+                    val condition = WeatherCondition.fromWmoCode(code)
+                    Log.d("WeatherTest", "Código WMO: $code -> Condición: $condition")
+                } catch (e: Exception) {
+                    Log.e("WeatherTest", "Error al obtener el clima", e)
                 }
+            } else {
+                Log.w("LocationTest", "No se obtuvo ubicación (verifica permisos y configuración de ubicación del emulador)")
+            }
+        }
+
+        setContent {
+            val navController = rememberNavController()
+            BreakLoopTheme {
+                BreakLoopApp()
             }
         }
     }
 }
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    BreakLoopTheme {
-        Greeting("Android")
-    }
-}
+// TODO: acá debe vivir el splash
