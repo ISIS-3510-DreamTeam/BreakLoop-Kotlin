@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.ui.layout
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,12 +34,13 @@ fun TopBar(
     title: String,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
+    streakDays: Int = 0,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(ColorPalette.Neutral.Snow)
-            .statusBarsPadding()                       // don't draw under the clock/battery
+            .statusBarsPadding()
             .padding(horizontal = 24.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -53,7 +55,6 @@ fun TopBar(
             )
             Spacer(Modifier.width(10.dp))
 
-            // weight(1f) = take all the space left, which pushes the icon to the right edge
             Column(Modifier.weight(1f)) {
                 Text("BREAKLOOP", style = Typography.headlineSmall, color = ColorPalette.Neutral.t850)
                 Text(title.uppercase(), style = Typography.headlineMedium, color = ColorPalette.Neutral.t850)
@@ -71,8 +72,8 @@ fun TopBar(
         Spacer(Modifier.height(3.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            HeaderBadge(text = "🛡️ Shield Test")
-            HeaderBadge(text = "🔥 18d")
+            HeaderBadge(text = "Shield Test", icon = R.drawable.ic_shield)
+            HeaderBadge(text = "${streakDays}d", icon = R.drawable.ic_streak)
         }
 
         Spacer(Modifier.height(6.dp))
@@ -88,25 +89,32 @@ fun TopBar(
 
 @Composable
 private fun HeaderBadge(
-    text: String
+    text: String,
+    @DrawableRes icon: Int? = null,
 ) {
-    Box(
+    Row(
         modifier = Modifier
             .border(
                 width = 2.dp,
                 color = ColorPalette.Neutral.t1000,
                 shape = RoundedCornerShape(8.dp)
             )
-            .padding(
-                horizontal = 14.dp,
-                vertical = 5.dp
-            )
+            .padding(horizontal = 14.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = ColorPalette.Neutral.t1000,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(Modifier.width(6.dp))
+        }
         Text(
             text = text,
             style = Typography.labelLarge,
             color = ColorPalette.Neutral.t1000,
-            textAlign = TextAlign.Center
         )
     }
 }

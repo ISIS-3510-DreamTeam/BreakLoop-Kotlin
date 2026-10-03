@@ -7,6 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import com.dreamteam.breakloop.background.worker.UsageAggregationWorker
 import com.dreamteam.breakloop.background.worker.UsageWorkScheduler
 import com.dreamteam.breakloop.data.remote.WeatherApiFactory
 import com.dreamteam.breakloop.data.system.LocationDataSource
@@ -18,6 +22,8 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         UsageWorkScheduler.schedule(this)
+        WorkManager.getInstance(this).enqueueUniqueWork("usage_aggregation_on_open",
+            ExistingWorkPolicy.KEEP,OneTimeWorkRequestBuilder<UsageAggregationWorker>().build(),)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 

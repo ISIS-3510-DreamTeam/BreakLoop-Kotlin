@@ -10,9 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.dreamteam.breakloop.data.auth.FirebaseAuthRepository
 import com.dreamteam.breakloop.ui.layout.NavBar
+import com.dreamteam.breakloop.ui.layout.StreakViewModel
 import com.dreamteam.breakloop.ui.layout.TopBar
 import com.dreamteam.breakloop.ui.navigation.AppNavHost
 import com.dreamteam.breakloop.ui.navigation.currentTopLevelDestination
@@ -32,9 +34,10 @@ fun BreakLoopApp() {
 }
 
 @Composable
-fun BreakLoopAppContent(isLoggedIn: Boolean, onSignOut: () -> Unit = {},) {
+fun BreakLoopAppContent(isLoggedIn: Boolean, onSignOut: () -> Unit = {}, streakViewModel: StreakViewModel = viewModel()) {
     val navController = rememberNavController()
     val currentTab = navController.currentTopLevelDestination()
+    val streakDays by streakViewModel.streakDays.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -42,6 +45,7 @@ fun BreakLoopAppContent(isLoggedIn: Boolean, onSignOut: () -> Unit = {},) {
                 TopBar(
                     title = stringResource(currentTab.label),
                     onSignOut = onSignOut,
+                    streakDays = streakDays,
                 )
             }
         },
