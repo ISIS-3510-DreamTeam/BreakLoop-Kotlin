@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.dreamteam.breakloop.background.notification.GoalExceededChecker
 import com.dreamteam.breakloop.data.local.AppDatabase
 import com.dreamteam.breakloop.data.local.repository.UsageRepositoryImpl
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
@@ -43,6 +44,9 @@ class UsageAggregationWorker(
                 repositoryImpl.refreshDay(yesterday.toString())
             }
             repositoryImpl.refreshDay(today.toString())
+            val usedMs = db.dailyUsageStatsDao()
+                .getDailyUsageStatsOnce(today.toString())?.screenTimeMs ?: 0L
+            GoalExceededChecker(applicationContext).check(usedMs, today.toString())
             Log.d("UsageAggregationWorker", "Usage aggregation completed successfully")
             Result.success()
         }
