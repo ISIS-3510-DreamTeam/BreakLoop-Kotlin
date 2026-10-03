@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.dreamteam.breakloop.data.local.dao.ActivityLogDao
 import com.dreamteam.breakloop.data.local.dao.AppUsageDao
 import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao
 import com.dreamteam.breakloop.data.local.dao.FocusSessionDao
+import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
 import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
@@ -15,6 +17,7 @@ import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
     entities = [
         DailyUsageStatsEntity::class,
         AppUsageEntity::class,
+        ActivityLogEntity::class,
         FocusSessionEntity::class
     ],
     version = 3,
@@ -23,8 +26,8 @@ import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun dailyUsageStatsDao(): DailyUsageStatsDao
-
     abstract fun appUsageDao(): AppUsageDao
+    abstract fun activityLogDao(): ActivityLogDao
 
     abstract fun focusSessionDao(): FocusSessionDao
 
