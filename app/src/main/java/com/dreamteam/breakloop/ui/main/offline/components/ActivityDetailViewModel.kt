@@ -5,9 +5,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.repository.ActivityLogRepositoryImpl
 import com.dreamteam.breakloop.data.repository.ActivityRepositoryImpl
+import com.dreamteam.breakloop.data.repository.ContextProviderImpl
 import com.dreamteam.breakloop.data.system.ActivityCatalogDataSource
+import com.dreamteam.breakloop.data.system.InterestsDataSource
 import com.dreamteam.breakloop.domain.enums.ActivityPhase
+import com.dreamteam.breakloop.domain.enums.ActivitySource
+import com.dreamteam.breakloop.domain.repository.ActivityLogRepository
 import com.dreamteam.breakloop.ui.navigation.OfflineActivityDetail
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,10 +25,21 @@ class ActivityDetailViewModel(
     application: Application,
     savedStateHandle: SavedStateHandle,
 ) : AndroidViewModel(application) {
-    private val activityId = savedStateHandle.toRoute<OfflineActivityDetail>().activityId
+    private val route = savedStateHandle.toRoute<OfflineActivityDetail>()
+    private val activityId = route.activityId
+
+    private val source = if(route.fromSuggestion) ActivitySource.RECOMMENDED else ActivitySource.BROWSED
 
     private val activityRepository =
         ActivityRepositoryImpl(ActivityCatalogDataSource(application.applicationContext))
+
+    private val db = AppDatabase.getInstance(application.applicationContext)
+    private val activityLogRepository = ActivityLogRepositoryImpl(db.activityLogDao())
+    private val contextProvider =
+        ContextProviderImpl(InterestsDataSource(application.applicationContext),
+            activityLogRepository)
+
+    private var logId: String? = null
     private val _uiState = MutableStateFlow<ActivityDetailUiState>(ActivityDetailUiState.Loading)
 
     val uiState = _uiState.asStateFlow()
@@ -43,12 +60,21 @@ class ActivityDetailViewModel(
             }
         }
     }
-
+    private fun saveComplexion(xp: Int){
+        val id =  logId?: return
+        viewModelScope.launch {
+            activityLogRepository.completeLog(id, xp)
+        }
+    }
     fun start() {
         timerJob?.cancel() // por si tocan Start dos veces
         val current = _uiState.value as? ActivityDetailUiState.Content ?: return
         _uiState.value = current.copy(phase = ActivityPhase.RUNNING)
 
+        viewModelScope.launch {
+            val snapshot = contextProvider.getSnapshot(current.activity.durationMin)
+            logId = activityLogRepository.startLog(current.activity.id, source, snapshot)
+        }
         timerJob = viewModelScope.launch {
             while ((currentContent()?.remainingSeconds ?: 0) > 0) {
                 delay(1000)
@@ -57,7 +83,7 @@ class ActivityDetailViewModel(
             }
             val current = currentContent() ?: return@launch
             _uiState.value = current.copy(phase = ActivityPhase.COMPLETED)
-            // TODO OFF-09: guardar el registro con su XP
+            saveComplexion(current.activity.xp)
         }
     }
 
@@ -65,7 +91,7 @@ class ActivityDetailViewModel(
         timerJob?.cancel()
         val current = currentContent() ?: return
         _uiState.value = current.copy(phase = ActivityPhase.COMPLETED)
-        // TODO OFF-09: guardar el registro
+        saveComplexion(current.activity.xp)
     }
 
     private fun currentContent(): ActivityDetailUiState.Content? =

@@ -3,18 +3,31 @@ package com.dreamteam.breakloop.ui.main.stats
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.LockReset
+import androidx.compose.material.icons.outlined.TrendingDown
+import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,6 +36,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -34,7 +49,6 @@ import com.dreamteam.breakloop.ui.main.stats.components.MetricCard
 import com.dreamteam.breakloop.ui.main.stats.components.WeeklyBars
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.ColorPalette.Neutral.Snow
-import com.dreamteam.breakloop.ui.theme.Typography
 import com.dreamteam.breakloop.ui.util.formatDuration
 import kotlin.math.abs
 
@@ -96,27 +110,56 @@ fun StatsContent(
             .background(Snow)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         // Encabezado
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Your Progress",
-                    style = Typography.headlineMedium
-                )
-                Text(
-                    text = "Mindful reduction metrics vs baseline",
-                    style = Typography.bodyMedium,
-                    color = ColorPalette.GoldenOrange.t500
-                )
+        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(ColorPalette.GoldenOrange.t100, RoundedCornerShape(12.dp))
+                        .border(2.dp, ColorPalette.Neutral.t1000, RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Insights,
+                        contentDescription = null,
+                        tint = ColorPalette.GoldenOrange.t500,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "YOUR PROGRESS",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ColorPalette.GoldenOrange.t500
+                    )
+                    Text(
+                        text = "Mindful reduction metrics",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = ColorPalette.Neutral.t1000
+                    )
+                }
             }
-            TextButton(onClick = onDeepStatsClick) {
-                Text(text = "Deep Stats →")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "vs baseline, this week",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ColorPalette.Neutral.t700
+                )
+                TextButton(onClick = onDeepStatsClick) {
+                    Text(text = "Deep Stats →")
+                }
             }
         }
 
@@ -162,77 +205,158 @@ fun StatsContent(
 
         // Gráfica semanal
         BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Weekly Screen Rhythm",
-                style = Typography.displaySmall
-            )
-            WeeklyBars(weeklySummary = content.weeklySummary)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SectionHeader(
+                    icon = Icons.Outlined.CalendarToday,
+                    label = "WEEKLY SCREEN RHYTHM"
+                )
+                WeeklyBars(weeklySummary = content.weeklySummary)
 
-            val averageMs = content.weeklySummary.weeklyAverageMs
-            val averageText = if (averageMs != null) formatDuration(averageMs) else "—"
-            Text(
-                text = "Average: $averageText",
-                style = Typography.bodyMedium
-            )
-
-
-        }
-
-        // Tamed Distraction Loops
-        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "Tamed Distraction Loops",
-                style = Typography.displaySmall
-            )
-            Text(
-                text = "Available when you mark your special apps",
-                style = Typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            for (app in content.apps) {
+                val averageMs = content.weeklySummary.weeklyAverageMs
+                val averageText = if (averageMs != null) formatDuration(averageMs) else "—"
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = app.packageName)
-                    Text(text = formatDuration(app.foregroundMs))
+                    Icon(
+                        imageVector = Icons.Outlined.BarChart,
+                        contentDescription = null,
+                        tint = ColorPalette.Neutral.t700,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = "Average: $averageText",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ColorPalette.Neutral.t700
+                    )
                 }
             }
         }
 
+        // Tamed Distraction Loops
         BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
-            // Reducción vs. baseline
-            Text(
-                text = "Reduction vs. baseline:",
-                style = Typography.labelSmall
-            )
-
-            val reduction = content.reduction
-            if (reduction ==null){
-                Text(text= "Calculating your baseline...")
-            } else {
-                val direction = if (reduction.changePercent < 0) "lower" else "higher"
-                Text(text = "Your weekly average is ${abs(reduction.changePercent)}% $direction than your baseline",
-                    style = Typography.bodyMedium,
-                    color = ColorPalette.Neutral.t1000
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SectionHeader(
+                    icon = Icons.Outlined.LockReset,
+                    label = "TAMED DISTRACTION LOOPS"
                 )
-                Text(text = "Baseline: ${formatDuration(reduction.baselineMs)} / day",
-                    style = Typography.bodySmall,
-                    color = ColorPalette.Neutral.t700)
-                LinearProgressIndicator(
-                    progress = { reduction.progressTowardTarget },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = ColorPalette.Fern.t500,
-                    trackColor = ColorPalette.Neutral.t100
-                )
-
                 Text(
-                    text = "Progress toward the -20% goal",
-                    style = Typography.labelSmall,
+                    text = "Available when you mark your special apps",
+                    style = MaterialTheme.typography.bodySmall,
                     color = ColorPalette.Neutral.t700
                 )
+
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    content.apps.forEachIndexed { index, app ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(ColorPalette.Neutral.t100, RoundedCornerShape(6.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Apps,
+                                        contentDescription = null,
+                                        tint = ColorPalette.Neutral.t700,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                Text(
+                                    text = app.packageName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = ColorPalette.Neutral.t1000
+                                )
+                            }
+                            Text(
+                                text = formatDuration(app.foregroundMs),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = ColorPalette.SpicyPaprika.t700
+                            )
+                        }
+                        if (index != content.apps.lastIndex) {
+                            HorizontalDivider(color = ColorPalette.Neutral.t100)
+                        }
+                    }
+                }
             }
         }
+
+        // Reducción vs. baseline
+        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+            val reduction = content.reduction
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SectionHeader(
+                    icon = if (reduction != null && reduction.changePercent < 0) {
+                        Icons.Outlined.TrendingDown
+                    } else {
+                        Icons.Outlined.TrendingUp
+                    },
+                    label = "REDUCTION VS. BASELINE"
+                )
+
+                if (reduction == null) {
+                    Text(
+                        text = "Calculating your baseline...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ColorPalette.Neutral.t700
+                    )
+                } else {
+                    val direction = if (reduction.changePercent < 0) "lower" else "higher"
+                    Text(
+                        text = "Your weekly average is ${abs(reduction.changePercent)}% $direction than your baseline",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ColorPalette.Neutral.t1000
+                    )
+                    Text(
+                        text = "Baseline: ${formatDuration(reduction.baselineMs)} / day",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ColorPalette.Neutral.t700
+                    )
+                    LinearProgressIndicator(
+                        progress = { reduction.progressTowardTarget },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                            .clip(RoundedCornerShape(50)),
+                        color = ColorPalette.Fern.t500,
+                        trackColor = ColorPalette.Neutral.t100
+                    )
+                    Text(
+                        text = "Progress toward the -20% goal",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = ColorPalette.Neutral.t700
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionHeader(icon: ImageVector, label: String) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = ColorPalette.Neutral.t700,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = ColorPalette.Neutral.t700
+        )
     }
 }

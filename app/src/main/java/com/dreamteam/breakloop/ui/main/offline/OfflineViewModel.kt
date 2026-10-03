@@ -7,6 +7,8 @@ import com.dreamteam.breakloop.data.system.ActivityCatalogDataSource
 import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
+import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.repository.ActivityLogRepositoryImpl
 import com.dreamteam.breakloop.data.repository.ContextProviderImpl
 import com.dreamteam.breakloop.data.system.InterestsDataSource
 import com.dreamteam.breakloop.domain.recommendation.DefaultScoringRules
@@ -30,8 +32,11 @@ class OfflineViewModel(
     private val _uiState = MutableStateFlow<OfflineUiState>(OfflineUiState.Loading)
     private var availableMin = 15
     private var selectedCategory: ActivityCategory? = null
+    private val db = AppDatabase.getInstance(application.applicationContext)
+    private val activityLogRepository = ActivityLogRepositoryImpl(db.activityLogDao())
     private val contextProvider = ContextProviderImpl(
-        InterestsDataSource(application.applicationContext)
+        InterestsDataSource(application.applicationContext),
+        activityLogRepository
     )
 
     val uiState : StateFlow<OfflineUiState> = _uiState
