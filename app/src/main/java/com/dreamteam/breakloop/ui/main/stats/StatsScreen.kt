@@ -43,25 +43,42 @@ fun StatsScreen(
     viewModel: StatsViewModel = viewModel(),
     onDeepStatsClick: () -> Unit = {}
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LifecycleResumeEffect(Unit){
+
+    LifecycleResumeEffect(Unit) {
         viewModel.refresh()
-        onPauseOrDispose {  }
+
+        onPauseOrDispose {
+        }
     }
+
     when (val state = uiState) {
-        StatsUiState.Loading -> LoadingContent(modifier = modifier)
-        StatsUiState.NoPermission -> NoPermissionContent(modifier = modifier)
-        is StatsUiState.Content -> StatsContent(
-            content = state,
-            onDeepStatsClick = onDeepStatsClick,
-            modifier = modifier
-        )
+        StatsUiState.Loading -> {
+            LoadingContent(
+                modifier = modifier
+            )
+        }
+
+        StatsUiState.NoPermission -> {
+            NoPermissionContent(
+                modifier = modifier
+            )
+        }
+
+        is StatsUiState.Content -> {
+            StatsContent(
+                content = state,
+                onDeepStatsClick = onDeepStatsClick,
+                modifier = modifier
+            )
+        }
     }
 }
 
 @Composable
-fun LoadingContent(modifier: Modifier = Modifier) {
+fun LoadingContent(
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -69,28 +86,42 @@ fun LoadingContent(modifier: Modifier = Modifier) {
         CircularProgressIndicator()
     }
 }
-@Composable
-fun NoPermissionContent(modifier: Modifier = Modifier) {
 
+@Composable
+fun NoPermissionContent(
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
+
     Column(
-        modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "We don't have permission to access your data and it is necessary to measure your screentime ",
+            text = "We don't have permission to access your data and it is necessary to measure your screentime",
             style = MaterialTheme.typography.headlineMedium,
             color = ColorPalette.GoldenOrange.t500
         )
+
         Button(
-            onClick = { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) },
-            colors = ButtonDefaults.buttonColors( containerColor = ColorPalette.SpicyPaprika.t500)
+            onClick = {
+                context.startActivity(
+                    Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                )
+            },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ColorPalette.SpicyPaprika.t500
+            )
         ) {
-            Text(text = "Give access")
+            Text(
+                text = "Give access"
+            )
         }
     }
 }
-
 
 @Composable
 fun StatsContent(
@@ -106,7 +137,8 @@ fun StatsContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Encabezado
+
+        // Header de estadísticas
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -117,20 +149,34 @@ fun StatsContent(
                     text = "Your Progress",
                     style = Typography.headlineMedium
                 )
+
                 Text(
                     text = "Mindful reduction metrics vs baseline",
                     style = Typography.bodyMedium,
                     color = ColorPalette.GoldenOrange.t500
                 )
             }
-            TextButton(onClick = onDeepStatsClick) {
-                Text(text = "Deep Stats →")
+
+            TextButton(
+                onClick = onDeepStatsClick
+            ) {
+                Text(
+                    text = "Deep Stats →"
+                )
             }
         }
 
-        // Tarjetas
-        val percentChange = content.weeklySummary.changeVsLastWeekPercent
-        val changeText = if (percentChange == null) "good start!" else "${percentChange}% vs last week"
+        // Métricas principales
+
+        val percentChange =
+            content.weeklySummary.changeVsLastWeekPercent
+
+        val changeText =
+            if (percentChange == null) {
+                "good start!"
+            } else {
+                "${percentChange}% vs last week"
+            }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -142,10 +188,11 @@ fun StatsContent(
                 supportingText = changeText,
                 modifier = Modifier.weight(1f)
             )
+
             MetricCard(
                 label = "Focus minutes",
                 value = "—",
-                supportingText = "sprint 3**",
+                supportingText = "sprint 3",
                 modifier = Modifier.weight(1f)
             )
         }
@@ -160,6 +207,7 @@ fun StatsContent(
                 supportingText = "days under target",
                 modifier = Modifier.weight(1f)
             )
+
             MetricCard(
                 label = "Best streak",
                 value = "—",
@@ -169,29 +217,45 @@ fun StatsContent(
         }
 
         // Gráfica semanal
-        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+
+        BreakLoopCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(
                 text = "Weekly Screen Rhythm",
                 style = Typography.displaySmall
             )
-            WeeklyBars(weeklySummary = content.weeklySummary)
 
-            val averageMs = content.weeklySummary.weeklyAverageMs
-            val averageText = if (averageMs != null) formatDuration(averageMs) else "—"
+            WeeklyBars(
+                weeklySummary = content.weeklySummary
+            )
+
+            val averageMs =
+                content.weeklySummary.weeklyAverageMs
+
+            val averageText =
+                if (averageMs != null) {
+                    formatDuration(averageMs)
+                } else {
+                    "—"
+                }
+
             Text(
                 text = "Average: $averageText",
                 style = Typography.bodyMedium
             )
-
-
         }
 
         // Tamed Distraction Loops
-        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+
+        BreakLoopCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(
                 text = "Tamed Distraction Loops",
                 style = Typography.displaySmall
             )
+
             Text(
                 text = "Available when you mark your special apps",
                 style = Typography.bodySmall,
@@ -203,33 +267,61 @@ fun StatsContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = app.packageName)
-                    Text(text = formatDuration(app.foregroundMs))
+                    Text(
+                        text = app.packageName
+                    )
+
+                    Text(
+                        text = formatDuration(app.foregroundMs)
+                    )
                 }
             }
         }
 
-        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
-            // Reducción vs. baseline
+        // Reducción vs baseline
+
+        BreakLoopCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(
                 text = "Reduction vs. baseline:",
                 style = Typography.labelSmall
             )
 
             val reduction = content.reduction
-            if (reduction ==null){
-                Text(text= "Calculating your baseline...")
+
+            if (reduction == null) {
+                Text(
+                    text = "Calculating your baseline..."
+                )
             } else {
-                val direction = if (reduction.changePercent < 0) "lower" else "higher"
-                Text(text = "Your weekly average is ${abs(reduction.changePercent)}% $direction than your baseline",
+                val direction =
+                    if (reduction.changePercent < 0) {
+                        "lower"
+                    } else {
+                        "higher"
+                    }
+
+                Text(
+                    text = "Your weekly average is ${
+                        abs(reduction.changePercent)
+                    }% $direction than your baseline",
                     style = Typography.bodyMedium,
                     color = ColorPalette.Neutral.t1000
                 )
-                Text(text = "Baseline: ${formatDuration(reduction.baselineMs)} / day",
+
+                Text(
+                    text = "Baseline: ${
+                        formatDuration(reduction.baselineMs)
+                    } / day",
                     style = Typography.bodySmall,
-                    color = ColorPalette.Neutral.t700)
+                    color = ColorPalette.Neutral.t700
+                )
+
                 LinearProgressIndicator(
-                    progress = { reduction.progressTowardTarget },
+                    progress = {
+                        reduction.progressTowardTarget
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     color = ColorPalette.Fern.t500,
                     trackColor = ColorPalette.Neutral.t100

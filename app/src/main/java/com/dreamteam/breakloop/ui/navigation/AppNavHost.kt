@@ -12,9 +12,14 @@ import com.dreamteam.breakloop.ui.main.friends.FriendsScreen
 import com.dreamteam.breakloop.ui.main.home.HomeScreen
 import com.dreamteam.breakloop.ui.main.offline.OfflineScreen
 import com.dreamteam.breakloop.ui.main.stats.StatsScreen
+import com.dreamteam.breakloop.ui.main.stats.deepstats.DeepStatsScreen
 
 @Composable
-fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: Modifier = Modifier) {
+fun AppNavHost(
+    navController: NavHostController,
+    isLoggedIn: Boolean,
+    modifier: Modifier = Modifier
+) {
     NavHost(
         navController = navController,
         startDestination = if (isLoggedIn) MainGraph else AuthGraph,
@@ -24,23 +29,41 @@ fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: 
             composable<Splash> {
                 // TODO: splash screen
             }
+
             composable<Login> {
                 AuthScreen()
             }
         }
+
         navigation<MainGraph>(startDestination = Home) {
             composable<Home> {
                 HomeScreen()
             }
+
             composable<Focus> {
                 FocusScreen()
             }
+
             composable<Stats> {
-                StatsScreen()
+                StatsScreen(
+                    onDeepStatsClick = {
+                        navController.navigate(DeepStats)
+                    }
+                )
             }
+
+            composable<DeepStats> {
+                DeepStatsScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             composable<Offline> {
                 OfflineScreen()
             }
+
             composable<Friends> {
                 FriendsScreen()
             }
