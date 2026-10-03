@@ -12,5 +12,6 @@ sealed interface OfflineUiState {
         val isWeatherAvailable: Boolean,
         val activities: List<OfflineActivity>,
         val selectedCategory: ActivityCategory?,
+        val needsLocationPermission: Boolean,
     ): OfflineUiState
 }

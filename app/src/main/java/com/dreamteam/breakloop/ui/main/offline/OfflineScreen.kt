@@ -1,5 +1,8 @@
 package com.dreamteam.breakloop.ui.main.offline
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +31,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
+import com.dreamteam.breakloop.ui.components.BreakLoopChip
 import com.dreamteam.breakloop.ui.components.LoadingContent
 import com.dreamteam.breakloop.ui.main.offline.components.ActivityCard
 import com.dreamteam.breakloop.ui.main.offline.components.CategoryChips
@@ -48,7 +52,8 @@ fun OfflineScreen(
             state,
             viewModel::onAvailableTimeSelected,
             viewModel::onCategorySelected,
-            onActivityClick = onActivityClick
+            onActivityClick = onActivityClick,
+            onLocationPermissionResult = viewModel::onLocationPermissionResult
         )
 
     }
@@ -60,8 +65,13 @@ fun OfflineContent(
     onAvailableTimeSelected: (Int) -> Unit,
     onCategorySelected: (ActivityCategory?) -> Unit,
     onActivityClick: (String, Boolean) -> Unit,
+    onLocationPermissionResult: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { onLocationPermissionResult() }
+
     Column(
         modifier = modifier.fillMaxSize()
             .background(Snow)
@@ -109,6 +119,28 @@ fun OfflineContent(
                 color = ColorPalette.Neutral.t700,
                 modifier = Modifier.padding(top = 8.dp)
             )
+        }
+        if (state.needsLocationPermission) {
+            BreakLoopCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Want weather-aware suggestions?",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = ColorPalette.Neutral.t1000
+                )
+                Text(
+                    text = "We only use your approximate location to check the weather.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ColorPalette.Neutral.t700
+                )
+                BreakLoopChip(
+                    text = "Enable location",
+                    selected = true,
+                    onClick = { launcher.launch(Manifest.permission.ACCESS_COARSE_LOCATION) },
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
         SuggestedCard(
             suggestion = state.suggestion,
