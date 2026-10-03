@@ -123,7 +123,7 @@ class AuthViewModel(
             AuthError.WEAK_PASSWORD -> msg = "This password isn't strong enough"
             AuthError.NETWORK -> msg = "Check your connection"
             AuthError.TOO_MANY_REQUESTS -> msg = "The system is overloaded, try again later"
-            AuthError.EMAIL_IN_USE -> msg = "This emails is already linked to an account"
+            AuthError.EMAIL_IN_USE -> msg = "This email is already linked to an account"
             AuthError.INVALID_CREDENTIALS -> msg = "Email or password don't match"
             else -> msg = "An error occurred, try again later"
         }
