@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.ui.navigation
 
+import android.view.inputmethod.InlineSuggestion
 import kotlinx.serialization.Serializable
 
 @Serializable data object AuthGraph
@@ -18,7 +19,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object Offline {
 
 }
-@Serializable data class OfflineActivityDetail(val activityId: String)
+@Serializable data class OfflineActivityDetail(val activityId: String, val fromSuggestion: Boolean=false)
 @Serializable data object Friends {
 
 }

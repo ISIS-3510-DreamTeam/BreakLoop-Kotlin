@@ -43,8 +43,8 @@ fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: 
             }
             composable<Offline> {
                 OfflineScreen(
-                    onActivityClick = {
-                        id -> navController.navigate(OfflineActivityDetail(id))
+                    onActivityClick = { id, fromSuggestion ->
+                        navController.navigate(OfflineActivityDetail(id, fromSuggestion))
                     }
                 )
             }

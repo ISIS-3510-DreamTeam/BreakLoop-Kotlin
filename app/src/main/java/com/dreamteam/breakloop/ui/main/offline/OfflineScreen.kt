@@ -39,7 +39,7 @@ import com.dreamteam.breakloop.ui.theme.ColorPalette.Neutral.Snow
 fun OfflineScreen(
     modifier: Modifier = Modifier,
     viewModel: OfflineViewModel = viewModel(),
-    onActivityClick: (String) -> Unit = {}
+    onActivityClick: (String, Boolean) -> Unit = { _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (val state = uiState) {
@@ -59,7 +59,7 @@ fun OfflineContent(
     state: OfflineUiState.Content,
     onAvailableTimeSelected: (Int) -> Unit,
     onCategorySelected: (ActivityCategory?) -> Unit,
-    onActivityClick: (String) -> Unit,
+    onActivityClick: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -115,7 +115,7 @@ fun OfflineContent(
             availableMin = state.availableMin,
             isWeatherAvailable = state.isWeatherAvailable,
             onTimeSelected = onAvailableTimeSelected,
-            onActivityClick = onActivityClick
+            onActivityClick = { id -> onActivityClick(id, true) }
         )
         CategoryChips(
             selectedCategory = state.selectedCategory,
@@ -141,7 +141,7 @@ fun OfflineContent(
             for (activity in state.activities) {
                 ActivityCard(
                     activity = activity,
-                    onClick = { onActivityClick(activity.id) }
+                    onClick = { onActivityClick(activity.id, false) }
                 )
             }
         }
