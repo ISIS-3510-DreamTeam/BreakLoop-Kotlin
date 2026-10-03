@@ -6,11 +6,15 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.remote.WeatherApiFactory
 import com.dreamteam.breakloop.data.repository.ActivityLogRepositoryImpl
 import com.dreamteam.breakloop.data.repository.ActivityRepositoryImpl
 import com.dreamteam.breakloop.data.repository.ContextProviderImpl
+import com.dreamteam.breakloop.data.repository.WeatherRepositoryImpl
 import com.dreamteam.breakloop.data.system.ActivityCatalogDataSource
 import com.dreamteam.breakloop.data.system.InterestsDataSource
+import com.dreamteam.breakloop.data.system.LocationDataSource
+import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.domain.enums.ActivityPhase
 import com.dreamteam.breakloop.domain.enums.ActivitySource
 import com.dreamteam.breakloop.domain.repository.ActivityLogRepository
@@ -35,9 +39,14 @@ class ActivityDetailViewModel(
 
     private val db = AppDatabase.getInstance(application.applicationContext)
     private val activityLogRepository = ActivityLogRepositoryImpl(db.activityLogDao())
+    private val weatherRepository = WeatherRepositoryImpl(
+        LocationDataSource(application.applicationContext, PermissionsDataSource(application.applicationContext)),
+        WeatherApiFactory.create()
+    )
     private val contextProvider =
         ContextProviderImpl(InterestsDataSource(application.applicationContext),
-            activityLogRepository)
+            activityLogRepository,
+            weatherRepository)
 
     private var logId: String? = null
     private val _uiState = MutableStateFlow<ActivityDetailUiState>(ActivityDetailUiState.Loading)
