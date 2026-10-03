@@ -8,9 +8,13 @@ import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.remote.WeatherApiFactory
 import com.dreamteam.breakloop.data.repository.ActivityLogRepositoryImpl
 import com.dreamteam.breakloop.data.repository.ContextProviderImpl
+import com.dreamteam.breakloop.data.repository.WeatherRepositoryImpl
 import com.dreamteam.breakloop.data.system.InterestsDataSource
+import com.dreamteam.breakloop.data.system.LocationDataSource
+import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.domain.recommendation.DefaultScoringRules
 import com.dreamteam.breakloop.domain.usecase.RecommendActivityUseCase
 import kotlinx.coroutines.Job
@@ -34,9 +38,15 @@ class OfflineViewModel(
     private var selectedCategory: ActivityCategory? = null
     private val db = AppDatabase.getInstance(application.applicationContext)
     private val activityLogRepository = ActivityLogRepositoryImpl(db.activityLogDao())
+    private val permissionsDataSource = PermissionsDataSource(application.applicationContext)
+    private val weatherRepository = WeatherRepositoryImpl(
+        LocationDataSource(application.applicationContext, permissionsDataSource),
+        WeatherApiFactory.create()
+    )
     private val contextProvider = ContextProviderImpl(
         InterestsDataSource(application.applicationContext),
-        activityLogRepository
+        activityLogRepository,
+        weatherRepository
     )
 
     val uiState : StateFlow<OfflineUiState> = _uiState
@@ -57,6 +67,10 @@ class OfflineViewModel(
         recompute()
     }
 
+    fun onLocationPermissionResult() {
+        recompute()
+    }
+
     private fun recompute(){
         refreshJob?.cancel()
 
@@ -70,7 +84,8 @@ class OfflineViewModel(
                 availableMin= availableMin ,
                 isWeatherAvailable = snapshot.weather != null,
                 activities = listSelected,
-                selectedCategory = selectedCategory
+                selectedCategory = selectedCategory,
+                needsLocationPermission = !permissionsDataSource.hasLocationAccess()
             )
             }
     }
