@@ -6,7 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.dreamteam.breakloop.background.notification.GoalExceededChecker
 import com.dreamteam.breakloop.data.local.AppDatabase
-import com.dreamteam.breakloop.data.local.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource

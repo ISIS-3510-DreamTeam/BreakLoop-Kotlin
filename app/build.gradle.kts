@@ -42,6 +42,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.compose.ui)
@@ -49,6 +50,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.protolite.well.known.types)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -69,6 +71,8 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
 
+    implementation(libs.androidx.datastore.preferences)
 }

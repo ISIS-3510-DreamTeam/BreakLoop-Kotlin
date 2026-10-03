@@ -1,4 +1,4 @@
-package com.dreamteam.breakloop.data.local.repository
+package com.dreamteam.breakloop.data.repository
 
 import com.dreamteam.breakloop.data.local.dao.AppUsageDao
 import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao

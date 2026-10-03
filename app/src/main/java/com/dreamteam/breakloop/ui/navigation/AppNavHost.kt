@@ -11,38 +11,81 @@ import com.dreamteam.breakloop.ui.main.focus.FocusScreen
 import com.dreamteam.breakloop.ui.main.friends.FriendsScreen
 import com.dreamteam.breakloop.ui.main.home.HomeScreen
 import com.dreamteam.breakloop.ui.main.offline.OfflineScreen
+import com.dreamteam.breakloop.ui.main.offline.components.ActivityDetailScreen
 import com.dreamteam.breakloop.ui.main.stats.StatsScreen
+import com.dreamteam.breakloop.ui.main.stats.deepstats.DeepStatsScreen
 
 @Composable
-fun AppNavHost(navController: NavHostController, isLoggedIn: Boolean, modifier: Modifier = Modifier) {
+fun AppNavHost(
+    navController: NavHostController,
+    isLoggedIn: Boolean,
+    modifier: Modifier = Modifier
+) {
     NavHost(
         navController = navController,
         startDestination = if (isLoggedIn) MainGraph else AuthGraph,
         modifier = modifier
     ) {
         navigation<AuthGraph>(startDestination = Login) {
+
             composable<Splash> {
                 // TODO: splash screen
             }
+
             composable<Login> {
                 AuthScreen()
             }
         }
+
         navigation<MainGraph>(startDestination = Home) {
+
             composable<Home> {
                 HomeScreen()
             }
+
             composable<Focus> {
                 FocusScreen()
             }
+
             composable<Stats> {
-                StatsScreen()
+                StatsScreen(
+                    onDeepStatsClick = {
+                        navController.navigate(DeepStats)
+                    }
+                )
             }
+
+            composable<DeepStats> {
+                DeepStatsScreen(
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
             composable<Offline> {
-                OfflineScreen()
+                OfflineScreen(
+                    onActivityClick = { id, fromSuggestion ->
+                        navController.navigate(
+                            OfflineActivityDetail(
+                                activityId = id,
+                                fromSuggestion = fromSuggestion
+                            )
+                        )
+                    }
+                )
             }
+
             composable<Friends> {
                 FriendsScreen()
+            }
+
+            composable<OfflineActivityDetail> {
+                ActivityDetailScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }

@@ -32,9 +32,9 @@ import com.dreamteam.breakloop.ui.theme.Typography
 @Composable
 fun TopBar(
     title: String,
-    streakDays: Int,
     onSignOut: () -> Unit,
     modifier: Modifier = Modifier,
+    streakDays: Int = 0,
 ) {
     Column(
         modifier = modifier
