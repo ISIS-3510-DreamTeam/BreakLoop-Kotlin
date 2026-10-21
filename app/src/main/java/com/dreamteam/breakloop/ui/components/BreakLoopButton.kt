@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.ui.theme.ColorPalette
+import com.dreamteam.breakloop.ui.theme.MonoLabel
 
 @Composable
 fun BreakLoopButton(
