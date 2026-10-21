@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 
 @Composable
 fun BreakLoopCard(
     modifier: Modifier = Modifier,
+    containerColor: Color = ColorPalette.Neutral.Snow,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(16.dp)
@@ -34,7 +36,7 @@ fun BreakLoopCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ColorPalette.Neutral.Snow, shape)
+                .background(containerColor, shape)
                 .border(2.dp, ink, shape)
                 .padding(16.dp),
             content = content,
