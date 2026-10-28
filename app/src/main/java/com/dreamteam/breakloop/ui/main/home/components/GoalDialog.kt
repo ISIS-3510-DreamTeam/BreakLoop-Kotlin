@@ -19,7 +19,7 @@ import androidx.compose.ui.window.Dialog
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.components.BreakLoopTextField
-import com.dreamteam.breakloop.ui.components.MonoTitle
+import com.dreamteam.breakloop.ui.theme.MonoTitle
 
 @Composable
 fun GoalDialog(
