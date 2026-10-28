@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.dreamteam.breakloop.data.repository.ActivityRepositoryImpl
 import com.dreamteam.breakloop.data.system.ActivityCatalogDataSource
+import com.dreamteam.breakloop.domain.ContextSnapshot
 import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
@@ -52,6 +53,7 @@ class OfflineViewModel(
     val uiState : StateFlow<OfflineUiState> = _uiState
 
     private var refreshJob: Job? = null
+    private var lastSnapshot: ContextSnapshot? = null
 
     init {
         recompute()
@@ -59,24 +61,31 @@ class OfflineViewModel(
 
     fun onAvailableTimeSelected(min: Int){
         availableMin = min
-        recompute()
+        recompute(refreshContext = false)
     }
 
     fun onCategorySelected(category: ActivityCategory?) {
         selectedCategory = category
-        recompute()
+        recompute(refreshContext = false)
     }
 
     fun onLocationPermissionResult() {
-        recompute()
+        recompute(refreshContext = true)
     }
 
-    private fun recompute(){
+    // El contexto (clima, ubicación, historial) es lento de obtener; solo se pide al
+    // inicio o al cambiar permisos. Cambiar tiempo/categoría reutiliza el último snapshot.
+    private fun recompute(refreshContext: Boolean = true){
         refreshJob?.cancel()
 
         refreshJob= viewModelScope.launch {
             val catalog = repositoryImpl.getCatalog()
-            val snapshot = contextProvider.getSnapshot(availableMin)
+            val cached = lastSnapshot
+            val snapshot = if (refreshContext || cached == null) {
+                contextProvider.getSnapshot(availableMin).also { lastSnapshot = it }
+            } else {
+                cached.copy(availableMin = availableMin)
+            }
             val suggestion = useCase.recommend(catalog, snapshot)
             val listSelected = if (selectedCategory != null) {catalog.filter { it.category == selectedCategory} } else catalog
             _uiState.value = OfflineUiState.Content(
@@ -87,6 +96,6 @@ class OfflineViewModel(
                 selectedCategory = selectedCategory,
                 needsLocationPermission = !permissionsDataSource.hasLocationAccess()
             )
-            }
+        }
     }
 }
