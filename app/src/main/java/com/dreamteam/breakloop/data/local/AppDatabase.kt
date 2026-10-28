@@ -11,6 +11,7 @@ import com.dreamteam.breakloop.data.local.dao.FocusSessionDao
 import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
+import com.dreamteam.breakloop.data.local.entity.FlaggedAppEntity
 import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
 
 @Database(
@@ -18,9 +19,10 @@ import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
         DailyUsageStatsEntity::class,
         AppUsageEntity::class,
         ActivityLogEntity::class,
-        FocusSessionEntity::class
+        FocusSessionEntity::class,
+        FlaggedAppEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
