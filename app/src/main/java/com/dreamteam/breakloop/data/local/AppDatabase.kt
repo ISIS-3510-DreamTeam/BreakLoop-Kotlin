@@ -7,6 +7,7 @@ import androidx.room.RoomDatabase
 import com.dreamteam.breakloop.data.local.dao.ActivityLogDao
 import com.dreamteam.breakloop.data.local.dao.AppUsageDao
 import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao
+import com.dreamteam.breakloop.data.local.dao.FlaggedAppDao
 import com.dreamteam.breakloop.data.local.dao.FocusSessionDao
 import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
@@ -32,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun activityLogDao(): ActivityLogDao
 
     abstract fun focusSessionDao(): FocusSessionDao
+    abstract fun flaggedAppDao(): FlaggedAppDao
 
     companion object {
 

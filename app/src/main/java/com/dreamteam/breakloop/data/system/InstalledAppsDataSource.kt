@@ -3,10 +3,24 @@ package com.dreamteam.breakloop.data.system
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import com.dreamteam.breakloop.domain.InstalledApp
 
 class InstalledAppsDataSource (
     private val context: Context
 ){
+    fun askAppsFromMenu(): Set<InstalledApp> {
+        val resolveInfo = context.packageManager.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0)
+        val launcher = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        val apps = mutableSetOf<InstalledApp>()
+        for (info in resolveInfo) {
+            val packageName = info.activityInfo.packageName
+            if (launcher?.component?.packageName != packageName) {
+                val appName = info.loadLabel(context.packageManager).toString()
+                apps.add(InstalledApp(packageName, appName))
+            }
+        }
+        return apps
+    }
     fun obtainIncludedPackages(): Set<String> {
         val packageManager = context.packageManager
         val intentLauncher = Intent(Intent.ACTION_MAIN)
@@ -24,5 +38,19 @@ class InstalledAppsDataSource (
             packages.remove(activityHome.activityInfo.packageName)
         }
         return packages
+    }
+
+    fun obtainAppsToFlag(): List<InstalledApp> {
+        val seen : MutableSet<InstalledApp> = mutableSetOf()
+        val result : MutableList<InstalledApp> = mutableListOf()
+        val allAps: Set<InstalledApp> = askAppsFromMenu()
+        for ( info in allAps){
+            val packageName: String = info.packageName
+            if (packageName != context.packageName && seen.contains(info)){
+                result.add(info)
+                seen.add(info)
+            }
+        }
+        return result.sortedBy { it.label }
     }
 }

@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.combine
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
 import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
@@ -12,6 +13,7 @@ import com.dreamteam.breakloop.data.system.UsageEventsDataSource
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.BuildWeeklySummaryUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateReductionUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +36,9 @@ class StatsViewModel(
         aggregateUsageEventsUseCase = AggregateUsageEventsUseCase(),
         appUsageDao = db.appUsageDao(),
         dailyUsageStatsDao = db.dailyUsageStatsDao(),
-        calculateBaselineUseCase = CalculateBaselineUseCase()
+        calculateBaselineUseCase = CalculateBaselineUseCase(),
+        calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
+        flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(flaggedAppsDao = db.flaggedAppDao())
     )
 
     private val buildWeeklySummaryUseCase = BuildWeeklySummaryUseCase()

@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey;
 data class FlaggedAppEntity (
     @PrimaryKey()
     val packageName: String,
-    val dailyLimitMin: Int,
+    val dailyLimitMin: Int?,
     val flaggedAt: Long
 
 )

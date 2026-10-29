@@ -11,6 +11,7 @@ data class DailyUsageStatsEntity (
     val pickups: Int,
     val unlocks: Int,
     val isPartial: Boolean,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val flaggedTimeMs: Long
 
 )
