@@ -34,40 +34,29 @@ class SoundscapeCache(context: Context) {
     }
 
     private fun descargarSonido(nombre: String, archivo: File) {
-        val conexion = URL("$baseUrl/$nombre").openConnection()
-                as HttpURLConnection
+        val temporal = File(carpeta, "$nombre.tmp")
+        val url = URL("$baseUrl/$nombre")
+
+        //Petición- Recibe bytes
+        val flujoEntrada = url.openStream()
+        val flujoSalida = temporal.outputStream()
 
         try {
-            conexion.connectTimeout = 15000
-            conexion.readTimeout = 30000
-
-            if (conexion.responseCode != HttpURLConnection.HTTP_OK) {
-                throw IllegalStateException(
-                    "No se pudo descargar $nombre: HTTP ${conexion.responseCode}"
-                )
-            }
-
-            val temporal = File(carpeta, "$nombre.tmp")
-
-            try {
-                conexion.inputStream.use { entrada ->
-                    temporal.outputStream().use { salida ->
-                        entrada.copyTo(salida)
-                    }
-                }
-
-                if (temporal.length() == 0L) {
-                    throw IllegalStateException("El archivo descargado está vacío")
-                }
-
-                if (!temporal.renameTo(archivo)) {
-                    throw IllegalStateException("No se pudo guardar el sonido $nombre")
-                }
-            } finally {
-                temporal.delete()
-            }
+            //Bytes a local
+            flujoEntrada.copyTo(flujoSalida)
         } finally {
-            conexion.disconnect()
+            flujoEntrada.close()
+            flujoSalida.close()
+        }
+
+        if (temporal.length() == 0L) {
+            temporal.delete()
+            throw IllegalStateException("El audio descargado está vacío")
+        }
+
+        if (!temporal.renameTo(archivo)) {
+            temporal.delete()
+            throw IllegalStateException("No se pudo guardar el audio")
         }
     }
 }
