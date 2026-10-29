@@ -2,8 +2,10 @@ package com.dreamteam.breakloop.data.local.mapper
 
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
+import com.dreamteam.breakloop.data.local.entity.FlaggedAppEntity
 import com.dreamteam.breakloop.domain.AppUsage
 import com.dreamteam.breakloop.domain.DailyUsageStats
+import com.dreamteam.breakloop.domain.FlaggedApp
 
 fun AppUsage.toEntity(): AppUsageEntity{
     return AppUsageEntity(
@@ -28,7 +30,8 @@ fun DailyUsageStats.toEntity(): DailyUsageStatsEntity {
         pickups = pickups,
         unlocks = unlocks,
         isPartial = isPartial,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        flaggedTimeMs = flaggedTimeMs
     )
 }
 
@@ -39,6 +42,23 @@ fun DailyUsageStatsEntity.toDomain(): DailyUsageStats {
         pickups = pickups,
         unlocks = unlocks,
         isPartial = isPartial,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        flaggedTimeMs = flaggedTimeMs
+    )
+}
+
+fun FlaggedAppEntity.toDomain(): FlaggedApp {
+    return FlaggedApp(
+        packageName = packageName,
+        dailyLimitMin = dailyLimitMin,
+        flaggedAt = flaggedAt
+    )
+}
+
+fun FlaggedApp.toEntity(): FlaggedAppEntity {
+    return FlaggedAppEntity(
+        packageName = packageName,
+        dailyLimitMin = dailyLimitMin,
+        flaggedAt = flaggedAt
     )
 }

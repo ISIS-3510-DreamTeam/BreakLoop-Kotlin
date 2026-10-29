@@ -13,8 +13,10 @@ import com.dreamteam.breakloop.domain.UsageEventsResult
 import com.dreamteam.breakloop.domain.repository.UsageRepository
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -26,7 +28,9 @@ class UsageRepositoryImpl (
     val aggregateUsageEventsUseCase: AggregateUsageEventsUseCase,
     private val appUsageDao: AppUsageDao,
     private val dailyUsageStatsDao: DailyUsageStatsDao,
-    private val calculateBaselineUseCase: CalculateBaselineUseCase
+    private val calculateBaselineUseCase: CalculateBaselineUseCase,
+    private val calculateFlaggedTimeUseCase: CalculateFlaggedTimeUseCase,
+    private val flaggedAppsRepositoryImpl: FlaggedAppsRepositoryImpl
 ): UsageRepository {
     override suspend fun refreshDay(date: String): Boolean {
         return withContext(Dispatchers.IO) {
@@ -43,7 +47,10 @@ class UsageRepositoryImpl (
                         date,
                         includedPackages
                     )
+                    val labeled = flaggedAppsRepositoryImpl.getFlaggedApps()
+                    val timeLabeled = calculateFlaggedTimeUseCase.getFlaggedAppTime(uses, labeled.first())
                     val usesEntity: MutableList<AppUsageEntity> = mutableListOf()
+
                     var foregroundMsTotal =0L
                     for (use in uses){
                         usesEntity.add(use.toEntity())
@@ -57,7 +64,8 @@ class UsageRepositoryImpl (
                         pickups = previous?.pickups?:0,
                         unlocks = previous?.unlocks?:0,
                         isPartial = result.usageEvents.isEmpty() && date != LocalDate.now().toString(),
-                        updatedAt = System.currentTimeMillis()
+                        updatedAt = System.currentTimeMillis(),
+                        flaggedTimeMs = timeLabeled
                     )
                     dailyUsageStatsDao.saveDailyUsageStats(stats.toEntity())
                     true

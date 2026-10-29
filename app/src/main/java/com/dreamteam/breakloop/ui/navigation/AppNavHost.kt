@@ -13,6 +13,7 @@ import com.dreamteam.breakloop.ui.main.home.HomeScreen
 import com.dreamteam.breakloop.ui.main.offline.OfflineScreen
 import com.dreamteam.breakloop.ui.main.offline.components.ActivityDetailScreen
 import com.dreamteam.breakloop.ui.main.stats.StatsScreen
+import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppsRoute
 import com.dreamteam.breakloop.ui.main.stats.deepstats.DeepStatsScreen
 
 @Composable
@@ -51,6 +52,17 @@ fun AppNavHost(
                 StatsScreen(
                     onDeepStatsClick = {
                         navController.navigate(DeepStats)
+                    },
+                    onConfigureFlaggedAppsClick = {
+                        navController.navigate(FlaggedApps)
+                    }
+                )
+            }
+
+            composable<FlaggedApps> {
+                FlaggedAppsRoute(
+                    onBack = {
+                        navController.popBackStack()
                     }
                 )
             }
