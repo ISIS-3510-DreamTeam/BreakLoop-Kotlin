@@ -6,22 +6,27 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 object RetrofitInstance {
+    private const val BASE_URL = "https://breakloop-backend-14746672383.southamerica-west1.run.app/"
 
     private val json = Json {
         ignoreUnknownKeys = true
     }
 
-    val focusApi: FocusApi by lazy {
+    private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
-            .baseUrl(
-                "https://breakloop-backend-14746672383.southamerica-west1.run.app/"
-            )
-            .addConverterFactory(
-                json.asConverterFactory(
-                    "application/json".toMediaType()
-                )
-            )
+            .baseUrl(BASE_URL)
+            .addConverterFactory(json.asConverterFactory(
+                "application/json".toMediaType()
+            ))
             .build()
+    }
+
+    val focusApi: FocusApi by lazy {
+        retrofit
             .create(FocusApi::class.java)
+    }
+    val activityLogApi: ActivityLogApi by lazy {
+        retrofit
+            .create(ActivityLogApi::class.java)
     }
 }
