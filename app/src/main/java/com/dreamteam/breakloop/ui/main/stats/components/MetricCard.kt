@@ -17,7 +17,7 @@ fun MetricCard(
     supportingText: String? = null,
     supportingColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
-    BreakLoopCard(modifier = modifier) {
+    BreakLoopCard(modifier = modifier, elevated = false) {
         Text(
             text = label,
             style = Typography.bodyMedium,

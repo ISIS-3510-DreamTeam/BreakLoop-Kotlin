@@ -3,9 +3,7 @@ package com.dreamteam.breakloop.ui.main.stats
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,13 +17,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material.icons.outlined.Insights
-import androidx.compose.material.icons.outlined.TrendingDown
-import androidx.compose.material.icons.outlined.TrendingUp
+import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.LocalFireDepartment
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.automirrored.outlined.TrendingDown
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,7 +41,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.components.LoadingContent
-import com.dreamteam.breakloop.ui.main.stats.components.MetricCard
+import com.dreamteam.breakloop.ui.main.stats.components.MiniMetricCard
+import com.dreamteam.breakloop.ui.main.stats.components.PixelProgressBar
+import com.dreamteam.breakloop.ui.main.stats.components.TodayHeroCard
 import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppRow
 import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppsCard
 import com.dreamteam.breakloop.ui.main.stats.components.WeeklyBars
@@ -115,45 +116,22 @@ fun StatsContent(
             .background(Snow)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Encabezado
-        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = "YOUR PROGRESS",
+                style = MaterialTheme.typography.labelSmall,
+                color = ColorPalette.SpicyPaprika.t700
+            )
+            Text(
+                text = "Mindful reduction metrics",
+                style = MaterialTheme.typography.titleLarge,
+                color = ColorPalette.Neutral.t1000
+            )
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(ColorPalette.GoldenOrange.t100, RoundedCornerShape(12.dp))
-                        .border(2.dp, ColorPalette.Neutral.t1000, RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Insights,
-                        contentDescription = null,
-                        tint = ColorPalette.GoldenOrange.t500,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "YOUR PROGRESS",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ColorPalette.GoldenOrange.t500
-                    )
-                    Text(
-                        text = "Mindful reduction metrics",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = ColorPalette.Neutral.t1000
-                    )
-                }
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -163,47 +141,48 @@ fun StatsContent(
                     color = ColorPalette.Neutral.t700
                 )
                 TextButton(onClick = onDeepStatsClick) {
-                    Text(text = "Deep Stats →")
+                    Text(
+                        text = "Deep Stats →",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = ColorPalette.SpicyPaprika.t700
+                    )
                 }
             }
         }
 
-        // Tarjetas
-        val percentChange = content.weeklySummary.changeVsLastWeekPercent
-        val changeText = if (percentChange == null) "good start!" else "${percentChange}% vs last week"
+        // Dato principal del día
+        TodayHeroCard(
+            value = formatDuration(content.totalMs),
+            changePercent = content.weeklySummary.changeVsLastWeekPercent
+        )
 
+        // Métricas secundarias
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            MetricCard(
-                label = "Today's screen time",
-                value = formatDuration(content.totalMs),
-                supportingText = changeText,
-                modifier = Modifier.weight(1f)
-            )
-            MetricCard(
+            MiniMetricCard(
+                icon = Icons.Outlined.Timer,
                 label = "Focus minutes",
                 value = "—",
-                supportingText = "sprint 3**",
+                iconBackground = ColorPalette.Fern.t100,
+                iconTint = ColorPalette.Fern.t500,
                 modifier = Modifier.weight(1f)
             )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            MetricCard(
+            MiniMetricCard(
+                icon = Icons.Outlined.LocalFireDepartment,
                 label = "Current streak",
                 value = "—",
-                supportingText = "days under target",
+                iconBackground = ColorPalette.SpicyPaprika.t100,
+                iconTint = ColorPalette.SpicyPaprika.t500,
                 modifier = Modifier.weight(1f)
             )
-            MetricCard(
+            MiniMetricCard(
+                icon = Icons.Outlined.EmojiEvents,
                 label = "Best streak",
                 value = "—",
-                supportingText = "your record, congrats!",
+                iconBackground = ColorPalette.GoldenOrange.t100,
+                iconTint = ColorPalette.GoldenOrange.t500,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -245,14 +224,14 @@ fun StatsContent(
         )
 
         // Reducción vs. baseline
-        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
+        BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
             val reduction = content.reduction
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SectionHeader(
                     icon = if (reduction != null && reduction.changePercent < 0) {
-                        Icons.Outlined.TrendingDown
+                        Icons.AutoMirrored.Outlined.TrendingDown
                     } else {
-                        Icons.Outlined.TrendingUp
+                        Icons.AutoMirrored.Outlined.TrendingUp
                     },
                     label = "REDUCTION VS. BASELINE"
                 )
@@ -275,15 +254,7 @@ fun StatsContent(
                         style = MaterialTheme.typography.bodySmall,
                         color = ColorPalette.Neutral.t700
                     )
-                    LinearProgressIndicator(
-                        progress = { reduction.progressTowardTarget },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(10.dp)
-                            .clip(RoundedCornerShape(50)),
-                        color = ColorPalette.Fern.t500,
-                        trackColor = ColorPalette.Neutral.t100
-                    )
+                    PixelProgressBar(progress = reduction.progressTowardTarget)
                     Text(
                         text = "Progress toward the -20% goal",
                         style = MaterialTheme.typography.labelSmall,

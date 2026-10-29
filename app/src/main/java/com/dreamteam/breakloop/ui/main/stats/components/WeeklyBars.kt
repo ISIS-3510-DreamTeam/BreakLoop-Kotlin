@@ -3,14 +3,15 @@ package com.dreamteam.breakloop.ui.main.stats.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,9 +30,12 @@ import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.domain.WeeklySummary
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import java.time.LocalDate
+import kotlin.math.roundToInt
 
 
 private val BarShape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+private val BlockHeight = 10.dp
+private val BlockGap = 2.dp
 private val LabelSpacing = 8.dp
 
 @Composable
@@ -65,7 +69,7 @@ fun WeeklyBars(
                     verticalArrangement = Arrangement.spacedBy(LabelSpacing, Alignment.Bottom)
                 ) {
                     // Zona de la barra: todo el alto que queda encima de la letra.
-                    Box(
+                    BoxWithConstraints(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
                         contentAlignment = Alignment.BottomCenter
                     ) {
@@ -79,28 +83,23 @@ fun WeeklyBars(
                             )
                         } else {
                             val fraction = screenTimeMs.toFloat() / max.toFloat()
-                            val shadowOffset = if (isToday) 2.dp else 1.dp
                             val barColor =
                                 if (isToday) ColorPalette.SpicyPaprika.t500 else ColorPalette.GoldenOrange.t500
+                            val maxBlocks = (maxHeight / (BlockHeight + BlockGap)).toInt()
+                            val blocks = (fraction * 0.85f * maxBlocks).roundToInt()
+                                .coerceAtLeast(if (screenTimeMs > 0) 1 else 0)
 
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(fraction * 0.85f)
-                            ) {
-                                // Sombra desplazada
-                                Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .offset(shadowOffset, shadowOffset)
-                                        .background(ColorPalette.Neutral.t1000, BarShape)
-                                )
-                                // Barra
-                                Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .background(barColor, BarShape)
-                                )
+                            // Barra hecha de bloques apilados, estilo pixel art
+                            Column(verticalArrangement = Arrangement.spacedBy(BlockGap)) {
+                                repeat(blocks) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(BlockHeight)
+                                            .background(barColor)
+                                            .border(1.dp, ColorPalette.Neutral.t1000)
+                                    )
+                                }
                             }
                         }
                     }

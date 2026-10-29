@@ -22,6 +22,7 @@ class FlaggedAppsViewModel(
 
     private val _installedApps = MutableStateFlow<List<InstalledApp>?>(null)
     private val _editingPackage = MutableStateFlow<String?>(null)
+    private var pinnedPackages: Set<String>? = null
 
     private val db = AppDatabase.getInstance(application.applicationContext)
 
@@ -46,7 +47,10 @@ class FlaggedAppsViewModel(
             )
         }
 
-        val (flaggedRows, unflaggedRows) = unSortedRows.partition { it.flagged != null }
+        // Las marcadas van arriba, pero según el estado al abrir la pantalla: si el orden
+        // cambiara al marcar/desmarcar, la lista seguiría la fila movida y se "saltaría".
+        val pinnedOnTop = pinnedPackages ?: flaggedByPackage.keys.also { pinnedPackages = it }
+        val (flaggedRows, unflaggedRows) = unSortedRows.partition { it.app.packageName in pinnedOnTop }
         val rows = flaggedRows.sortedBy { it.app.label.lowercase() } +
                 unflaggedRows.sortedBy { it.app.label.lowercase() }
 

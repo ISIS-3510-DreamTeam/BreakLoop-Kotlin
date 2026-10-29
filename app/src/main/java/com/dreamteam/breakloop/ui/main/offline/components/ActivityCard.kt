@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.domain.OfflineActivity
 import com.dreamteam.breakloop.domain.enums.ActivityCategory
+import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 
 @Composable
@@ -41,15 +42,14 @@ fun ActivityCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(12.dp)
-    Row(
+    BreakLoopCard(
         modifier = modifier
             .fillMaxWidth()
-            .clip(shape)
-            .background(ColorPalette.Neutral.Snow, shape)
-            .border(1.5.dp, ColorPalette.Neutral.t1000, shape)
-            .clickable { onClick() }
-            .padding(12.dp),
+            .clickable { onClick() },
+        elevated = false
+    ) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -85,6 +85,7 @@ fun ActivityCard(
             tint = ColorPalette.Neutral.t700
         )
     }
+}
 }
 
 fun categoryColor(category: ActivityCategory): Color = when (category) {
