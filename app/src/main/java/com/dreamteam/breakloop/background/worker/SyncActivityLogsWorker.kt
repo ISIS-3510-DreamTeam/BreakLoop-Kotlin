@@ -25,15 +25,18 @@ class SyncActivityLogsWorker(
             remote = ActivityLogRemoteDataSource(RetrofitInstance.activityLogApi, FirebaseAuth.getInstance()),
             syncScheduler = WorkManagerSyncScheduler(applicationContext)
         )
-
+        Log.w("SyncActivityLogs", "Intentando sincronizar")
         return try {
             repository.syncActivityLogs()
             Result.success()
         } catch (_: NoSessionException) {
+
             Result.success()
         } catch (_: IOException) {
+            Log.w("SyncActivityLogs", "Error de red al sincronizar IOException")
             Result.retry()
         } catch (e: HttpException) {
+
             val code = e.code()
             if (code == 401 || code == 408 || code == 429 || code in 500..599) {
                 Result.retry()
