@@ -33,6 +33,9 @@ data object Stats
 data object DeepStats
 
 @Serializable
+data object FlaggedApps
+
+@Serializable
 data object Offline
 
 @Serializable

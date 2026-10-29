@@ -20,7 +20,7 @@ interface FlaggedAppDao {
     suspend fun deletePackage(packageName: String)
 
     @Query("UPDATE flagged_apps SET dailyLimitMin = :newLimit WHERE packageName = :packageName")
-    suspend fun updateLimit(packageName: String, newLimit: Long)
+    suspend fun updateLimit(packageName: String, newLimit: Long?)
 
     @Query("DELETE FROM flagged_apps WHERE packageName NOT IN (:installedPackages)")
     suspend fun deleteUninstalled(installedPackages: Set<String>)

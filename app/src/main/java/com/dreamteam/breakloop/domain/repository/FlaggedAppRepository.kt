@@ -13,5 +13,5 @@ interface FlaggedAppRepository {
 
     suspend fun deleteUninstalledApps(packages: Set<String>)
 
-    suspend fun changeFlaggedAppLimit(packageName: String, limit: Long)
+    suspend fun changeFlaggedAppLimit(packageName: String, limit: Long?)
 }

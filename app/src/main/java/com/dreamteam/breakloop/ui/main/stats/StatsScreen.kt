@@ -17,16 +17,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Insights
-import androidx.compose.material.icons.outlined.LockReset
 import androidx.compose.material.icons.outlined.TrendingDown
 import androidx.compose.material.icons.outlined.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +43,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.components.LoadingContent
 import com.dreamteam.breakloop.ui.main.stats.components.MetricCard
+import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppRow
+import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppsCard
 import com.dreamteam.breakloop.ui.main.stats.components.WeeklyBars
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.ColorPalette.Neutral.Snow
@@ -56,10 +55,12 @@ import kotlin.math.abs
 fun StatsScreen(
     modifier: Modifier = Modifier,
     viewModel: StatsViewModel = viewModel(),
-    onDeepStatsClick: () -> Unit = {}
+    onDeepStatsClick: () -> Unit = {},
+    onConfigureFlaggedAppsClick: () -> Unit = {}
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val flaggedRows by viewModel.flaggedRows.collectAsStateWithLifecycle()
     LifecycleResumeEffect(Unit){
         viewModel.refresh()
         onPauseOrDispose {  }
@@ -70,6 +71,8 @@ fun StatsScreen(
         is StatsUiState.Content -> StatsContent(
             content = state,
             onDeepStatsClick = onDeepStatsClick,
+            flaggedRows = flaggedRows,
+            onConfigureFlaggedAppsClick = onConfigureFlaggedAppsClick,
             modifier = modifier
         )
     }
@@ -102,6 +105,8 @@ fun NoPermissionContent(modifier: Modifier = Modifier) {
 fun StatsContent(
     content: StatsUiState.Content,
     onDeepStatsClick: () -> Unit,
+    flaggedRows: List<FlaggedAppRow>?,
+    onConfigureFlaggedAppsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -234,61 +239,10 @@ fun StatsContent(
         }
 
         // Tamed Distraction Loops
-        BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SectionHeader(
-                    icon = Icons.Outlined.LockReset,
-                    label = "TAMED DISTRACTION LOOPS"
-                )
-                Text(
-                    text = "Available when you mark your special apps",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ColorPalette.Neutral.t700
-                )
-
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    content.apps.forEachIndexed { index, app ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(ColorPalette.Neutral.t100, RoundedCornerShape(6.dp)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Apps,
-                                        contentDescription = null,
-                                        tint = ColorPalette.Neutral.t700,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                                Text(
-                                    text = app.packageName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = ColorPalette.Neutral.t1000
-                                )
-                            }
-                            Text(
-                                text = formatDuration(app.foregroundMs),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = ColorPalette.SpicyPaprika.t700
-                            )
-                        }
-                        if (index != content.apps.lastIndex) {
-                            HorizontalDivider(color = ColorPalette.Neutral.t100)
-                        }
-                    }
-                }
-            }
-        }
+        FlaggedAppsCard(
+            flaggedRows = flaggedRows,
+            onConfigureClick = onConfigureFlaggedAppsClick
+        )
 
         // Reducción vs. baseline
         BreakLoopCard(modifier = Modifier.fillMaxWidth()) {

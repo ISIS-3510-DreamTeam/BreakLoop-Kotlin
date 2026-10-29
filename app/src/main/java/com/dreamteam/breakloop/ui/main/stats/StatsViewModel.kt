@@ -3,7 +3,15 @@ package com.dreamteam.breakloop.ui.main.stats
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.pm.PackageManager
+import com.dreamteam.breakloop.domain.InstalledApp
+import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppRow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import com.dreamteam.breakloop.data.local.AppDatabase
 import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
 import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
@@ -40,6 +48,24 @@ class StatsViewModel(
         calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
         flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(flaggedAppsDao = db.flaggedAppDao())
     )
+
+    private val flaggedAppsRepository = FlaggedAppsRepositoryImpl(flaggedAppsDao = db.flaggedAppDao())
+
+    // Solo las apps marcadas (y aún instaladas); null mientras carga.
+    val flaggedRows: StateFlow<List<FlaggedAppRow>?> = flaggedAppsRepository.getFlaggedApps()
+        .map { flagged ->
+            val pm = application.packageManager
+            flagged.mapNotNull { app ->
+                try {
+                    val label = pm.getApplicationLabel(pm.getApplicationInfo(app.packageName, 0)).toString()
+                    FlaggedAppRow(InstalledApp(app.packageName, label), app)
+                } catch (e: PackageManager.NameNotFoundException) {
+                    null
+                }
+            }.sortedBy { it.app.label.lowercase() }
+        }
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val buildWeeklySummaryUseCase = BuildWeeklySummaryUseCase()
     private val calculateReductionUseCase = CalculateReductionUseCase()

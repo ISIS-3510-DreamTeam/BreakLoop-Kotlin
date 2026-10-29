@@ -1,4 +1,4 @@
-package com.dreamteam.breakloop.ui.main.offline.components.flaggedapps
+package com.dreamteam.breakloop.ui.main.stats.flaggedapps
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -75,6 +75,8 @@ class FlaggedAppsViewModel(
                 flaggedAppsRepositoryImpl.deletePackage(row.app.packageName)
             } else {
                 flaggedAppsRepositoryImpl.addFlaggedApp(row.app.packageName, null)
+                // al marcarla, abrimos de una vez la hoja para elegir el límite
+                _editingPackage.value = row.app.packageName
             }
         }
     }
@@ -85,5 +87,15 @@ class FlaggedAppsViewModel(
 
     fun onDismissEdit() {
         _editingPackage.value = null
+    }
+
+    fun onLimitSave(hours: Int, minutes: Int, noLimit: Boolean) {
+        val packageName = _editingPackage.value ?: return
+        val total = hours * 60 + minutes
+        val limit = if (noLimit || total == 0) null else total.toLong()
+        viewModelScope.launch {
+            flaggedAppsRepositoryImpl.changeFlaggedAppLimit(packageName, limit)
+            _editingPackage.value = null
+        }
     }
 }

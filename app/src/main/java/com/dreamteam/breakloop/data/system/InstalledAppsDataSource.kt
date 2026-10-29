@@ -46,7 +46,7 @@ class InstalledAppsDataSource (
         val allAps: Set<InstalledApp> = askAppsFromMenu()
         for ( info in allAps){
             val packageName: String = info.packageName
-            if (packageName != context.packageName && seen.contains(info)){
+            if (packageName != context.packageName && !seen.contains(info)){
                 result.add(info)
                 seen.add(info)
             }

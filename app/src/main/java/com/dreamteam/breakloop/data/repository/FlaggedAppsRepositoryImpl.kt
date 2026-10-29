@@ -15,7 +15,7 @@ class FlaggedAppsRepositoryImpl(
          flaggedAppsDao.insertOrReplaceApp(packageName, limit, System.currentTimeMillis())
     }
 
-    override suspend fun changeFlaggedAppLimit(packageName: String, limit: Long) {
+    override suspend fun changeFlaggedAppLimit(packageName: String, limit: Long?) {
         flaggedAppsDao.updateLimit(packageName, limit)
     }
 
