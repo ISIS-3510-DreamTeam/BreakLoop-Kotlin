@@ -2,8 +2,8 @@ package com.dreamteam.breakloop.data.local.repository
 
 import com.dreamteam.breakloop.data.local.dao.FocusSessionDao
 import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
-import com.dreamteam.breakloop.remote.FocusApi
-import com.dreamteam.breakloop.remote.FocusSessionRequest
+import com.dreamteam.breakloop.data.remote.FocusApi
+import com.dreamteam.breakloop.data.remote.FocusSessionRequest
 import kotlinx.coroutines.flow.Flow
 
 class FocusSessionRepository(
