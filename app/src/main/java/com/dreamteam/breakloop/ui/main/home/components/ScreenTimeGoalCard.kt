@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.R
 import com.dreamteam.breakloop.domain.GoalProgress
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
-import com.dreamteam.breakloop.ui.components.MonoLabel
+import com.dreamteam.breakloop.ui.theme.MonoLabel
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.util.formatDuration

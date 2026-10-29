@@ -19,23 +19,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dreamteam.breakloop.ui.theme.ColorPalette
+import com.dreamteam.breakloop.ui.theme.MonoLabel
 import com.dreamteam.breakloop.ui.theme.SpaceMono
 import androidx.compose.ui.text.TextStyle
 
-
-val MonoLabel = TextStyle(
-    fontFamily = SpaceMono,
-    fontWeight = FontWeight.Bold,
-    fontSize = 13.sp,
-    letterSpacing = 1.sp,
-)
-
-val MonoTitle = TextStyle(
-    fontFamily = SpaceMono,
-    fontWeight = FontWeight.Bold,
-    fontSize = 22.sp,
-    letterSpacing = 1.sp,
-)
 
 @Composable
 fun BreakLoopTextField(
