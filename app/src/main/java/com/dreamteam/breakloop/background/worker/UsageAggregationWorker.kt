@@ -6,12 +6,14 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.dreamteam.breakloop.background.notification.GoalExceededChecker
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
 import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -23,14 +25,17 @@ class UsageAggregationWorker(
         return try {
             val db = AppDatabase.getInstance(applicationContext)
             val repositoryImpl = UsageRepositoryImpl(
-                usageEventsDataSource = UsageEventsDataSource(this.applicationContext,
+                usageEventsDataSource = UsageEventsDataSource(
+                    this.applicationContext,
                     PermissionsDataSource(this.applicationContext)
                 ),
                 installedAppsDataSource = InstalledAppsDataSource(this.applicationContext),
                 aggregateUsageEventsUseCase = AggregateUsageEventsUseCase(),
-                appUsageDao =db.appUsageDao(),
-                dailyUsageStatsDao =db.dailyUsageStatsDao(),
-                calculateBaselineUseCase = CalculateBaselineUseCase()
+                appUsageDao = db.appUsageDao(),
+                dailyUsageStatsDao = db.dailyUsageStatsDao(),
+                calculateBaselineUseCase = CalculateBaselineUseCase(),
+                calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
+                flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(db.flaggedAppDao())
             )
             val today = LocalDate.now()
             val yesterday = today.minusDays(1)

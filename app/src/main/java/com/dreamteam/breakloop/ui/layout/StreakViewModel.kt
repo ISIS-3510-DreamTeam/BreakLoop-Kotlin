@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dreamteam.breakloop.data.goal.DataStoreGoalRepository
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
 import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
@@ -13,6 +14,7 @@ import com.dreamteam.breakloop.domain.repository.GoalRepository
 import com.dreamteam.breakloop.domain.repository.UsageRepository
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateStreakUseCase
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +36,9 @@ class StreakViewModel(application: Application) : AndroidViewModel(application) 
             aggregateUsageEventsUseCase = AggregateUsageEventsUseCase(),
             appUsageDao = db.appUsageDao(),
             dailyUsageStatsDao = db.dailyUsageStatsDao(),
-            calculateBaselineUseCase = CalculateBaselineUseCase()
+            calculateBaselineUseCase = CalculateBaselineUseCase(),
+            calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
+            flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(db.flaggedAppDao()),
         )
     private val goalRepository: GoalRepository = DataStoreGoalRepository(application)
     private val calculateStreak = CalculateStreakUseCase()
