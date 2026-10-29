@@ -17,4 +17,5 @@ data class ActivityLogEntity (
     var timeOfDay: TimeOfDay,
     val weather: String?,
     val availableMin: Int,
+    val synced : Boolean = false
 )
