@@ -1,4 +1,4 @@
-package com.dreamteam.breakloop.remote
+package com.dreamteam.breakloop.data.remote
 
 import retrofit2.Response
 import retrofit2.http.Body
