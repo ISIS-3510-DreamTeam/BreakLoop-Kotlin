@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -11,12 +12,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import com.dreamteam.breakloop.data.auth.FirebaseAuthRepository
 import com.dreamteam.breakloop.ui.layout.NavBar
 import com.dreamteam.breakloop.ui.layout.StreakViewModel
 import com.dreamteam.breakloop.ui.layout.TopBar
+import com.dreamteam.breakloop.ui.main.offline.components.activeactivity.ActiveActivityBanner
+import com.dreamteam.breakloop.ui.main.offline.components.activeactivity.ActiveActivityViewModel
 import com.dreamteam.breakloop.ui.navigation.AppNavHost
+import com.dreamteam.breakloop.ui.navigation.OfflineActivityDetail
 import com.dreamteam.breakloop.ui.navigation.currentTopLevelDestination
 import com.dreamteam.breakloop.ui.navigation.navigateToTopLevel
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
@@ -34,19 +40,37 @@ fun BreakLoopApp() {
 }
 
 @Composable
-fun BreakLoopAppContent(isLoggedIn: Boolean, onSignOut: () -> Unit = {}, streakViewModel: StreakViewModel = viewModel()) {
+fun BreakLoopAppContent(isLoggedIn: Boolean, onSignOut: () -> Unit = {},
+                        streakViewModel: StreakViewModel = viewModel(),
+                        activeActivityViewModel: ActiveActivityViewModel = viewModel()) {
     val navController = rememberNavController()
     val currentTab = navController.currentTopLevelDestination()
     val streakDays by streakViewModel.streakDays.collectAsStateWithLifecycle()
+    val activeState by activeActivityViewModel.uiState.collectAsStateWithLifecycle()
+
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val isOnDetail = backStackEntry?.destination?.hasRoute<OfflineActivityDetail>() == true
 
     Scaffold(
         topBar = {
             if (currentTab != null) {
-                TopBar(
-                    title = stringResource(currentTab.label),
-                    onSignOut = onSignOut,
-                    streakDays = streakDays,
-                )
+                Column {
+                    TopBar(
+                        title = stringResource(currentTab.label),
+                        onSignOut = onSignOut,
+                        streakDays = streakDays,
+                    )
+                    if (!isOnDetail) {
+                        ActiveActivityBanner(
+                            state = activeState,
+                            onClick = { activityId ->
+                                navController.navigate(
+                                    OfflineActivityDetail(activityId, fromSuggestion = false)
+                                ) { launchSingleTop = true }
+                            },
+                        )
+                    }
+                }
             }
         },
         bottomBar = {
