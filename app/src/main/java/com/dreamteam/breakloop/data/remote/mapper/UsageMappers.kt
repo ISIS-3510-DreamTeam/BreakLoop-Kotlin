@@ -1,10 +1,13 @@
 package com.dreamteam.breakloop.data.remote.mapper
 
 import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
+import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
+import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
 import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
 import com.dreamteam.breakloop.data.remote.dto.ActivityLogDto
 import com.dreamteam.breakloop.data.remote.dto.ShownSuggestionDto
 import com.dreamteam.breakloop.data.remote.dto.SuggestionInteractionDto
+import com.dreamteam.breakloop.data.remote.dto.UsageDto
 import kotlinx.serialization.json.Json
 import kotlin.math.round
 
@@ -43,6 +46,31 @@ fun ActivityLogDto.toEntity(): ActivityLogEntity {
         placeLabel = placeLabel,
         latitude = latitude?.let { round(it * 100.0) / 100.0 },
         longitude = longitude?.let { round(it * 100.0) / 100.0 }
+    )
+}
+
+fun DailyUsageStatsEntity.toDto(): UsageDto {
+    return UsageDto(
+        date = date,
+        screenTimeMs = screenTimeMs,
+        pickups = pickups,
+        unlocks = unlocks,
+        isPartial = isPartial,
+        updatedAt = updatedAt,
+        flaggedTimeMs = flaggedTimeMs
+    )
+}
+
+fun UsageDto.toEntity(synced: Boolean = true): DailyUsageStatsEntity {
+    return DailyUsageStatsEntity(
+        date = date,
+        screenTimeMs = screenTimeMs,
+        pickups = pickups,
+        unlocks = unlocks,
+        isPartial = isPartial,
+        updatedAt = updatedAt,
+        flaggedTimeMs = flaggedTimeMs,
+        synced = synced
     )
 }
 

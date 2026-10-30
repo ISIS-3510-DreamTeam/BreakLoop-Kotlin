@@ -6,14 +6,18 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.dreamteam.breakloop.background.notification.GoalExceededChecker
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
+import com.dreamteam.breakloop.data.remote.UsageRemoteDataSource
 import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
 import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
+import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -35,7 +39,9 @@ class UsageAggregationWorker(
                 dailyUsageStatsDao = db.dailyUsageStatsDao(),
                 calculateBaselineUseCase = CalculateBaselineUseCase(),
                 calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
-                flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(db.flaggedAppDao())
+                flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(db.flaggedAppDao()),
+                remote = UsageRemoteDataSource(RetrofitInstance.usageApi, FirebaseAuth.getInstance()),
+                syncScheduler = WorkManagerSyncScheduler(applicationContext)
             )
             val today = LocalDate.now()
             val yesterday = today.minusDays(1)

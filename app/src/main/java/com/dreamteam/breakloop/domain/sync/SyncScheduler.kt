@@ -4,6 +4,8 @@ import com.dreamteam.breakloop.domain.ContextSnapshot
 
 interface SyncScheduler {
     fun enqueueActivityLogSync()
-    fun enqueueSuggestionInteractionSync(
-    )
+
+    fun enqueueUsageSync()
+
+    fun enqueueSuggestionInteractionSync()
 }
