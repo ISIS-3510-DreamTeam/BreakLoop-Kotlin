@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ActivityLogDao {
@@ -28,4 +29,7 @@ interface ActivityLogDao {
 
     @Query("SELECT * FROM activity_log WHERE activityId = :activityId AND completedAt IS NULL ORDER BY startedAt DESC LIMIT 1")
     suspend fun getOpenLog(activityId: String): ActivityLogEntity?
+
+    @Query("SELECT * FROM activity_log WHERE completedAt IS NULL ORDER BY startedAt DESC LIMIT 1")
+    fun observeOpenLog(): Flow<ActivityLogEntity?>
 }

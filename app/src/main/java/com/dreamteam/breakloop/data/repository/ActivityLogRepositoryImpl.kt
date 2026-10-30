@@ -9,6 +9,7 @@ import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import com.dreamteam.breakloop.domain.enums.ActivitySource
 import com.dreamteam.breakloop.domain.repository.ActivityLogRepository
 import com.dreamteam.breakloop.domain.sync.SyncScheduler
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 class ActivityLogRepositoryImpl (
@@ -65,4 +66,13 @@ class ActivityLogRepositoryImpl (
         }
 
     }
+
+    override fun observeOpenLog(): Flow<ActivityLogEntity?> {
+        return activityLogDao.observeOpenLog()
+    }
+
+    override suspend fun getOpenLog(activityId: String): ActivityLogEntity? {
+        return activityLogDao.getOpenLog(activityId)
+    }
+
 }

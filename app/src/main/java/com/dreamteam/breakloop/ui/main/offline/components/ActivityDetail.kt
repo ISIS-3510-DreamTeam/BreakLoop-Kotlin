@@ -37,21 +37,25 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.domain.OfflineActivity
+import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import com.dreamteam.breakloop.domain.enums.ActivityPhase
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.components.LoadingContent
+import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.Typography
 
 @Composable
 fun ActivityDetailScreen(
      onBack: () -> Unit = {},
+     onGoToActivity: (String) -> Unit = {},
      viewModel: ActivityDetailViewModel = viewModel(),
 ) {
      val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -75,112 +79,200 @@ fun ActivityDetailScreen(
                TextButton(onClick = onBack) { Text("Back") }
           }
 
-          is ActivityDetailUiState.Content -> {
-               val activity = state.activity
+          is ActivityDetailUiState.Content -> ActivityDetailContent(
+               state = state,
+               onBack = onBack,
+               onStart = viewModel::start,
+               onFinish = viewModel::finish,
+               onGoToActivity = onGoToActivity,
+          )
+     }
+}
 
-               Column(
-                    modifier = Modifier
-                         .fillMaxSize()
-                         .background(ColorPalette.Neutral.Snow)
-                         .verticalScroll(rememberScrollState())
-                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+@Composable
+private fun ActivityDetailContent(
+     state: ActivityDetailUiState.Content,
+     onBack: () -> Unit,
+     onStart: () -> Unit,
+     onFinish: () -> Unit,
+     onGoToActivity: (String) -> Unit,
+) {
+     val activity = state.activity
+
+     Column(
+          modifier = Modifier
+               .fillMaxSize()
+               .background(ColorPalette.Neutral.Snow)
+               .verticalScroll(rememberScrollState())
+               .padding(horizontal = 16.dp, vertical = 8.dp),
+          verticalArrangement = Arrangement.spacedBy(20.dp)
+     ) {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+               IconButton(onClick = onBack) {
+                    Icon(
+                         imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                         contentDescription = "Back",
+                         tint = ColorPalette.Neutral.t1000
+                    )
+               }
+               Text(
+                    text = "ACTIVITY",
+                    style = Typography.labelSmall,
+                    color = ColorPalette.Neutral.t700
+               )
+          }
+
+          ActivityHero(activity)
+
+          when (state.phase) {
+               ActivityPhase.READY -> if (state.blockedBy != null) {
+                    BlockedNotice(
+                         blockedBy = state.blockedBy,
+                         onGoToActivity = onGoToActivity
+                    )
+               } else Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                         IconButton(onClick = onBack) {
-                              Icon(
-                                   imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                   contentDescription = "Back",
-                                   tint = ColorPalette.Neutral.t1000
-                              )
-                         }
+                    Text(
+                         text = "Put your phone away and give this your full attention.",
+                         style = Typography.bodyMedium,
+                         color = ColorPalette.Neutral.t700,
+                         textAlign = TextAlign.Center,
+                         modifier = Modifier.fillMaxWidth()
+                    )
+                    BreakLoopButton(
+                         text = "Start & Log Activity",
+                         onClick = onStart
+                    )
+               }
+
+               ActivityPhase.RUNNING -> {
+                    val total = activity.durationMin * 60
+                    val remaining = (state.remainingSeconds / total.toFloat()).coerceIn(0f, 1f)
+                    Column(
+                         modifier = Modifier.fillMaxWidth(),
+                         horizontalAlignment = Alignment.CenterHorizontally,
+                         verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                         CircularTimer(
+                              remainingFraction = remaining,
+                              remainingSeconds = state.remainingSeconds
+                         )
                          Text(
-                              text = "ACTIVITY",
-                              style = Typography.labelSmall,
-                              color = ColorPalette.Neutral.t700
+                              text = "Put your phone face down. You've got this.",
+                              style = Typography.bodyMedium,
+                              color = ColorPalette.Neutral.t700,
+                              textAlign = TextAlign.Center,
+                              modifier = Modifier.fillMaxWidth()
+                         )
+                         BreakLoopButton(
+                              text = "I'm done",
+                              onClick = onFinish
                          )
                     }
+               }
 
-                    ActivityHero(activity)
-
-                    when (state.phase) {
-                         ActivityPhase.READY -> Column(
-                              verticalArrangement = Arrangement.spacedBy(12.dp)
-                         ) {
-                              Text(
-                                   text = "Put your phone away and give this your full attention.",
-                                   style = Typography.bodyMedium,
-                                   color = ColorPalette.Neutral.t700,
-                                   textAlign = TextAlign.Center,
-                                   modifier = Modifier.fillMaxWidth()
-                              )
-                              BreakLoopButton(
-                                   text = "Start & Log Activity",
-                                   onClick = viewModel::start
-                              )
-                         }
-
-                         ActivityPhase.RUNNING -> {
-                              val total = activity.durationMin * 60
-                              val remaining = (state.remainingSeconds / total.toFloat()).coerceIn(0f, 1f)
-                              Column(
-                                   modifier = Modifier.fillMaxWidth(),
-                                   horizontalAlignment = Alignment.CenterHorizontally,
-                                   verticalArrangement = Arrangement.spacedBy(16.dp)
-                              ) {
-                                   CircularTimer(
-                                        remainingFraction = remaining,
-                                        remainingSeconds = state.remainingSeconds
-                                   )
-                                   Text(
-                                        text = "Put your phone face down. You've got this.",
-                                        style = Typography.bodyMedium,
-                                        color = ColorPalette.Neutral.t700,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                   )
-                                   BreakLoopButton(
-                                        text = "I'm done",
-                                        onClick = viewModel::finish
-                                   )
-                              }
-                         }
-
-                         ActivityPhase.COMPLETED -> Column(
-                              modifier = Modifier.fillMaxWidth(),
-                              horizontalAlignment = Alignment.CenterHorizontally,
-                              verticalArrangement = Arrangement.spacedBy(16.dp)
-                         ) {
-                              PixelBadge(
-                                   color = ColorPalette.Fern.t100,
-                                   size = 96.dp,
-                                   shape = CircleShape
-                              ) {
-                                   Icon(
-                                        imageVector = Icons.Outlined.CheckCircle,
-                                        contentDescription = null,
-                                        tint = ColorPalette.Fern.t500,
-                                        modifier = Modifier.size(52.dp)
-                                   )
-                              }
-                              Text(
-                                   text = "NICE WORK",
-                                   style = Typography.labelSmall,
-                                   color = ColorPalette.Fern.t500
-                              )
-                              Text(
-                                   text = "+${activity.xp} XP earned!",
-                                   style = Typography.headlineSmall,
-                                   color = ColorPalette.Neutral.t1000
-                              )
-                              BreakLoopButton(
-                                   text = "Back to activities",
-                                   onClick = onBack
-                              )
-                         }
+               ActivityPhase.COMPLETED -> Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+               ) {
+                    PixelBadge(
+                         color = ColorPalette.Fern.t100,
+                         size = 96.dp,
+                         shape = CircleShape
+                    ) {
+                         Icon(
+                              imageVector = Icons.Outlined.CheckCircle,
+                              contentDescription = null,
+                              tint = ColorPalette.Fern.t500,
+                              modifier = Modifier.size(52.dp)
+                         )
                     }
+                    Text(
+                         text = "NICE WORK",
+                         style = Typography.labelSmall,
+                         color = ColorPalette.Fern.t500
+                    )
+                    Text(
+                         text = "+${activity.xp} XP earned!",
+                         style = Typography.headlineSmall,
+                         color = ColorPalette.Neutral.t1000
+                    )
+                    BreakLoopButton(
+                         text = "Back to activities",
+                         onClick = onBack
+                    )
                }
           }
+     }
+}
+
+@Composable
+private fun BlockedNotice(
+     blockedBy: BlockingActivity,
+     onGoToActivity: (String) -> Unit,
+) {
+     Column(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.spacedBy(14.dp)
+     ) {
+          BreakLoopCard(
+               modifier = Modifier.fillMaxWidth(),
+               containerColor = ColorPalette.GoldenOrange.t100
+          ) {
+               Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+               ) {
+                    Icon(
+                         imageVector = Icons.Outlined.Timer,
+                         contentDescription = null,
+                         tint = ColorPalette.SpicyPaprika.t700,
+                         modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                         text = "You're already doing ${blockedBy.title}. Finish it before starting a new one.",
+                         style = Typography.bodyMedium,
+                         color = ColorPalette.Neutral.t1000,
+                         modifier = Modifier.weight(1f)
+                    )
+               }
+          }
+          BreakLoopButton(
+               text = "Go to ${blockedBy.title}",
+               onClick = { onGoToActivity(blockedBy.activityId) }
+          )
+     }
+}
+
+@Preview(name = "Blocked", showBackground = true)
+@Composable
+private fun BlockedPreview() {
+     BreakLoopTheme {
+          ActivityDetailContent(
+               state = ActivityDetailUiState.Content(
+                    activity = OfflineActivity(
+                         id = "2",
+                         title = "Sketch something",
+                         category = ActivityCategory.CREATE,
+                         durationMin = 15,
+                         xp = 40,
+                         prompt = "Grab a pen and draw whatever is in front of you.",
+                         isOutdoor = false,
+                         suitableWeather = emptySet(),
+                         suitableTimesOfDay = emptySet(),
+                    ),
+                    phase = ActivityPhase.READY,
+                    remainingSeconds = 900,
+                    blockedBy = BlockingActivity("1", "Evening walk"),
+               ),
+               onBack = {},
+               onStart = {},
+               onFinish = {},
+               onGoToActivity = {},
+          )
      }
 }
 

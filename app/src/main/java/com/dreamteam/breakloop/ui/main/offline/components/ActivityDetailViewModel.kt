@@ -63,52 +63,105 @@ class ActivityDetailViewModel(
 
     private var timerJob: Job? = null
 
+    private var endAt: Long? = null
+    private var startJob: Job? = null
+
     init {
         viewModelScope.launch {
             val activity = activityRepository.getActivity(activityId)
-            _uiState.value = if (activity == null) {
-                ActivityDetailUiState.NotFound
-            } else {
-                ActivityDetailUiState.Content(
+            if ( activity == null){
+                _uiState.value =
+                    ActivityDetailUiState.NotFound
+                return@launch
+            }
+            val open = activityLogRepository.getOpenLog(activityId)
+            if ( open == null){
+                _uiState.value =
+                    ActivityDetailUiState.Content(
+                        activity,
+                        ActivityPhase.READY,
+                        activity.durationMin * 60
+                    )
+                viewModelScope.launch {
+                    activityLogRepository.observeOpenLog().collect { log ->
+                        val current = currentContent() ?: return@collect
+                        if (current.phase != ActivityPhase.READY) {
+                            return@collect
+                        }
+                        if (log!= null && log.activityId != activityId) {
+                            _uiState.value = current.copy(blockedBy = BlockingActivity(log.activityId, activityRepository.getActivity(log.activityId)?.title ?: ""))
+                        } else {
+                            _uiState.value = current.copy(blockedBy = null)
+                        }
+
+                    }
+                }
+                return@launch
+            }
+            logId = open.id
+            endAt = open.startedAt + activity.durationMin * 60000
+            if(System.currentTimeMillis() < endAt!!) {
+                _uiState.value = ActivityDetailUiState.Content(
                     activity,
-                    ActivityPhase.READY,
-                    activity.durationMin * 60
+                    ActivityPhase.RUNNING,
+                    ((endAt!! - System.currentTimeMillis()) / 1000).toInt()
                 )
+                startTicker()
+            } else {
+                _uiState.value = ActivityDetailUiState.Content(
+                    activity,
+                    ActivityPhase.RUNNING,
+                    0
+                )
+                finish()
             }
         }
     }
-    private fun saveComplexion(xp: Int){
-        val id =  logId?: return
-        viewModelScope.launch {
-            activityLogRepository.completeLog(id, xp)
-        }
-    }
-    fun start() {
+
+    private fun startTicker(){
         timerJob?.cancel() // por si tocan Start dos veces
         val current = _uiState.value as? ActivityDetailUiState.Content ?: return
         _uiState.value = current.copy(phase = ActivityPhase.RUNNING)
 
-        viewModelScope.launch {
+        timerJob = viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                val current = currentContent() ?: return@launch
+                val remainingMs = (endAt ?: (0L)) - System.currentTimeMillis()
+                if (remainingMs <= 0) {
+                    break
+                }
+                val seconds = (remainingMs + 999)/1000
+                _uiState.value = current.copy(remainingSeconds = seconds.toInt())
+            }
+            finish()
+        }
+    }
+    fun start() {
+        val current = currentContent() ?: return
+        if (current.phase != ActivityPhase.READY) {
+            return
+        }
+        val startedAt = System.currentTimeMillis()
+        endAt = startedAt + current.activity.durationMin * 60000
+        _uiState.value = current.copy(phase = ActivityPhase.RUNNING, remainingSeconds = ((endAt!! - System.currentTimeMillis()) / 1000).toInt())
+        startJob = viewModelScope.launch {
             val snapshot = contextProvider.getSnapshot(current.activity.durationMin)
             logId = activityLogRepository.startLog(current.activity.id, current.activity.category, source, snapshot)
         }
-        timerJob = viewModelScope.launch {
-            while ((currentContent()?.remainingSeconds ?: 0) > 0) {
-                delay(1000)
-                val current = currentContent() ?: return@launch
-                _uiState.value = current.copy(remainingSeconds = current.remainingSeconds - 1)
-            }
-            val current = currentContent() ?: return@launch
-            _uiState.value = current.copy(phase = ActivityPhase.COMPLETED)
-            saveComplexion(current.activity.xp)
-        }
+
+        startTicker()
     }
 
     fun finish() {
         timerJob?.cancel()
         val current = currentContent() ?: return
         _uiState.value = current.copy(phase = ActivityPhase.COMPLETED)
-        saveComplexion(current.activity.xp)
+        viewModelScope.launch {
+            startJob?.join()
+            val id = logId ?: return@launch
+            activityLogRepository.completeLog(id, current.activity.xp)
+        }
     }
 
     private fun currentContent(): ActivityDetailUiState.Content? =
