@@ -30,8 +30,9 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,7 +43,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -190,10 +190,6 @@ private fun FocusSetupScreen(
     onStartFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val customDurationValid = remember(state.isCustomDurationSelected) {
-        mutableStateOf(!state.isCustomDurationSelected || state.customDuration > 0)
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -206,17 +202,12 @@ private fun FocusSetupScreen(
             onDurationChange = onDurationChange,
             onCustomDurationSelected = onCustomDurationSelected,
             onCustomDurationChange = onCustomDurationChange,
-            onCustomDurationValidityChange = { customDurationValid.value = it },
             onFocusGoalChange = onFocusGoalChange,
             onSoundscapeChange = onSoundscapeChange,
             onLoadSound = onLoadSound,
             onStopSound = onStopSound,
             onAppShieldChange = onAppShieldChange,
-            onStartFocus = {
-                if (!state.isCustomDurationSelected || customDurationValid.value) {
-                    onStartFocus()
-                }
-            }
+            onStartFocus = onStartFocus
         )
 
         Spacer(
@@ -231,7 +222,6 @@ private fun FocusSetupContent(
     onDurationChange: (Int) -> Unit,
     onCustomDurationSelected: () -> Unit,
     onCustomDurationChange: (Int) -> Unit,
-    onCustomDurationValidityChange: (Boolean) -> Unit,
     onFocusGoalChange: (String) -> Unit,
     onSoundscapeChange: (Soundscape) -> Unit,
     onLoadSound: (String) -> Unit,
@@ -251,8 +241,7 @@ private fun FocusSetupContent(
         isCustomSelected = state.isCustomDurationSelected,
         onDurationChange = onDurationChange,
         onCustomDurationSelected = onCustomDurationSelected,
-        onCustomDurationChange = onCustomDurationChange,
-        onCustomDurationValidityChange = onCustomDurationValidityChange
+        onCustomDurationChange = onCustomDurationChange
     )
 
     Spacer(
@@ -360,8 +349,7 @@ private fun DurationSelector(
     isCustomSelected: Boolean,
     onDurationChange: (Int) -> Unit,
     onCustomDurationSelected: () -> Unit,
-    onCustomDurationChange: (Int) -> Unit,
-    onCustomDurationValidityChange: (Boolean) -> Unit
+    onCustomDurationChange: (Int) -> Unit
 ) {
     Text(
         text = "SESSION LENGTH",
@@ -425,25 +413,26 @@ private fun DurationSelector(
     }
 
     if (isCustomSelected) {
-        val customDurationText = remember(isCustomSelected) {
-            mutableStateOf(if (customDuration > 0) customDuration.toString() else "")
+        var customDurationText by remember(isCustomSelected) {
+            mutableStateOf(customDuration.takeIf { it > 0 }?.toString() ?: "")
+        }
+
+        val parsedDuration = customDurationText.toIntOrNull()
+        val durationError = when {
+            customDurationText.isBlank() || parsedDuration == null || parsedDuration <= 0 ->
+                "Enter a whole number greater than 0."
+            parsedDuration > 5 -> "Pomodoro, it's all about taking breaks!"
+            else -> null
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         TextField(
-            value = customDurationText.value,
+            value = customDurationText,
             onValueChange = { value ->
                 if (value.all { it.isDigit() }) {
-                    customDurationText.value = value
-
-                    val duration = value.toIntOrNull()
-                    val isValid = duration != null && duration > 0
-                    onCustomDurationValidityChange(isValid)
-
-                    if (isValid) {
-                        onCustomDurationChange(duration!!)
-                    }
+                    customDurationText = value
+                    onCustomDurationChange(value.toIntOrNull() ?: 0)
                 }
             },
             modifier = Modifier
@@ -458,7 +447,7 @@ private fun DurationSelector(
             },
             placeholder = {
                 Text(
-                    text = "Enter whole minutes",
+                    text = "Enter minutes (1–5)",
                     style = Typography.bodyMedium.copy(fontFamily = FocusBodyFont)
                 )
             },
@@ -469,6 +458,7 @@ private fun DurationSelector(
                 )
             },
             singleLine = true,
+            isError = durationError != null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = ColorPalette.Neutral.Snow,
@@ -481,17 +471,18 @@ private fun DurationSelector(
                 unfocusedPlaceholderColor = ColorPalette.Neutral.t700,
                 focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                 unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                errorIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                 cursorColor = ColorPalette.SpicyPaprika.t500
             )
         )
 
-        val parsedDuration = customDurationText.value.toIntOrNull()
-        if (parsedDuration == null || parsedDuration <= 0) {
+        if (durationError != null) {
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Enter a whole number greater than 0.",
+                text = durationError,
                 style = Typography.bodySmall.copy(fontFamily = FocusBodyFont),
                 color = ColorPalette.SpicyPaprika.t500,
-                modifier = Modifier.padding(start = 24.dp, top = 4.dp)
+                modifier = Modifier.padding(horizontal = 28.dp)
             )
         }
     }
@@ -730,21 +721,18 @@ private fun ActiveFocusContent(
         ActiveFocusTopBar()
 
         Spacer(
-            modifier = Modifier.height(28.dp)
+            modifier = Modifier.height(45.dp)
         )
 
         FocusSprintPet()
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier = Modifier.height(18.dp)
         )
 
         Text(
             text = timeText,
-            style = Typography.displayLarge.copy(
-                fontFamily = FocusTitleFont,
-                fontWeight = FontWeight.SemiBold
-            ),
+            style = Typography.displayLarge.copy(fontFamily = FocusTitleFont),
             color = ColorPalette.Neutral.t1000,
             textAlign = TextAlign.Center
         )
@@ -857,24 +845,21 @@ private fun FocusGoalBadge(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.9f)
             .border(
                 width = 2.dp,
                 color = ColorPalette.Neutral.t850,
                 shape = RoundedCornerShape(20.dp)
             )
             .padding(
-                horizontal = 12.dp,
-                vertical = 6.dp
+                horizontal = 16.dp,
+                vertical = 7.dp
             )
     ) {
         Text(
             text = "Target: $focusGoal",
             style = Typography.labelMedium.copy(fontFamily = FocusBodyFont),
             color = ColorPalette.Neutral.t850,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -889,30 +874,23 @@ private fun FocusProgressBar(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.88f)
-            .height(16.dp)
-            .clip(RoundedCornerShape(50))
-            .background(androidx.compose.ui.graphics.Color(0xFFE9DCD5))
+            .fillMaxWidth(0.65f)
+            .height(10.dp)
+            .clip(RoundedCornerShape(10.dp))
             .border(
-                width = 1.5.dp,
+                width = 2.dp,
                 color = ColorPalette.Neutral.t850,
-                shape = RoundedCornerShape(50)
+                shape = RoundedCornerShape(10.dp)
             )
-            .padding(2.dp),
-        contentAlignment = Alignment.CenterStart
+            .padding(2.dp)
     ) {
-        val progresoVisible = progress.coerceIn(0f, 1f)
-        val anchoVisible = if (progresoVisible > 0f) {
-            progresoVisible.coerceAtLeast(0.035f)
-        } else {
-            0f
-        }
-
         Box(
             modifier = Modifier
-                .fillMaxWidth(anchoVisible)
+                .fillMaxWidth(
+                    progress.coerceIn(0f, 1f)
+                )
                 .fillMaxSize()
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(10.dp))
                 .background(ColorPalette.SpicyPaprika.t500)
         )
     }
@@ -986,7 +964,7 @@ private fun DurationButton(
             .clip(RoundedCornerShape(16.dp))
             .background(
                 if (selected) {
-                    ColorPalette.SpicyPaprika.t500
+                    androidx.compose.ui.graphics.Color(0xFFB94B2D)
                 } else {
                     ColorPalette.Neutral.Snow
                 }
@@ -1038,9 +1016,16 @@ private fun SoundscapeButton(
             color = borderColor
         ),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = backgroundColor.copy(
-                alpha = if (selected) 1f else 0.55f
-            ),
+            containerColor = if (selected) {
+                backgroundColor.copy(
+                    red = backgroundColor.red * 0.88f,
+                    green = backgroundColor.green * 0.88f,
+                    blue = backgroundColor.blue * 0.88f,
+                    alpha = 1f
+                )
+            } else {
+                backgroundColor.copy(alpha = 0.55f)
+            },
             contentColor = ColorPalette.Neutral.t1000
         ),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
@@ -1062,8 +1047,8 @@ private fun FocusSprintPet() {
     Box(
         modifier = Modifier
             .size(
-                width = 174.dp,
-                height = 180.dp
+                width = 190.dp,
+                height = 195.dp
             )
             .clip(
                 RoundedCornerShape(34.dp)
@@ -1072,7 +1057,7 @@ private fun FocusSprintPet() {
                 ColorPalette.Neutral.Snow
             )
             .border(
-                width = 3.dp,
+                width = 5.dp,
                 color = ColorPalette.Neutral.t1000,
                 shape = RoundedCornerShape(34.dp)
             ),
@@ -1086,7 +1071,7 @@ private fun FocusSprintPet() {
                     R.drawable.ic_nav_focus_selected
                 ),
                 contentDescription = "Focus",
-                modifier = Modifier.size(58.dp)
+                modifier = Modifier.size(64.dp)
             )
 
             Spacer(
