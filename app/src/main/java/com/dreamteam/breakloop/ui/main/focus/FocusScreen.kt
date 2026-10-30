@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,6 +41,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.R
@@ -85,6 +89,22 @@ fun FocusScreen(
     )
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(viewModel, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_STOP) {
+                viewModel.detenerSonido()
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.detenerSonido()
+        }
+    }
 
     FocusContent(
         state = state,
@@ -93,6 +113,8 @@ fun FocusScreen(
         onCustomDurationChange = viewModel::onCustomDurationChange,
         onFocusGoalChange = viewModel::onFocusGoalChange,
         onSoundscapeChange = viewModel::onSoundscapeChange,
+        onLoadSound = viewModel::cargarSonido,
+        onStopSound = viewModel::detenerSonido,
         onAppShieldChange = viewModel::onAppShieldChange,
         onStartFocus = viewModel::startFocus,
         onStopFocus = viewModel::stopFocus,
@@ -112,6 +134,8 @@ private fun FocusContent(
     onCustomDurationChange: (Int) -> Unit,
     onFocusGoalChange: (String) -> Unit,
     onSoundscapeChange: (Soundscape) -> Unit,
+    onLoadSound: (String) -> Unit,
+    onStopSound: () -> Unit,
     onAppShieldChange: (Boolean) -> Unit,
     onStartFocus: () -> Unit,
     onStopFocus: () -> Unit,
@@ -131,6 +155,8 @@ private fun FocusContent(
             onCustomDurationChange = onCustomDurationChange,
             onFocusGoalChange = onFocusGoalChange,
             onSoundscapeChange = onSoundscapeChange,
+            onLoadSound = onLoadSound,
+            onStopSound = onStopSound,
             onAppShieldChange = onAppShieldChange,
             onStartFocus = onStartFocus,
             modifier = modifier
@@ -150,6 +176,8 @@ private fun FocusSetupScreen(
     onCustomDurationChange: (Int) -> Unit,
     onFocusGoalChange: (String) -> Unit,
     onSoundscapeChange: (Soundscape) -> Unit,
+    onLoadSound: (String) -> Unit,
+    onStopSound: () -> Unit,
     onAppShieldChange: (Boolean) -> Unit,
     onStartFocus: () -> Unit,
     modifier: Modifier = Modifier
@@ -168,6 +196,8 @@ private fun FocusSetupScreen(
             onCustomDurationChange = onCustomDurationChange,
             onFocusGoalChange = onFocusGoalChange,
             onSoundscapeChange = onSoundscapeChange,
+            onLoadSound = onLoadSound,
+            onStopSound = onStopSound,
             onAppShieldChange = onAppShieldChange,
             onStartFocus = onStartFocus
         )
@@ -186,6 +216,8 @@ private fun FocusSetupContent(
     onCustomDurationChange: (Int) -> Unit,
     onFocusGoalChange: (String) -> Unit,
     onSoundscapeChange: (Soundscape) -> Unit,
+    onLoadSound: (String) -> Unit,
+    onStopSound: () -> Unit,
     onAppShieldChange: (Boolean) -> Unit,
     onStartFocus: () -> Unit
 ) {
@@ -219,7 +251,9 @@ private fun FocusSetupContent(
 
     SoundscapeCard(
         selectedSoundscape = state.selectedSoundscape,
-        onSoundscapeChange = onSoundscapeChange
+        onSoundscapeChange = onSoundscapeChange,
+        onLoadSound = onLoadSound,
+        onStopSound = onStopSound
     )
 
     Spacer(
@@ -475,7 +509,9 @@ private fun FocusGoalCard(
 @Composable
 private fun SoundscapeCard(
     selectedSoundscape: Soundscape,
-    onSoundscapeChange: (Soundscape) -> Unit
+    onSoundscapeChange: (Soundscape) -> Unit,
+    onLoadSound: (String) -> Unit,
+    onStopSound: () -> Unit
 ) {
     BreakLoopCard(
         modifier = Modifier.padding(horizontal = 24.dp)
@@ -499,6 +535,7 @@ private fun SoundscapeCard(
                 selected = selectedSoundscape == Soundscape.HEARTH,
                 onClick = {
                     onSoundscapeChange(Soundscape.HEARTH)
+                    onLoadSound("hearth")
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -508,6 +545,7 @@ private fun SoundscapeCard(
                 selected = selectedSoundscape == Soundscape.RAIN,
                 onClick = {
                     onSoundscapeChange(Soundscape.RAIN)
+                    onLoadSound("rain")
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -517,6 +555,7 @@ private fun SoundscapeCard(
                 selected = selectedSoundscape == Soundscape.SILENCE,
                 onClick = {
                     onSoundscapeChange(Soundscape.SILENCE)
+                    onStopSound()
                 },
                 modifier = Modifier.weight(1f)
             )
@@ -1021,6 +1060,8 @@ private fun FocusScreenPreview() {
             onCustomDurationChange = {},
             onFocusGoalChange = {},
             onSoundscapeChange = {},
+            onLoadSound = {},
+            onStopSound = {},
             onAppShieldChange = {},
             onStartFocus = {},
             onStopFocus = {}

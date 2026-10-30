@@ -336,6 +336,7 @@ class FocusViewModel(
         soundscapeJob?.cancel()
         detenerReproductor()
 
+        //creación de hilo pidiendo el sonido
         soundscapeJob = viewModelScope.launch {
             try {
                 val archivo = withContext(Dispatchers.IO) {
@@ -355,6 +356,7 @@ class FocusViewModel(
                 }
 
                 reproductor.setOnErrorListener { player, _, _ ->
+                    //comparación en memoria
                     if (mediaPlayer === player) {
                         mediaPlayer = null
                     }
@@ -389,7 +391,7 @@ class FocusViewModel(
         try {
             reproductor.reset()
         } catch (e: IllegalStateException) {
-            // El reproductor ya no está en un estado válido.
+            // El reproductor ya no está en un estado válido
         } finally {
             reproductor.release()
         }
