@@ -4,13 +4,16 @@ import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
 import com.dreamteam.breakloop.domain.ContextSnapshot
 import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import com.dreamteam.breakloop.domain.enums.ActivitySource
+import com.dreamteam.breakloop.domain.enums.PlaceLabel
 import kotlinx.coroutines.flow.Flow
 
 interface ActivityLogRepository {
     suspend fun startLog(activityId: String,
                          category: ActivityCategory,
                          source: ActivitySource,
-                         context: ContextSnapshot): String
+                         context: ContextSnapshot,
+                         interactionId: String? = null,
+                         placeLabel: PlaceLabel? = null): String
     suspend fun completeLog(logId: String, xp: Int)
     suspend fun getRecentActivityIds(limit: Int): List<String>
 
