@@ -21,7 +21,6 @@ import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.google.firebase.auth.FirebaseAuth
 import com.dreamteam.breakloop.domain.enums.ActivityPhase
 import com.dreamteam.breakloop.domain.enums.ActivitySource
-import com.dreamteam.breakloop.domain.repository.ActivityLogRepository
 import com.dreamteam.breakloop.ui.navigation.OfflineActivityDetail
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
