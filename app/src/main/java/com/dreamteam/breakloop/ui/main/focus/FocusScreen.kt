@@ -303,30 +303,37 @@ private fun FocusSetupContent(
 
 @Composable
 private fun FocusIntroCard() {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(start = 32.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-        FocusIcon()
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Ready to Focus?",
-            style = Typography.headlineMedium.copy(fontFamily = FocusTitleFont),
-            color = ColorPalette.Neutral.t1000
+        FocusIcon(
+            modifier = Modifier.padding(start = 4.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Ready to Focus?",
+                style = Typography.headlineMedium.copy(fontFamily = FocusTitleFont),
+                color = ColorPalette.Neutral.t1000,
+                textAlign = TextAlign.Center
+            )
 
-        Text(
-            text = "Select your duration and choose your commitment.",
-            style = Typography.bodyMedium.copy(fontFamily = FocusBodyFont),
-            color = ColorPalette.Neutral.t850,
-            textAlign = TextAlign.Center
-        )
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "Select your duration and choose your commitment.",
+                style = Typography.bodyMedium.copy(fontFamily = FocusBodyFont),
+                color = ColorPalette.Neutral.t850,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 // -----------------------------------------------------------------------------
@@ -878,20 +885,20 @@ private fun FocusProgressBar(
 private fun FocusIcon(
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(7.dp)
+    val shape = RoundedCornerShape(12.dp)
 
     Box(
-        modifier = modifier.size(40.dp)
+        modifier = modifier.size(76.dp)
     ) {
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .offset(
-                    x = 3.dp,
-                    y = 3.dp
+                    x = 2.dp,
+                    y = 2.dp
                 )
                 .background(
-                    color = ColorPalette.Neutral.t1000,
+                    color = ColorPalette.Neutral.t850,
                     shape = shape
                 )
         )
@@ -905,7 +912,7 @@ private fun FocusIcon(
                 )
                 .border(
                     width = 1.5.dp,
-                    color = ColorPalette.Neutral.t1000,
+                    color = ColorPalette.Neutral.t850,
                     shape = shape
                 ),
             contentAlignment = Alignment.Center
@@ -915,7 +922,7 @@ private fun FocusIcon(
                     R.drawable.ic_nav_focus_selected
                 ),
                 contentDescription = "Focus",
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(48.dp)
             )
         }
     }
@@ -1149,3 +1156,4 @@ private fun ActiveFocusPreview() {
         )
     }
 }
+
