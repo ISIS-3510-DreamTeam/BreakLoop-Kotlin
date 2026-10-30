@@ -13,7 +13,7 @@ interface FocusSessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(session: FocusSessionEntity)
 
-    @Query("SELECT * FROM focus_sessions WHERE synced = 0")
+    @Query("SELECT * FROM focus_sessions WHERE synced =s 0")
     suspend fun getUnsyncedSessions(): List<FocusSessionEntity>
 
     @Query("UPDATE focus_sessions SET synced = 1 WHERE id = :id")
