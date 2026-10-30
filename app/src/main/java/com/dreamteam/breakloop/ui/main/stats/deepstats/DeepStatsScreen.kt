@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +34,10 @@ import com.dreamteam.breakloop.ui.layout.TopBar
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.ColorPalette.Neutral.Snow
 import com.dreamteam.breakloop.ui.theme.Typography
+
+private val StatsTitleFont = FontFamily.Monospace
+private val StatsBodyFont = FontFamily.SansSerif
+private const val DAILY_PICKUP_BASELINE = 86
 
 @Composable
 fun DeepStatsScreen(
@@ -113,7 +118,7 @@ private fun DeepStatsContent(
             ) {
                 Text(
                     text = "← Back",
-                    style = Typography.titleMedium,
+                    style = Typography.titleMedium.copy(fontFamily = StatsTitleFont),
                     color = ColorPalette.SpicyPaprika.t700,
                     fontWeight = FontWeight.Bold
                 )
@@ -125,7 +130,7 @@ private fun DeepStatsContent(
 
             Text(
                 text = "Detailed Statistics",
-                style = Typography.headlineMedium,
+                style = Typography.headlineMedium.copy(fontFamily = StatsTitleFont),
                 color = ColorPalette.Neutral.t1000,
                 fontWeight = FontWeight.Bold
             )
@@ -138,7 +143,6 @@ private fun DeepStatsContent(
 
         DailyPickupCard(
             dailyPickups = content.dailyPickups,
-            baselineText = content.baselineText,
             averageIntervalMinutes = content.avgIntervalMinutes
         )
     }
@@ -154,7 +158,7 @@ private fun MindfulUnlockCard(
     ) {
         Text(
             text = "MINDFUL UNLOCK INTENTIONALITY",
-            style = Typography.displaySmall,
+            style = Typography.displaySmall.copy(fontFamily = StatsTitleFont),
             color = ColorPalette.SpicyPaprika.t700,
             fontWeight = FontWeight.Bold,
             lineHeight = 32.sp
@@ -191,7 +195,7 @@ private fun MindfulUnlockCard(
 
                 Text(
                     text = "$mindfulPercentage%",
-                    style = Typography.headlineMedium,
+                    style = Typography.headlineMedium.copy(fontFamily = StatsTitleFont),
                     color = ColorPalette.SpicyPaprika.t700,
                     fontWeight = FontWeight.Bold
                 )
@@ -206,7 +210,7 @@ private fun MindfulUnlockCard(
             ) {
                 Text(
                     text = "$mindfulPercentage% intentional unlocks",
-                    style = Typography.titleLarge,
+                    style = Typography.titleLarge.copy(fontFamily = StatsTitleFont),
                     color = ColorPalette.Neutral.t1000,
                     fontWeight = FontWeight.Bold
                 )
@@ -217,7 +221,7 @@ private fun MindfulUnlockCard(
 
                 Text(
                     text = "Only $impulsivePercentage% were impulsive reflex pick-ups.",
-                    style = Typography.bodyLarge,
+                    style = Typography.bodyLarge.copy(fontFamily = StatsBodyFont),
                     color = ColorPalette.Neutral.t700
                 )
             }
@@ -228,7 +232,6 @@ private fun MindfulUnlockCard(
 @Composable
 private fun DailyPickupCard(
     dailyPickups: Int,
-    baselineText: String,
     averageIntervalMinutes: Int
 ) {
     BreakLoopCard(
@@ -236,7 +239,7 @@ private fun DailyPickupCard(
     ) {
         Text(
             text = "DAILY PICKUP COUNT",
-            style = Typography.displaySmall,
+            style = Typography.displaySmall.copy(fontFamily = StatsTitleFont),
             color = ColorPalette.SpicyPaprika.t700,
             fontWeight = FontWeight.Bold
         )
@@ -251,7 +254,7 @@ private fun DailyPickupCard(
         ) {
             Text(
                 text = dailyPickups.toString(),
-                style = Typography.displayLarge,
+                style = Typography.displayLarge.copy(fontFamily = StatsTitleFont),
                 color = ColorPalette.Neutral.t1000,
                 fontWeight = FontWeight.Bold
             )
@@ -262,7 +265,7 @@ private fun DailyPickupCard(
 
             Text(
                 text = "pickups",
-                style = Typography.headlineMedium,
+                style = Typography.headlineMedium.copy(fontFamily = StatsTitleFont),
                 color = ColorPalette.Neutral.t1000,
                 modifier = Modifier.padding(bottom = 7.dp)
             )
@@ -271,10 +274,17 @@ private fun DailyPickupCard(
                 modifier = Modifier.weight(1f)
             )
 
+            val difference = DAILY_PICKUP_BASELINE - dailyPickups
+            val comparisonText = when {
+                difference > 0 -> "$difference fewer"
+                difference < 0 -> "${-difference} more"
+                else -> "Same as"
+            }
+
             Text(
-                text = baselineText,
-                style = Typography.titleMedium,
-                color = ColorPalette.Fern.t500,
+                text = comparisonText,
+                style = Typography.titleMedium.copy(fontFamily = StatsTitleFont),
+                color = if (difference >= 0) ColorPalette.Fern.t500 else ColorPalette.SpicyPaprika.t700,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 7.dp)
             )
@@ -285,15 +295,16 @@ private fun DailyPickupCard(
         )
 
         Text(
-            text = if (averageIntervalMinutes > 0) {
-                "Average interval between phone checks: " +
-                        "$averageIntervalMinutes minutes."
-            } else {
-                "Average interval between phone checks: -"
-            },
-            style = Typography.bodyLarge,
+            text = "Compared with a reference of $DAILY_PICKUP_BASELINE phone checks per day, " +
+                    "you made ${dailyPickups} checks today.",
+            style = Typography.bodyLarge.copy(fontFamily = StatsBodyFont),
             color = ColorPalette.Neutral.t700
         )
+
+        Spacer(
+            modifier = Modifier.size(8.dp)
+        )
+
     }
 }
 
@@ -311,7 +322,7 @@ private fun ErrorContent(
     ) {
         Text(
             text = message,
-            style = Typography.bodyLarge,
+            style = Typography.bodyLarge.copy(fontFamily = StatsBodyFont),
             color = ColorPalette.Neutral.t1000,
             textAlign = TextAlign.Center
         )
@@ -346,7 +357,7 @@ private fun DeepStatsScreenPreviewContent() {
             content = DeepStatsUiState.Content(
                 dailyPickups = 15,
                 avgIntervalMinutes = 53,
-                baselineText = "-45 vs baseline",
+                baselineText = "-71 vs. daily reference",
                 mindfulPercentage = 62,
                 impulsivePercentage = 38
             ),
