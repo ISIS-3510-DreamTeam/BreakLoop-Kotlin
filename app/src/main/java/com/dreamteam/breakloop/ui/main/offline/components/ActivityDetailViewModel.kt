@@ -6,15 +6,19 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.remote.ActivityLogRemoteDataSource
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
 import com.dreamteam.breakloop.data.remote.WeatherApiFactory
 import com.dreamteam.breakloop.data.repository.ActivityLogRepositoryImpl
 import com.dreamteam.breakloop.data.repository.ActivityRepositoryImpl
 import com.dreamteam.breakloop.data.repository.ContextProviderImpl
 import com.dreamteam.breakloop.data.repository.WeatherRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.data.system.ActivityCatalogDataSource
 import com.dreamteam.breakloop.data.system.InterestsDataSource
 import com.dreamteam.breakloop.data.system.LocationDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
+import com.google.firebase.auth.FirebaseAuth
 import com.dreamteam.breakloop.domain.enums.ActivityPhase
 import com.dreamteam.breakloop.domain.enums.ActivitySource
 import com.dreamteam.breakloop.domain.repository.ActivityLogRepository
@@ -38,7 +42,11 @@ class ActivityDetailViewModel(
         ActivityRepositoryImpl(ActivityCatalogDataSource(application.applicationContext))
 
     private val db = AppDatabase.getInstance(application.applicationContext)
-    private val activityLogRepository = ActivityLogRepositoryImpl(db.activityLogDao())
+    private val activityLogRepository = ActivityLogRepositoryImpl(
+        db.activityLogDao(),
+        remote = ActivityLogRemoteDataSource(RetrofitInstance.activityLogApi, FirebaseAuth.getInstance()),
+        syncScheduler = WorkManagerSyncScheduler(application.applicationContext)
+    )
     private val weatherRepository = WeatherRepositoryImpl(
         LocationDataSource(application.applicationContext, PermissionsDataSource(application.applicationContext)),
         WeatherApiFactory.create()
@@ -82,7 +90,7 @@ class ActivityDetailViewModel(
 
         viewModelScope.launch {
             val snapshot = contextProvider.getSnapshot(current.activity.durationMin)
-            logId = activityLogRepository.startLog(current.activity.id, source, snapshot)
+            logId = activityLogRepository.startLog(current.activity.id, current.activity.category, source, snapshot)
         }
         timerJob = viewModelScope.launch {
             while ((currentContent()?.remainingSeconds ?: 0) > 0) {

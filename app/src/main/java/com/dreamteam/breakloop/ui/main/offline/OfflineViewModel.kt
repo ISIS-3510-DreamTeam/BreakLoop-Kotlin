@@ -9,15 +9,19 @@ import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.lifecycle.viewModelScope
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.remote.ActivityLogRemoteDataSource
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
 import com.dreamteam.breakloop.data.remote.WeatherApiFactory
 import com.dreamteam.breakloop.data.repository.ActivityLogRepositoryImpl
 import com.dreamteam.breakloop.data.repository.ContextProviderImpl
 import com.dreamteam.breakloop.data.repository.WeatherRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.data.system.InterestsDataSource
 import com.dreamteam.breakloop.data.system.LocationDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.domain.recommendation.DefaultScoringRules
 import com.dreamteam.breakloop.domain.usecase.RecommendActivityUseCase
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -38,7 +42,11 @@ class OfflineViewModel(
     private var availableMin = 15
     private var selectedCategory: ActivityCategory? = null
     private val db = AppDatabase.getInstance(application.applicationContext)
-    private val activityLogRepository = ActivityLogRepositoryImpl(db.activityLogDao())
+    private val activityLogRepository = ActivityLogRepositoryImpl(
+        db.activityLogDao(),
+        remote = ActivityLogRemoteDataSource(RetrofitInstance.activityLogApi, FirebaseAuth.getInstance()),
+        syncScheduler = WorkManagerSyncScheduler(application.applicationContext)
+    )
     private val permissionsDataSource = PermissionsDataSource(application.applicationContext)
     private val weatherRepository = WeatherRepositoryImpl(
         LocationDataSource(application.applicationContext, permissionsDataSource),

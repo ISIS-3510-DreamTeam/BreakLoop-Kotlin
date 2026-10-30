@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.data.remote
 
+import com.dreamteam.breakloop.data.remote.dto.WeatherResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

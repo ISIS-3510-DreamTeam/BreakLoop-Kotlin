@@ -1,4 +1,4 @@
-package com.dreamteam.breakloop.data.remote
+package com.dreamteam.breakloop.data.remote.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
