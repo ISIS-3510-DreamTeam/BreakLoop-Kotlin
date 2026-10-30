@@ -119,7 +119,7 @@ class UsageRepositoryImpl (
         for (day in unsyncedDays) {
             val updatedDay = dailyUsageStatsDao.getDailyUsageStatsOnce(day.date) ?: day
             remote.post(updatedDay.toDto())
-            dailyUsageStatsDao.markSynced(updatedDay.date)
+            dailyUsageStatsDao.markSynced(updatedDay.date, updatedDay.updatedAt)
         }
     }
 }

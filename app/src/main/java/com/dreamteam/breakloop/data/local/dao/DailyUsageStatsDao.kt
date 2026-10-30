@@ -32,5 +32,5 @@ interface DailyUsageStatsDao {
     suspend fun getUnsyncedDailyUsageStats(): List<DailyUsageStatsEntity>
 
     @Query("UPDATE daily_usage_stats SET synced = 1 WHERE date = :date and updatedAt = :updatedAt")
-    suspend fun markSynced(date: String, updatedAt: Long = System.currentTimeMillis())
+    suspend fun markSynced(date: String, updatedAt: Long )
 }
