@@ -7,7 +7,7 @@ import com.dreamteam.breakloop.domain.enums.PlaceLabel
 import com.dreamteam.breakloop.domain.enums.TimeOfDay
 
 @Entity(tableName = "suggestion_interaction")
-class SuggestionInteractionEntity (
+data class SuggestionInteractionEntity (
 
     @PrimaryKey
     val id : String,
