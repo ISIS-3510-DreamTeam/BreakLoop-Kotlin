@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.data.remote
 
+import android.util.Log
 import com.dreamteam.breakloop.data.remote.dto.UsageDto
 import com.dreamteam.breakloop.data.remote.exception.NoSessionException
 import com.google.firebase.auth.FirebaseAuth
