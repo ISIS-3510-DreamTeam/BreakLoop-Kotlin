@@ -94,10 +94,17 @@ class SuggestionInteractionRepositoryImpl(
         if ( actual.outcome != InteractionOutcome.PENDING) return
         val now = System.currentTimeMillis()
 
+        val shown = try {
+            Json.decodeFromString<List<ShownSuggestionDto>>(actual.shownSuggestionsJson)
+        } catch (_: Exception) {
+            emptyList()
+        }
+        val wasShown = chosenActivityId != null && shown.any { it.activityId == chosenActivityId }
+
         dao.upsert(actual.copy(
-            outcome = outcome,
-            acceptedActivityId = acceptedActivityId,
-            chosenActivityId = chosenActivityId,
+            outcome = if (wasShown) InteractionOutcome.ACCEPTED else outcome,
+            acceptedActivityId = if (wasShown) chosenActivityId else acceptedActivityId,
+            chosenActivityId = if (wasShown) null else chosenActivityId,
             closedAt = now,
             updatedAt = now,
             synced = false

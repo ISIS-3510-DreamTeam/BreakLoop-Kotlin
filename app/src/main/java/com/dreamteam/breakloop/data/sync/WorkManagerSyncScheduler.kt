@@ -7,6 +7,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.dreamteam.breakloop.background.worker.SyncActivityLogsWorker
+import com.dreamteam.breakloop.background.worker.SyncSuggestionInteractionsWorker
 import com.dreamteam.breakloop.domain.ContextSnapshot
 import com.dreamteam.breakloop.domain.sync.SyncScheduler
 
@@ -31,7 +32,7 @@ class WorkManagerSyncScheduler(
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
 
-        val request = OneTimeWorkRequestBuilder<SyncActivityLogsWorker>()
+        val request = OneTimeWorkRequestBuilder<SyncSuggestionInteractionsWorker>()
             .setConstraints(constraints)
             .build()
 
