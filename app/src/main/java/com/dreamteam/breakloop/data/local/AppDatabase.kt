@@ -23,7 +23,7 @@ import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
         FocusSessionEntity::class,
         FlaggedAppEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

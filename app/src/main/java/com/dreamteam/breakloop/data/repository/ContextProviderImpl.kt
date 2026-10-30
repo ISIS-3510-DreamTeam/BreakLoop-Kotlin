@@ -25,7 +25,9 @@ class ContextProviderImpl(
             availableMin = availableMin,
             weather = weather,
             interests = interestsDataSource.getInterests(),
-            recentActivityIds = activityLogRepository.getRecentActivityIds(3)
+            recentActivityIds = activityLogRepository.getRecentActivityIds(3),
+            latitude = null,
+            longitude = null
         )
     }
 }

@@ -45,7 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.R
 import com.dreamteam.breakloop.data.local.AppDatabase
 import com.dreamteam.breakloop.data.local.repository.FocusSessionRepository
-import com.dreamteam.breakloop.remote.RetrofitInstance
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
