@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dreamteam.breakloop.data.local.repository.PhoneCheckRepository
+import com.dreamteam.breakloop.data.local.worker.PhonePickupSyncScheduler
 import com.dreamteam.breakloop.data.tracking.PhoneCheckService
 import com.dreamteam.breakloop.data.tracking.SensorDataSource
 import com.dreamteam.breakloop.data.tracking.AndroidSensorDataSource
@@ -21,11 +22,13 @@ class DeepStatsViewModel(
 
     private val sensorDataSource = AndroidSensorDataSource(application)
 
+    private val syncScheduler = PhonePickupSyncScheduler(application)
+
     private val phoneCheckService = PhoneCheckService(
         sensorDataSource = sensorDataSource,
-        repository = repository
+        repository = repository,
+        syncScheduler = syncScheduler
     )
-
     private val _uiState =
         MutableStateFlow<DeepStatsUiState>(DeepStatsUiState.Loading)
 
