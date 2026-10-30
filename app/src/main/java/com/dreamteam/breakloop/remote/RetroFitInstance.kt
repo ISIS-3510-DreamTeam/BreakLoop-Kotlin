@@ -21,6 +21,8 @@ object RetrofitInstance {
             .build()
     }
 
+    //Implementacion de los apis de las interfaces de los apis
+
     val focusApi: FocusApi by lazy { retrofit.create(FocusApi::class.java) }
 
     val petApi: PetApi by lazy { retrofit.create(PetApi::class.java) }

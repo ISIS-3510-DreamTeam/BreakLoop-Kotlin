@@ -21,7 +21,7 @@ class PetSyncWorker(
             PetRepository(applicationContext).syncWithServer()
             Result.success()
         } catch (e: Exception) {
-            Result.retry() // e.g. connection dropped mid-download: try again later
+            Result.retry() // si se cae, vuelve a intentar
         }
     }
 

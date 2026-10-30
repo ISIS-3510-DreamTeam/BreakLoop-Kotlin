@@ -7,6 +7,7 @@ import java.io.IOException
 
 class PetImageStorage(context: Context) {
 
+    //private folders
     private val folder = File(context.filesDir, "pet")              // current pet
     private val tempFolder = File(context.filesDir, "pet_download") // new pet being downloaded
 

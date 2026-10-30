@@ -1,5 +1,12 @@
 package com.dreamteam.breakloop.ui.main.home.pet
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,14 +16,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.domain.PetMood
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
+import com.dreamteam.breakloop.ui.components.MonoLabel
 import com.dreamteam.breakloop.ui.theme.ColorPalette
-import com.dreamteam.breakloop.ui.theme.MonoLabel
 
 @Composable
 fun PetCard(
@@ -37,11 +49,12 @@ fun PetCard(
             return@BreakLoopCard
         }
 
-        if (state.image != null) {
-            Image(
-                bitmap = state.image,
-                contentDescription = "Your pet is ${state.mood.name.lowercase()}",
-                contentScale = ContentScale.Fit,
+        // The image is saved in a local val so Kotlin knows it is not null inside the if
+        val image = state.image
+        if (image != null) {
+            AnimatedPet(
+                image = image,
+                mood = state.mood,
                 modifier = Modifier.fillMaxWidth().height(180.dp),
             )
         } else {
@@ -67,4 +80,58 @@ fun PetCard(
             )
         }
     }
+}
+
+// Idle animation: happy = quick hop and stretch, sad = slow sink and sway.
+@Composable
+private fun AnimatedPet(
+    image: ImageBitmap,
+    mood: PetMood,
+    modifier: Modifier = Modifier,
+) {
+    val happy = mood == PetMood.HAPPY
+    val transition = rememberInfiniteTransition(label = "petIdle")
+
+    val offsetY by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = if (happy) -10f else 4f,
+        animationSpec = infiniteRepeatable<Float>(
+            animation = tween<Float>(durationMillis = if (happy) 450 else 1600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "offsetY",
+    )
+
+    val stretch by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (happy) 1.05f else 0.97f,
+        animationSpec = infiniteRepeatable<Float>(
+            animation = tween<Float>(durationMillis = if (happy) 450 else 1600),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "stretch",
+    )
+
+    val tilt by transition.animateFloat(
+        initialValue = if (happy) 0f else -3f,
+        targetValue = if (happy) 0f else 3f,
+        animationSpec = infiniteRepeatable<Float>(
+            animation = tween<Float>(durationMillis = 2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "tilt",
+    )
+
+    Image(
+        bitmap = image,
+        contentDescription = "Your pet is ${mood.name.lowercase()}",
+        contentScale = ContentScale.Fit,
+        filterQuality = FilterQuality.None, // keeps pixel art sharp
+        modifier = modifier.graphicsLayer {
+            translationY = offsetY.dp.toPx()
+            scaleY = stretch
+            rotationZ = tilt
+            transformOrigin = TransformOrigin(0.5f, 1f) // squash from the feet
+        },
+    )
 }

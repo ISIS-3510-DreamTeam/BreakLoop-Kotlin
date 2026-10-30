@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
+//Guarda localmente
+
+//datastore file (preferences)
 private val Context.petDataStore by preferencesDataStore(name = "pet_prefs")
 
 data class LocalPetState(
@@ -23,6 +26,7 @@ data class LocalPetState(
 
 class PetLocalStore(context: Context) {
 
+    //pet preferences datastore
     private val dataStore = context.applicationContext.petDataStore
 
     private val currentPetKey = stringPreferencesKey("current_pet_id")
@@ -44,7 +48,7 @@ class PetLocalStore(context: Context) {
 
     suspend fun getState(): LocalPetState = state.first()
 
-    // Overwrites any previous pending choice: only the last one survives.
+    // Overwrites any previous pending choice (solo ultimo)
     suspend fun setPendingPet(petId: String) {
         dataStore.edit { prefs ->
             if (prefs[currentPetKey] == petId) {
@@ -59,7 +63,7 @@ class PetLocalStore(context: Context) {
     suspend fun finishPetChange(petId: String) {
         dataStore.edit { prefs ->
             prefs[currentPetKey] = petId
-            // If the user picked yet another pet during the download, keep that one pending.
+            // If the user picked another pet during the download, keep pending.
             if (prefs[pendingPetKey] == petId) prefs.remove(pendingPetKey)
             prefs[syncedKey] = false
             prefs[updatedAtKey] = System.currentTimeMillis()

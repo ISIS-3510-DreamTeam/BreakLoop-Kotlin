@@ -6,6 +6,8 @@ import android.net.NetworkCapabilities
 
 object NetworkChecker {
 
+    //revisa si hay conexion y si da internet
+
     fun isOnline(context: Context): Boolean {
         val manager = context.getSystemService(ConnectivityManager::class.java)
         val network = manager.activeNetwork ?: return false

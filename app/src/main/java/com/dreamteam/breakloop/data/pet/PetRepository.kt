@@ -24,6 +24,7 @@ class PetRepository(
 
     private val json = Json { ignoreUnknownKeys = true }
 
+    //lo que le pasa al vm
     fun observeState(): Flow<LocalPetState> = localStore.state
 
     fun getImageFile(mood: PetMood): File? = imageStorage.getImageFile(mood)
@@ -40,12 +41,12 @@ class PetRepository(
         }
     }
 
-    // Retry anything left from a previous session (e.g. the app was closed while offline).
+    // Resync anything unsynchronized.
     fun scheduleSync() {
         PetSyncWorker.schedule(context)
     }
 
-    // Catalog from the server if possible, otherwise the last saved copy.
+    // Catalog from server if possible, otherwise the last saved copy.
     suspend fun getCatalog(): List<PetDto> {
         return try {
             val pets = api.getPets()
@@ -59,14 +60,14 @@ class PetRepository(
 
     // Only called by PetSyncWorker, which only runs when there is internet.
     suspend fun syncWithServer() {
-        // 1. Apply the pending pet change (if any)
+        // 1. Apply the pending pet change
         val pendingId = localStore.getState().pendingPetId
         if (pendingId != null) {
             downloadPet(pendingId)
             localStore.finishPetChange(pendingId)
         }
 
-        // 2. Send the current pet + mood to the backend (if the server is out of date)
+        // 2. Send the current pet and mood to the backend (if out of date)
         val state = localStore.getState()
         val petId = state.currentPetId ?: return
         if (state.synced) return
@@ -85,7 +86,7 @@ class PetRepository(
     private suspend fun downloadPet(petId: String) {
         val pet = getCatalog().first { it.id == petId }
 
-        // Network + file writing happen on the IO thread pool, never on the UI thread.
+        // Network and file writing happen on thread pool
         withContext(Dispatchers.IO) {
             imageStorage.startDownload()
             for ((moodName, path) in pet.images) {
