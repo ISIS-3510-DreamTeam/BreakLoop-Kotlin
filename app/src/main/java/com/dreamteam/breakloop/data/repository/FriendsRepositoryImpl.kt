@@ -104,8 +104,8 @@ class FriendsRepositoryImpl(
         return invalidos
     }
 
-    suspend fun queuePendingCode(uid: String, code: String ): Set<String> {
-        val pending = localDataSource.getPendingCodes(uid)
+    suspend fun queuePendingCode(uid: String, code: String): Set<String> {
+        val pending = localDataSource.getPendingCodes(uid, listOf(code.trim().uppercase()))
         localDataSource.savePendingCodes(uid, pending)
         return pending
     }
