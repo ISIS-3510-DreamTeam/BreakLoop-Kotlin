@@ -28,5 +28,9 @@ interface DailyUsageStatsDao {
     @Query("SELECT * FROM daily_usage_stats WHERE date >= :dateStart AND date <= :dateEnd ORDER BY date ASC")
     suspend fun getDailyUsageStatsByRangeOnce(dateStart: String, dateEnd: String): List<DailyUsageStatsEntity>
 
+    @Query("SELECT * FROM daily_usage_stats WHERE synced = 0")
+    suspend fun getUnsyncedDailyUsageStats(): List<DailyUsageStatsEntity>
 
+    @Query("UPDATE daily_usage_stats SET synced = 1 WHERE date = :date and updatedAt = :updatedAt")
+    suspend fun markSynced(date: String, updatedAt: Long = System.currentTimeMillis())
 }

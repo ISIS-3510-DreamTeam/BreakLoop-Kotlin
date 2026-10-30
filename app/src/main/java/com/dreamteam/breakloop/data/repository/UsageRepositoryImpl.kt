@@ -5,12 +5,15 @@ import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.mapper.toEntity
 import com.dreamteam.breakloop.data.local.mapper.toDomain
+import com.dreamteam.breakloop.data.remote.mapper.toDto
+import com.dreamteam.breakloop.data.remote.UsageRemoteDataSource
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
 import com.dreamteam.breakloop.domain.AppUsage
 import com.dreamteam.breakloop.domain.DailyUsageStats
 import com.dreamteam.breakloop.domain.UsageEventsResult
 import com.dreamteam.breakloop.domain.repository.UsageRepository
+import com.dreamteam.breakloop.domain.sync.SyncScheduler
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
@@ -30,7 +33,9 @@ class UsageRepositoryImpl (
     private val dailyUsageStatsDao: DailyUsageStatsDao,
     private val calculateBaselineUseCase: CalculateBaselineUseCase,
     private val calculateFlaggedTimeUseCase: CalculateFlaggedTimeUseCase,
-    private val flaggedAppsRepositoryImpl: FlaggedAppsRepositoryImpl
+    private val flaggedAppsRepositoryImpl: FlaggedAppsRepositoryImpl,
+    private val remote: UsageRemoteDataSource,
+    private val syncScheduler: SyncScheduler
 ): UsageRepository {
     override suspend fun refreshDay(date: String): Boolean {
         return withContext(Dispatchers.IO) {
@@ -68,6 +73,7 @@ class UsageRepositoryImpl (
                         flaggedTimeMs = timeLabeled
                     )
                     dailyUsageStatsDao.saveDailyUsageStats(stats.toEntity())
+                    syncScheduler.enqueueUsageSync()
                     true
                 }
             }
@@ -106,6 +112,15 @@ class UsageRepositoryImpl (
         val daysMode = days.map { list -> list.toDomain() }
         return calculateBaselineUseCase.calculate(daysMode)
 
+    }
+
+    override suspend fun syncUnsyncedDays() {
+        val unsyncedDays = dailyUsageStatsDao.getUnsyncedDailyUsageStats()
+        for (day in unsyncedDays) {
+            val updatedDay = dailyUsageStatsDao.getDailyUsageStatsOnce(day.date) ?: day
+            remote.post(updatedDay.toDto())
+            dailyUsageStatsDao.markSynced(updatedDay.date)
+        }
     }
 }
 
