@@ -7,6 +7,7 @@ import com.dreamteam.breakloop.data.remote.mapper.toDto
 import com.dreamteam.breakloop.domain.ContextSnapshot
 import com.dreamteam.breakloop.domain.enums.ActivityCategory
 import com.dreamteam.breakloop.domain.enums.ActivitySource
+import com.dreamteam.breakloop.domain.enums.PlaceLabel
 import com.dreamteam.breakloop.domain.repository.ActivityLogRepository
 import com.dreamteam.breakloop.domain.sync.SyncScheduler
 import kotlinx.coroutines.flow.Flow
@@ -21,7 +22,9 @@ class ActivityLogRepositoryImpl (
         activityId: String,
         category: ActivityCategory,
         source: ActivitySource,
-        context: ContextSnapshot
+        context: ContextSnapshot,
+        interactionId: String?,
+        placeLabel: PlaceLabel?
     ): String {
         val id = UUID.randomUUID().toString()
         activityLogDao.insertActivityLog(
@@ -36,8 +39,8 @@ class ActivityLogRepositoryImpl (
                 weather = context.weather?.name,
                 availableMin = context.availableMin,
                 category = category,
-                interactionId = null,
-                placeLabel = null,
+                interactionId = interactionId,
+                placeLabel = placeLabel,
                 latitude = context.latitude,
                 longitude = context.longitude,
                 synced = false
