@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -188,6 +190,10 @@ private fun FocusSetupScreen(
     onStartFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val customDurationValid = remember(state.isCustomDurationSelected) {
+        mutableStateOf(!state.isCustomDurationSelected || state.customDuration > 0)
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -200,12 +206,17 @@ private fun FocusSetupScreen(
             onDurationChange = onDurationChange,
             onCustomDurationSelected = onCustomDurationSelected,
             onCustomDurationChange = onCustomDurationChange,
+            onCustomDurationValidityChange = { customDurationValid.value = it },
             onFocusGoalChange = onFocusGoalChange,
             onSoundscapeChange = onSoundscapeChange,
             onLoadSound = onLoadSound,
             onStopSound = onStopSound,
             onAppShieldChange = onAppShieldChange,
-            onStartFocus = onStartFocus
+            onStartFocus = {
+                if (!state.isCustomDurationSelected || customDurationValid.value) {
+                    onStartFocus()
+                }
+            }
         )
 
         Spacer(
@@ -220,6 +231,7 @@ private fun FocusSetupContent(
     onDurationChange: (Int) -> Unit,
     onCustomDurationSelected: () -> Unit,
     onCustomDurationChange: (Int) -> Unit,
+    onCustomDurationValidityChange: (Boolean) -> Unit,
     onFocusGoalChange: (String) -> Unit,
     onSoundscapeChange: (Soundscape) -> Unit,
     onLoadSound: (String) -> Unit,
@@ -239,7 +251,8 @@ private fun FocusSetupContent(
         isCustomSelected = state.isCustomDurationSelected,
         onDurationChange = onDurationChange,
         onCustomDurationSelected = onCustomDurationSelected,
-        onCustomDurationChange = onCustomDurationChange
+        onCustomDurationChange = onCustomDurationChange,
+        onCustomDurationValidityChange = onCustomDurationValidityChange
     )
 
     Spacer(
@@ -347,7 +360,8 @@ private fun DurationSelector(
     isCustomSelected: Boolean,
     onDurationChange: (Int) -> Unit,
     onCustomDurationSelected: () -> Unit,
-    onCustomDurationChange: (Int) -> Unit
+    onCustomDurationChange: (Int) -> Unit,
+    onCustomDurationValidityChange: (Boolean) -> Unit
 ) {
     Text(
         text = "SESSION LENGTH",
@@ -411,19 +425,25 @@ private fun DurationSelector(
     }
 
     if (isCustomSelected) {
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+        val customDurationText = remember(isCustomSelected) {
+            mutableStateOf(if (customDuration > 0) customDuration.toString() else "")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         TextField(
-            value = customDuration.toString(),
+            value = customDurationText.value,
             onValueChange = { value ->
-                val duration = value
-                    .filter { it.isDigit() }
-                    .toIntOrNull()
+                if (value.all { it.isDigit() }) {
+                    customDurationText.value = value
 
-                if (duration != null && duration > 0) {
-                    onCustomDurationChange(duration)
+                    val duration = value.toIntOrNull()
+                    val isValid = duration != null && duration > 0
+                    onCustomDurationValidityChange(isValid)
+
+                    if (isValid) {
+                        onCustomDurationChange(duration!!)
+                    }
                 }
             },
             modifier = Modifier
@@ -438,7 +458,7 @@ private fun DurationSelector(
             },
             placeholder = {
                 Text(
-                    text = "Enter minutes",
+                    text = "Enter whole minutes",
                     style = Typography.bodyMedium.copy(fontFamily = FocusBodyFont)
                 )
             },
@@ -449,9 +469,7 @@ private fun DurationSelector(
                 )
             },
             singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
-            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = ColorPalette.Neutral.Snow,
                 unfocusedContainerColor = ColorPalette.Neutral.Snow,
@@ -466,6 +484,16 @@ private fun DurationSelector(
                 cursorColor = ColorPalette.SpicyPaprika.t500
             )
         )
+
+        val parsedDuration = customDurationText.value.toIntOrNull()
+        if (parsedDuration == null || parsedDuration <= 0) {
+            Text(
+                text = "Enter a whole number greater than 0.",
+                style = Typography.bodySmall.copy(fontFamily = FocusBodyFont),
+                color = ColorPalette.SpicyPaprika.t500,
+                modifier = Modifier.padding(start = 24.dp, top = 4.dp)
+            )
+        }
     }
 }
 
@@ -702,18 +730,21 @@ private fun ActiveFocusContent(
         ActiveFocusTopBar()
 
         Spacer(
-            modifier = Modifier.height(45.dp)
+            modifier = Modifier.height(28.dp)
         )
 
         FocusSprintPet()
 
         Spacer(
-            modifier = Modifier.height(18.dp)
+            modifier = Modifier.height(12.dp)
         )
 
         Text(
             text = timeText,
-            style = Typography.displayLarge.copy(fontFamily = FocusTitleFont),
+            style = Typography.displayLarge.copy(
+                fontFamily = FocusTitleFont,
+                fontWeight = FontWeight.SemiBold
+            ),
             color = ColorPalette.Neutral.t1000,
             textAlign = TextAlign.Center
         )
@@ -826,21 +857,24 @@ private fun FocusGoalBadge(
 ) {
     Box(
         modifier = Modifier
+            .fillMaxWidth(0.9f)
             .border(
                 width = 2.dp,
                 color = ColorPalette.Neutral.t850,
                 shape = RoundedCornerShape(20.dp)
             )
             .padding(
-                horizontal = 16.dp,
-                vertical = 7.dp
+                horizontal = 12.dp,
+                vertical = 6.dp
             )
     ) {
         Text(
             text = "Target: $focusGoal",
             style = Typography.labelMedium.copy(fontFamily = FocusBodyFont),
             color = ColorPalette.Neutral.t850,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -855,23 +889,30 @@ private fun FocusProgressBar(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.65f)
-            .height(10.dp)
-            .clip(RoundedCornerShape(10.dp))
+            .fillMaxWidth(0.88f)
+            .height(16.dp)
+            .clip(RoundedCornerShape(50))
+            .background(androidx.compose.ui.graphics.Color(0xFFE9DCD5))
             .border(
-                width = 2.dp,
+                width = 1.5.dp,
                 color = ColorPalette.Neutral.t850,
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(50)
             )
-            .padding(2.dp)
+            .padding(2.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
+        val progresoVisible = progress.coerceIn(0f, 1f)
+        val anchoVisible = if (progresoVisible > 0f) {
+            progresoVisible.coerceAtLeast(0.035f)
+        } else {
+            0f
+        }
+
         Box(
             modifier = Modifier
-                .fillMaxWidth(
-                    progress.coerceIn(0f, 1f)
-                )
+                .fillMaxWidth(anchoVisible)
                 .fillMaxSize()
-                .clip(RoundedCornerShape(10.dp))
+                .clip(RoundedCornerShape(50))
                 .background(ColorPalette.SpicyPaprika.t500)
         )
     }
@@ -1021,8 +1062,8 @@ private fun FocusSprintPet() {
     Box(
         modifier = Modifier
             .size(
-                width = 190.dp,
-                height = 195.dp
+                width = 174.dp,
+                height = 180.dp
             )
             .clip(
                 RoundedCornerShape(34.dp)
@@ -1031,7 +1072,7 @@ private fun FocusSprintPet() {
                 ColorPalette.Neutral.Snow
             )
             .border(
-                width = 5.dp,
+                width = 3.dp,
                 color = ColorPalette.Neutral.t1000,
                 shape = RoundedCornerShape(34.dp)
             ),
@@ -1045,7 +1086,7 @@ private fun FocusSprintPet() {
                     R.drawable.ic_nav_focus_selected
                 ),
                 contentDescription = "Focus",
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(58.dp)
             )
 
             Spacer(
@@ -1156,4 +1197,3 @@ private fun ActiveFocusPreview() {
         )
     }
 }
-
