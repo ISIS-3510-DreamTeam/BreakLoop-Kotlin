@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.dreamteam.breakloop.remote.PetApi
 
 object RetrofitInstance {
     private const val BASE_URL = "https://breakloop-backend-14746672383.southamerica-west1.run.app/"
@@ -39,4 +40,15 @@ object RetrofitInstance {
         retrofit
             .create(SuggestionInteractionApi::class.java)
     }
+
+    val friendsApi: FriendsApi by lazy {
+        retrofit
+            .create(FriendsApi::class.java)
+    }
+
+    val petApi: PetApi by lazy {
+        retrofit
+            .create(PetApi::class.java)
+    }
+
 }

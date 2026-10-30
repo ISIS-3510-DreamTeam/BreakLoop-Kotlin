@@ -5,7 +5,7 @@ import com.dreamteam.breakloop.domain.PetMood
 import com.dreamteam.breakloop.remote.PetApi
 import com.dreamteam.breakloop.remote.PetDto
 import com.dreamteam.breakloop.remote.PetStateRequest
-import com.dreamteam.breakloop.remote.RetrofitInstance
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
