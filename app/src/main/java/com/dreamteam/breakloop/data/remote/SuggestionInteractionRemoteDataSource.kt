@@ -1,9 +1,7 @@
 package com.dreamteam.breakloop.data.remote
 
 import com.dreamteam.breakloop.data.remote.dto.SuggestionInteractionDto
-import com.dreamteam.breakloop.data.remote.exception.NoSessionException
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.tasks.await
 
 class SuggestionInteractionRemoteDataSource(
     private val api: SuggestionInteractionApi,
@@ -11,12 +9,11 @@ class SuggestionInteractionRemoteDataSource(
 
 ) {
     suspend fun upload(suggestionInteractions: List<SuggestionInteractionDto>) {
-        val user = auth.currentUser ?: throw NoSessionException("User not authenticated")
-        val token = user.getIdToken(false).await().token ?: throw NoSessionException("User token not found")
+        val (uid, authHeader) = auth.authorized()
 
         api.postSuggestionInteraction(
-            user.uid,
-            "Bearer $token",
+            uid,
+            authHeader,
             suggestionInteractions
         )
 
