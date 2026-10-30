@@ -18,7 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -29,11 +33,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dreamteam.breakloop.data.network.ConnectivityStatus
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.layout.TopBar
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.ColorPalette.Neutral.Snow
 import com.dreamteam.breakloop.ui.theme.Typography
+import kotlinx.coroutines.delay
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 private val StatsTitleFont = FontFamily.Monospace
 private val StatsBodyFont = FontFamily.SansSerif
@@ -48,11 +61,48 @@ fun DeepStatsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val connectivityStatus by viewModel.connectivityStatus
+        .collectAsStateWithLifecycle(
+            initialValue = ConnectivityStatus.CHECKING
+        )
+
+    var mensajeConexion by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(connectivityStatus) {
+        when (connectivityStatus) {
+
+            ConnectivityStatus.CHECKING -> {
+                mensajeConexion = null
+            }
+
+            ConnectivityStatus.CONNECTED -> {
+                if (mensajeConexion == "No internet connection") {
+                    mensajeConexion = "Internet connection restored"
+                    delay(3000)
+                    mensajeConexion = null
+                }
+            }
+
+            ConnectivityStatus.NO_INTERNET,
+            ConnectivityStatus.DISCONNECTED -> {
+                mensajeConexion = "No internet connection"
+            }
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(Snow)
     ) {
+
+        ConnectivityNotice(
+            message = mensajeConexion
+        )
+
+
 
         when (val state = uiState) {
             DeepStatsUiState.Loading -> {
@@ -118,7 +168,9 @@ private fun DeepStatsContent(
             ) {
                 Text(
                     text = "← Back",
-                    style = Typography.titleMedium.copy(fontFamily = StatsTitleFont),
+                    style = Typography.titleMedium.copy(
+                        fontFamily = StatsTitleFont
+                    ),
                     color = ColorPalette.SpicyPaprika.t700,
                     fontWeight = FontWeight.Bold
                 )
@@ -130,7 +182,9 @@ private fun DeepStatsContent(
 
             Text(
                 text = "Detailed Statistics",
-                style = Typography.headlineMedium.copy(fontFamily = StatsTitleFont),
+                style = Typography.headlineMedium.copy(
+                    fontFamily = StatsTitleFont
+                ),
                 color = ColorPalette.Neutral.t1000,
                 fontWeight = FontWeight.Bold
             )
@@ -158,7 +212,9 @@ private fun MindfulUnlockCard(
     ) {
         Text(
             text = "MINDFUL UNLOCK INTENTIONALITY",
-            style = Typography.displaySmall.copy(fontFamily = StatsTitleFont),
+            style = Typography.displaySmall.copy(
+                fontFamily = StatsTitleFont
+            ),
             color = ColorPalette.SpicyPaprika.t700,
             fontWeight = FontWeight.Bold,
             lineHeight = 32.sp
@@ -195,7 +251,9 @@ private fun MindfulUnlockCard(
 
                 Text(
                     text = "$mindfulPercentage%",
-                    style = Typography.headlineMedium.copy(fontFamily = StatsTitleFont),
+                    style = Typography.headlineMedium.copy(
+                        fontFamily = StatsTitleFont
+                    ),
                     color = ColorPalette.SpicyPaprika.t700,
                     fontWeight = FontWeight.Bold
                 )
@@ -210,7 +268,9 @@ private fun MindfulUnlockCard(
             ) {
                 Text(
                     text = "$mindfulPercentage% intentional unlocks",
-                    style = Typography.titleLarge.copy(fontFamily = StatsTitleFont),
+                    style = Typography.titleLarge.copy(
+                        fontFamily = StatsTitleFont
+                    ),
                     color = ColorPalette.Neutral.t1000,
                     fontWeight = FontWeight.Bold
                 )
@@ -221,7 +281,9 @@ private fun MindfulUnlockCard(
 
                 Text(
                     text = "Only $impulsivePercentage% were impulsive reflex pick-ups.",
-                    style = Typography.bodyLarge.copy(fontFamily = StatsBodyFont),
+                    style = Typography.bodyLarge.copy(
+                        fontFamily = StatsBodyFont
+                    ),
                     color = ColorPalette.Neutral.t700
                 )
             }
@@ -239,7 +301,9 @@ private fun DailyPickupCard(
     ) {
         Text(
             text = "DAILY PICKUP COUNT",
-            style = Typography.displaySmall.copy(fontFamily = StatsTitleFont),
+            style = Typography.displaySmall.copy(
+                fontFamily = StatsTitleFont
+            ),
             color = ColorPalette.SpicyPaprika.t700,
             fontWeight = FontWeight.Bold
         )
@@ -254,7 +318,9 @@ private fun DailyPickupCard(
         ) {
             Text(
                 text = dailyPickups.toString(),
-                style = Typography.displayLarge.copy(fontFamily = StatsTitleFont),
+                style = Typography.displayLarge.copy(
+                    fontFamily = StatsTitleFont
+                ),
                 color = ColorPalette.Neutral.t1000,
                 fontWeight = FontWeight.Bold
             )
@@ -265,7 +331,9 @@ private fun DailyPickupCard(
 
             Text(
                 text = "pickups",
-                style = Typography.headlineMedium.copy(fontFamily = StatsTitleFont),
+                style = Typography.headlineMedium.copy(
+                    fontFamily = StatsTitleFont
+                ),
                 color = ColorPalette.Neutral.t1000,
                 modifier = Modifier.padding(bottom = 7.dp)
             )
@@ -275,6 +343,7 @@ private fun DailyPickupCard(
             )
 
             val difference = DAILY_PICKUP_BASELINE - dailyPickups
+
             val comparisonText = when {
                 difference > 0 -> "$difference fewer"
                 difference < 0 -> "${-difference} more"
@@ -283,8 +352,14 @@ private fun DailyPickupCard(
 
             Text(
                 text = comparisonText,
-                style = Typography.titleMedium.copy(fontFamily = StatsTitleFont),
-                color = if (difference >= 0) ColorPalette.Fern.t500 else ColorPalette.SpicyPaprika.t700,
+                style = Typography.titleMedium.copy(
+                    fontFamily = StatsTitleFont
+                ),
+                color = if (difference >= 0) {
+                    ColorPalette.Fern.t500
+                } else {
+                    ColorPalette.SpicyPaprika.t700
+                },
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 7.dp)
             )
@@ -297,14 +372,15 @@ private fun DailyPickupCard(
         Text(
             text = "Compared with a reference of $DAILY_PICKUP_BASELINE phone checks per day, " +
                     "you made ${dailyPickups} checks today.",
-            style = Typography.bodyLarge.copy(fontFamily = StatsBodyFont),
+            style = Typography.bodyLarge.copy(
+                fontFamily = StatsBodyFont
+            ),
             color = ColorPalette.Neutral.t700
         )
 
         Spacer(
             modifier = Modifier.size(8.dp)
         )
-
     }
 }
 
@@ -322,7 +398,9 @@ private fun ErrorContent(
     ) {
         Text(
             text = message,
-            style = Typography.bodyLarge.copy(fontFamily = StatsBodyFont),
+            style = Typography.bodyLarge.copy(
+                fontFamily = StatsBodyFont
+            ),
             color = ColorPalette.Neutral.t1000,
             textAlign = TextAlign.Center
         )
@@ -364,5 +442,41 @@ private fun DeepStatsScreenPreviewContent() {
             onBackClick = {},
             modifier = Modifier.weight(1f)
         )
+    }
+}
+
+@Composable
+private fun ConnectivityNotice(
+    message: String?
+) {
+    AnimatedVisibility(
+        visible = message != null,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 14.dp,
+                    vertical = 8.dp
+                )
+                .background(
+                    color = Color(0xFFFCE6DF),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 10.dp
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = message.orEmpty(),
+                color = Color(0xFFB94B2F),
+                fontSize = 12.sp,
+                fontFamily = StatsBodyFont
+            )
+        }
     }
 }

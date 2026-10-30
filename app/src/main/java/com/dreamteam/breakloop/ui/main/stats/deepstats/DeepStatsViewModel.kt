@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-
+import com.dreamteam.breakloop.data.network.ConnectivityObserver
+import com.dreamteam.breakloop.data.network.ConnectivityStatus
 class DeepStatsViewModel(
     application: Application
 ) : AndroidViewModel(application) {
@@ -23,7 +24,9 @@ class DeepStatsViewModel(
     private val sensorDataSource = AndroidSensorDataSource(application)
 
     private val syncScheduler = PhonePickupSyncScheduler(application)
+    private val connectivityObserver = ConnectivityObserver(application)
 
+    val connectivityStatus = connectivityObserver.status
     private val phoneCheckService = PhoneCheckService(
         sensorDataSource = sensorDataSource,
         repository = repository,
