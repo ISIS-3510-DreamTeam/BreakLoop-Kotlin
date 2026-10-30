@@ -1,5 +1,10 @@
 package com.dreamteam.breakloop.ui.main.focus
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,7 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -46,19 +52,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.R
 import com.dreamteam.breakloop.data.local.AppDatabase
 import com.dreamteam.breakloop.data.local.repository.FocusSessionRepository
+import com.dreamteam.breakloop.data.network.ConnectivityStatus
 import com.dreamteam.breakloop.data.remote.RetrofitInstance
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.Typography
+import kotlinx.coroutines.delay
 
 // Tipografias de FocusScreen: titulo monoespaciado y textos sans serif.
 private val FocusTitleFont = FontFamily.Monospace
@@ -67,6 +72,7 @@ private val FocusBodyFont = FontFamily.SansSerif
 // -----------------------------------------------------------------------------
 // Main Screen
 // -----------------------------------------------------------------------------
+
 
 @Composable
 fun FocusScreen(
@@ -97,37 +103,97 @@ fun FocusScreen(
     )
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val lifecycleOwner = LocalLifecycleOwner.current
 
-    DisposableEffect(viewModel, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
-                viewModel.detenerSonido()
+    val connectivityStatus by viewModel.connectivityStatus
+        .collectAsStateWithLifecycle()
+
+    var ultimaConexion by remember {
+        mutableStateOf<Boolean?>(null)
+    }
+
+    var mensajeConexion by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(connectivityStatus) {
+        when (connectivityStatus) {
+            ConnectivityStatus.CHECKING -> {
+                mensajeConexion = null
             }
-        }
 
-        lifecycleOwner.lifecycle.addObserver(observer)
+            ConnectivityStatus.CONNECTED -> {
+                if (mensajeConexion == "No internet connection") {
+                    mensajeConexion = "Internet connection restored"
+                    delay(3000)
+                    mensajeConexion = null
+                }
+            }
 
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            viewModel.detenerSonido()
+            ConnectivityStatus.NO_INTERNET,
+            ConnectivityStatus.DISCONNECTED -> {
+                mensajeConexion = "No internet connection"
+            }
         }
     }
 
-    FocusContent(
-        state = state,
-        onDurationChange = viewModel::onDurationChange,
-        onCustomDurationSelected = viewModel::onCustomDurationSelected,
-        onCustomDurationChange = viewModel::onCustomDurationChange,
-        onFocusGoalChange = viewModel::onFocusGoalChange,
-        onSoundscapeChange = viewModel::onSoundscapeChange,
-        onLoadSound = viewModel::cargarSonido,
-        onStopSound = viewModel::detenerSonido,
-        onAppShieldChange = viewModel::onAppShieldChange,
-        onStartFocus = viewModel::startFocus,
-        onStopFocus = viewModel::stopFocus,
-        modifier = modifier
-    )
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        ConnectivityNotice(
+            message = mensajeConexion
+        )
+
+        FocusContent(
+            state = state,
+            onDurationChange = viewModel::onDurationChange,
+            onCustomDurationSelected = viewModel::onCustomDurationSelected,
+            onCustomDurationChange = viewModel::onCustomDurationChange,
+            onFocusGoalChange = viewModel::onFocusGoalChange,
+            onSoundscapeChange = viewModel::onSoundscapeChange,
+            onLoadSound = viewModel::cargarSonido,
+            onStopSound = viewModel::detenerSonido,
+            onAppShieldChange = viewModel::onAppShieldChange,
+            onStartFocus = viewModel::startFocus,
+            onStopFocus = viewModel::stopFocus,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun ConnectivityNotice(
+    message: String?
+) {
+    AnimatedVisibility(
+        visible = message != null,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 14.dp,
+                    vertical = 8.dp
+                )
+                .background(
+                    color = Color(0xFFFCE6DF),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 10.dp
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = message.orEmpty(),
+                color = Color(0xFFB94B2F),
+                fontSize = 12.sp,
+                fontFamily = FocusBodyFont
+            )
+        }
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -421,7 +487,7 @@ private fun DurationSelector(
         val durationError = when {
             customDurationText.isBlank() || parsedDuration == null || parsedDuration <= 0 ->
                 "Enter a whole number greater than 0."
-            parsedDuration > 5 -> "Pomodoro, it's all about taking breaks!"
+            parsedDuration > 120 -> "Pomodoro, it's all about taking breaks!"
             else -> null
         }
 
