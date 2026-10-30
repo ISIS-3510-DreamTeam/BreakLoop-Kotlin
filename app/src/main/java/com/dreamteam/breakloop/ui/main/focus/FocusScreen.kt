@@ -1,5 +1,10 @@
 package com.dreamteam.breakloop.ui.main.focus
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,13 +33,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -42,23 +49,21 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.R
 import com.dreamteam.breakloop.data.local.AppDatabase
 import com.dreamteam.breakloop.data.local.repository.FocusSessionRepository
+import com.dreamteam.breakloop.data.network.ConnectivityStatus
 import com.dreamteam.breakloop.data.remote.RetrofitInstance
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.Typography
+import kotlinx.coroutines.delay
 
 // Tipografias de FocusScreen: titulo monoespaciado y textos sans serif.
 private val FocusTitleFont = FontFamily.Monospace
@@ -67,6 +72,7 @@ private val FocusBodyFont = FontFamily.SansSerif
 // -----------------------------------------------------------------------------
 // Main Screen
 // -----------------------------------------------------------------------------
+
 
 @Composable
 fun FocusScreen(
@@ -97,37 +103,97 @@ fun FocusScreen(
     )
 
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val lifecycleOwner = LocalLifecycleOwner.current
 
-    DisposableEffect(viewModel, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
-                viewModel.detenerSonido()
+    val connectivityStatus by viewModel.connectivityStatus
+        .collectAsStateWithLifecycle()
+
+    var ultimaConexion by remember {
+        mutableStateOf<Boolean?>(null)
+    }
+
+    var mensajeConexion by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    LaunchedEffect(connectivityStatus) {
+        when (connectivityStatus) {
+            ConnectivityStatus.CHECKING -> {
+                mensajeConexion = null
             }
-        }
 
-        lifecycleOwner.lifecycle.addObserver(observer)
+            ConnectivityStatus.CONNECTED -> {
+                if (mensajeConexion == "No internet connection") {
+                    mensajeConexion = "Internet connection restored"
+                    delay(3000)
+                    mensajeConexion = null
+                }
+            }
 
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-            viewModel.detenerSonido()
+            ConnectivityStatus.NO_INTERNET,
+            ConnectivityStatus.DISCONNECTED -> {
+                mensajeConexion = "No internet connection"
+            }
         }
     }
 
-    FocusContent(
-        state = state,
-        onDurationChange = viewModel::onDurationChange,
-        onCustomDurationSelected = viewModel::onCustomDurationSelected,
-        onCustomDurationChange = viewModel::onCustomDurationChange,
-        onFocusGoalChange = viewModel::onFocusGoalChange,
-        onSoundscapeChange = viewModel::onSoundscapeChange,
-        onLoadSound = viewModel::cargarSonido,
-        onStopSound = viewModel::detenerSonido,
-        onAppShieldChange = viewModel::onAppShieldChange,
-        onStartFocus = viewModel::startFocus,
-        onStopFocus = viewModel::stopFocus,
-        modifier = modifier
-    )
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        ConnectivityNotice(
+            message = mensajeConexion
+        )
+
+        FocusContent(
+            state = state,
+            onDurationChange = viewModel::onDurationChange,
+            onCustomDurationSelected = viewModel::onCustomDurationSelected,
+            onCustomDurationChange = viewModel::onCustomDurationChange,
+            onFocusGoalChange = viewModel::onFocusGoalChange,
+            onSoundscapeChange = viewModel::onSoundscapeChange,
+            onLoadSound = viewModel::cargarSonido,
+            onStopSound = viewModel::detenerSonido,
+            onAppShieldChange = viewModel::onAppShieldChange,
+            onStartFocus = viewModel::startFocus,
+            onStopFocus = viewModel::stopFocus,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun ConnectivityNotice(
+    message: String?
+) {
+    AnimatedVisibility(
+        visible = message != null,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = 14.dp,
+                    vertical = 8.dp
+                )
+                .background(
+                    color = Color(0xFFFCE6DF),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 10.dp
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = message.orEmpty(),
+                color = Color(0xFFB94B2F),
+                fontSize = 12.sp,
+                fontFamily = FocusBodyFont
+            )
+        }
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -190,10 +256,6 @@ private fun FocusSetupScreen(
     onStartFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val customDurationValid = remember(state.isCustomDurationSelected) {
-        mutableStateOf(!state.isCustomDurationSelected || state.customDuration > 0)
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -206,17 +268,12 @@ private fun FocusSetupScreen(
             onDurationChange = onDurationChange,
             onCustomDurationSelected = onCustomDurationSelected,
             onCustomDurationChange = onCustomDurationChange,
-            onCustomDurationValidityChange = { customDurationValid.value = it },
             onFocusGoalChange = onFocusGoalChange,
             onSoundscapeChange = onSoundscapeChange,
             onLoadSound = onLoadSound,
             onStopSound = onStopSound,
             onAppShieldChange = onAppShieldChange,
-            onStartFocus = {
-                if (!state.isCustomDurationSelected || customDurationValid.value) {
-                    onStartFocus()
-                }
-            }
+            onStartFocus = onStartFocus
         )
 
         Spacer(
@@ -231,7 +288,6 @@ private fun FocusSetupContent(
     onDurationChange: (Int) -> Unit,
     onCustomDurationSelected: () -> Unit,
     onCustomDurationChange: (Int) -> Unit,
-    onCustomDurationValidityChange: (Boolean) -> Unit,
     onFocusGoalChange: (String) -> Unit,
     onSoundscapeChange: (Soundscape) -> Unit,
     onLoadSound: (String) -> Unit,
@@ -251,8 +307,7 @@ private fun FocusSetupContent(
         isCustomSelected = state.isCustomDurationSelected,
         onDurationChange = onDurationChange,
         onCustomDurationSelected = onCustomDurationSelected,
-        onCustomDurationChange = onCustomDurationChange,
-        onCustomDurationValidityChange = onCustomDurationValidityChange
+        onCustomDurationChange = onCustomDurationChange
     )
 
     Spacer(
@@ -360,8 +415,7 @@ private fun DurationSelector(
     isCustomSelected: Boolean,
     onDurationChange: (Int) -> Unit,
     onCustomDurationSelected: () -> Unit,
-    onCustomDurationChange: (Int) -> Unit,
-    onCustomDurationValidityChange: (Boolean) -> Unit
+    onCustomDurationChange: (Int) -> Unit
 ) {
     Text(
         text = "SESSION LENGTH",
@@ -425,25 +479,26 @@ private fun DurationSelector(
     }
 
     if (isCustomSelected) {
-        val customDurationText = remember(isCustomSelected) {
-            mutableStateOf(if (customDuration > 0) customDuration.toString() else "")
+        var customDurationText by remember(isCustomSelected) {
+            mutableStateOf(customDuration.takeIf { it > 0 }?.toString() ?: "")
+        }
+
+        val parsedDuration = customDurationText.toIntOrNull()
+        val durationError = when {
+            customDurationText.isBlank() || parsedDuration == null || parsedDuration <= 0 ->
+                "Enter a whole number greater than 0."
+            parsedDuration > 120 -> "Pomodoro, it's all about taking breaks!"
+            else -> null
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         TextField(
-            value = customDurationText.value,
+            value = customDurationText,
             onValueChange = { value ->
                 if (value.all { it.isDigit() }) {
-                    customDurationText.value = value
-
-                    val duration = value.toIntOrNull()
-                    val isValid = duration != null && duration > 0
-                    onCustomDurationValidityChange(isValid)
-
-                    if (isValid) {
-                        onCustomDurationChange(duration!!)
-                    }
+                    customDurationText = value
+                    onCustomDurationChange(value.toIntOrNull() ?: 0)
                 }
             },
             modifier = Modifier
@@ -458,7 +513,7 @@ private fun DurationSelector(
             },
             placeholder = {
                 Text(
-                    text = "Enter whole minutes",
+                    text = "Enter minutes (1–5)",
                     style = Typography.bodyMedium.copy(fontFamily = FocusBodyFont)
                 )
             },
@@ -469,6 +524,7 @@ private fun DurationSelector(
                 )
             },
             singleLine = true,
+            isError = durationError != null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = ColorPalette.Neutral.Snow,
@@ -481,17 +537,18 @@ private fun DurationSelector(
                 unfocusedPlaceholderColor = ColorPalette.Neutral.t700,
                 focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                 unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                errorIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
                 cursorColor = ColorPalette.SpicyPaprika.t500
             )
         )
 
-        val parsedDuration = customDurationText.value.toIntOrNull()
-        if (parsedDuration == null || parsedDuration <= 0) {
+        if (durationError != null) {
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Enter a whole number greater than 0.",
+                text = durationError,
                 style = Typography.bodySmall.copy(fontFamily = FocusBodyFont),
                 color = ColorPalette.SpicyPaprika.t500,
-                modifier = Modifier.padding(start = 24.dp, top = 4.dp)
+                modifier = Modifier.padding(horizontal = 28.dp)
             )
         }
     }
@@ -730,21 +787,18 @@ private fun ActiveFocusContent(
         ActiveFocusTopBar()
 
         Spacer(
-            modifier = Modifier.height(28.dp)
+            modifier = Modifier.height(45.dp)
         )
 
         FocusSprintPet()
 
         Spacer(
-            modifier = Modifier.height(12.dp)
+            modifier = Modifier.height(18.dp)
         )
 
         Text(
             text = timeText,
-            style = Typography.displayLarge.copy(
-                fontFamily = FocusTitleFont,
-                fontWeight = FontWeight.SemiBold
-            ),
+            style = Typography.displayLarge.copy(fontFamily = FocusTitleFont),
             color = ColorPalette.Neutral.t1000,
             textAlign = TextAlign.Center
         )
@@ -857,24 +911,21 @@ private fun FocusGoalBadge(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.9f)
             .border(
                 width = 2.dp,
                 color = ColorPalette.Neutral.t850,
                 shape = RoundedCornerShape(20.dp)
             )
             .padding(
-                horizontal = 12.dp,
-                vertical = 6.dp
+                horizontal = 16.dp,
+                vertical = 7.dp
             )
     ) {
         Text(
             text = "Target: $focusGoal",
             style = Typography.labelMedium.copy(fontFamily = FocusBodyFont),
             color = ColorPalette.Neutral.t850,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -889,30 +940,23 @@ private fun FocusProgressBar(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.88f)
-            .height(16.dp)
-            .clip(RoundedCornerShape(50))
-            .background(androidx.compose.ui.graphics.Color(0xFFE9DCD5))
+            .fillMaxWidth(0.65f)
+            .height(10.dp)
+            .clip(RoundedCornerShape(10.dp))
             .border(
-                width = 1.5.dp,
+                width = 2.dp,
                 color = ColorPalette.Neutral.t850,
-                shape = RoundedCornerShape(50)
+                shape = RoundedCornerShape(10.dp)
             )
-            .padding(2.dp),
-        contentAlignment = Alignment.CenterStart
+            .padding(2.dp)
     ) {
-        val progresoVisible = progress.coerceIn(0f, 1f)
-        val anchoVisible = if (progresoVisible > 0f) {
-            progresoVisible.coerceAtLeast(0.035f)
-        } else {
-            0f
-        }
-
         Box(
             modifier = Modifier
-                .fillMaxWidth(anchoVisible)
+                .fillMaxWidth(
+                    progress.coerceIn(0f, 1f)
+                )
                 .fillMaxSize()
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(10.dp))
                 .background(ColorPalette.SpicyPaprika.t500)
         )
     }
@@ -986,7 +1030,7 @@ private fun DurationButton(
             .clip(RoundedCornerShape(16.dp))
             .background(
                 if (selected) {
-                    ColorPalette.SpicyPaprika.t500
+                    androidx.compose.ui.graphics.Color(0xFFB94B2D)
                 } else {
                     ColorPalette.Neutral.Snow
                 }
@@ -1038,9 +1082,16 @@ private fun SoundscapeButton(
             color = borderColor
         ),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = backgroundColor.copy(
-                alpha = if (selected) 1f else 0.55f
-            ),
+            containerColor = if (selected) {
+                backgroundColor.copy(
+                    red = backgroundColor.red * 0.88f,
+                    green = backgroundColor.green * 0.88f,
+                    blue = backgroundColor.blue * 0.88f,
+                    alpha = 1f
+                )
+            } else {
+                backgroundColor.copy(alpha = 0.55f)
+            },
             contentColor = ColorPalette.Neutral.t1000
         ),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(4.dp)
@@ -1062,8 +1113,8 @@ private fun FocusSprintPet() {
     Box(
         modifier = Modifier
             .size(
-                width = 174.dp,
-                height = 180.dp
+                width = 190.dp,
+                height = 195.dp
             )
             .clip(
                 RoundedCornerShape(34.dp)
@@ -1072,7 +1123,7 @@ private fun FocusSprintPet() {
                 ColorPalette.Neutral.Snow
             )
             .border(
-                width = 3.dp,
+                width = 5.dp,
                 color = ColorPalette.Neutral.t1000,
                 shape = RoundedCornerShape(34.dp)
             ),
@@ -1086,7 +1137,7 @@ private fun FocusSprintPet() {
                     R.drawable.ic_nav_focus_selected
                 ),
                 contentDescription = "Focus",
-                modifier = Modifier.size(58.dp)
+                modifier = Modifier.size(64.dp)
             )
 
             Spacer(

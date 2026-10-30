@@ -14,14 +14,19 @@ import com.dreamteam.breakloop.data.local.cache.SoundscapeCache
 import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
 import com.dreamteam.breakloop.data.local.repository.FocusSessionRepository
 import com.dreamteam.breakloop.data.local.worker.FocusSessionWorker
+import com.dreamteam.breakloop.data.network.ConnectivityObserver
+import com.dreamteam.breakloop.data.network.ConnectivityStatus
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,6 +56,17 @@ class FocusViewModel(
     private var mediaPlayer: MediaPlayer? = null
 
     private var soundscapeJob: Job? = null
+
+    private val connectivityObserver = ConnectivityObserver(appContext)
+
+    val connectivityStatus: StateFlow<ConnectivityStatus> =
+        connectivityObserver.status
+            .distinctUntilChanged()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = ConnectivityStatus.CHECKING
+            )
 
     fun onDurationChange(duration: Int) {
         _uiState.update {
@@ -120,6 +136,13 @@ class FocusViewModel(
             return
         }
 
+        if (_uiState.value.isCustomDurationSelected && duration > 5) {
+            _uiState.update {
+                it.copy(error = "Pomodoro, it's all about taking breaks!")
+            }
+            return
+        }
+
         val uid = firebaseAuth.currentUser?.uid
 
         if (uid == null) {
@@ -182,29 +205,12 @@ class FocusViewModel(
         }
     }
 
-    fun pauseFocus() {
-        if (!_uiState.value.isSessionActive) {
-            return
-        }
 
-        _uiState.update {
-            it.copy(
-                isPaused = true
-            )
-        }
-    }
 
-    fun resumeFocus() {
-        if (!_uiState.value.isSessionActive) {
-            return
-        }
 
-        _uiState.update {
-            it.copy(
-                isPaused = false
-            )
-        }
-    }
+
+
+
 
     fun stopFocus() {
         if (!_uiState.value.isSessionActive) {
