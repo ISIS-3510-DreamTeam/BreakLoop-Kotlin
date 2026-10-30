@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ActivityLogDao {
@@ -17,5 +18,8 @@ interface ActivityLogDao {
 
     @Query("SELECT activityId FROM activity_log WHERE completedAt IS NOT NULL ORDER BY completedAt DESC LIMIT :limit")
     suspend fun getRecentCompletedActivityIds(limit: Int): List<String>
+
+    @Query("SELECT COALESCE(SUM(xp), 0) FROM activity_log WHERE completedAt >= :startOfDay")
+    fun observeXpSince(startOfDay: Long): Flow<Int>
 
 }

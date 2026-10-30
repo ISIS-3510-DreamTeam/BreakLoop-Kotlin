@@ -21,4 +21,7 @@ interface FocusSessionDao {
 
     @Query("SELECT * FROM focus_sessions ORDER BY startTime DESC")
     fun observeSessions(): Flow<List<FocusSessionEntity>>
+
+    @Query("SELECT COALESCE(SUM(xpEarned), 0) FROM focus_sessions WHERE startTime >= :startOfDay")
+    fun observeXpSince(startOfDay: Long): Flow<Int>
 }
