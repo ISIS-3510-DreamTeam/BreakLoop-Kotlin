@@ -282,7 +282,7 @@ class FocusViewModel(
             duration = currentState.selectedDuration,
             type = "FOCUS",
             status = status,
-            xpEarned = 0,
+            xpEarned = 2,
             synced = false
         )
 
