@@ -96,6 +96,13 @@ fun AppNavHost(
                 ActivityDetailScreen(
                     onBack = {
                         navController.popBackStack()
+                    },
+                    onGoToActivity = {
+                        id -> navController.navigate(OfflineActivityDetail(id, fromSuggestion = false)){
+                            // reemplaza el detalle actual: con launchSingleTop reutilizaría la misma entrada
+                            // (y su ViewModel) y la pantalla no cambiaría
+                            popUpTo<OfflineActivityDetail> { inclusive = true }
+                        }
                     }
                 )
             }

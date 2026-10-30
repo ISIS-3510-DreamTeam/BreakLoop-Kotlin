@@ -17,4 +17,5 @@ interface ActivityLogRepository {
     suspend fun syncActivityLogs()
 
     fun observeOpenLog(): Flow<ActivityLogEntity?>
+    suspend fun getOpenLog(activityId: String): ActivityLogEntity?
 }

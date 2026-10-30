@@ -71,4 +71,8 @@ class ActivityLogRepositoryImpl (
         return activityLogDao.observeOpenLog()
     }
 
+    override suspend fun getOpenLog(activityId: String): ActivityLogEntity? {
+        return activityLogDao.getOpenLog(activityId)
+    }
+
 }
