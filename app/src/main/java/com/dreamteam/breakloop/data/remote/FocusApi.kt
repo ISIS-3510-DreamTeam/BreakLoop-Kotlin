@@ -1,5 +1,6 @@
-package com.dreamteam.breakloop.remote
+package com.dreamteam.breakloop.data.remote
 
+import com.dreamteam.breakloop.data.remote.dto.FocusSessionRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET

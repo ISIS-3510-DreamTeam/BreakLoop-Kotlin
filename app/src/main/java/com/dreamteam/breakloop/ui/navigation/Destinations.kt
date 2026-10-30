@@ -33,12 +33,16 @@ data object Stats
 data object DeepStats
 
 @Serializable
+data object FlaggedApps
+
+@Serializable
 data object Offline
 
 @Serializable
 data class OfflineActivityDetail(
     val activityId: String,
-    val fromSuggestion: Boolean = false
+    val fromSuggestion: Boolean = false,
+    val interactionId: String? = null
 )
 
 @Serializable

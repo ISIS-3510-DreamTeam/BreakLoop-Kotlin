@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.R
 import com.dreamteam.breakloop.domain.GoalProgress
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
-import com.dreamteam.breakloop.ui.components.MonoLabel
+import com.dreamteam.breakloop.ui.theme.MonoLabel
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.util.formatDuration
@@ -37,7 +37,7 @@ fun ScreenTimeGoalCard(
         is GoalProgress.NearLimit -> { val percent = progress.usedMs * 100 / progress.goalMs
             "$percent% of your goal · ${formatDuration(progress.remainingMs)} left" to ColorPalette.GoldenOrange.t500 }
         is GoalProgress.Exceeded -> { val percent = progress.usedMs * 100 / progress.goalMs
-            "$percent% over your goal · ${formatDuration(progress.exceededMs)} left" to ColorPalette.SpicyPaprika.t500 }
+            "$percent% over your goal · ${formatDuration(progress.exceededMs)}" to ColorPalette.SpicyPaprika.t500 }
     }
 
     BreakLoopCard(modifier = modifier) {

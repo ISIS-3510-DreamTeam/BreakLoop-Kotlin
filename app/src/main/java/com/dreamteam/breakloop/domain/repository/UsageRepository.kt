@@ -13,4 +13,6 @@ interface UsageRepository {
     suspend fun backfillMissingDays(startDate: LocalDate, endDate: LocalDate)
 
     suspend fun getBaselineMs(): Long?
+
+    suspend fun syncUnsyncedDays()
 }

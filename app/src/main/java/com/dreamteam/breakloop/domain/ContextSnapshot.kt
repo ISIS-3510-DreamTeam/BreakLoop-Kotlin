@@ -11,4 +11,6 @@ data class ContextSnapshot (
     val weather: WeatherCondition?,
     val interests: Set<ActivityCategory>,
     val recentActivityIds: List<String>, // MÁS RECIENTE PRIMEROOO
+    val latitude: Double? = null,
+    val longitude: Double? = null
 )

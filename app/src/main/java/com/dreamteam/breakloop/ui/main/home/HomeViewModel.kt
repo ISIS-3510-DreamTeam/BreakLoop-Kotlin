@@ -6,15 +6,21 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.dreamteam.breakloop.data.goal.DataStoreGoalRepository
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
+import com.dreamteam.breakloop.data.remote.UsageRemoteDataSource
+import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
 import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
+import com.google.firebase.auth.FirebaseAuth
 import com.dreamteam.breakloop.domain.DailyUsageStats
 import com.dreamteam.breakloop.domain.repository.GoalRepository
 import com.dreamteam.breakloop.domain.repository.UsageRepository
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateGoalProgressUseCase
 import com.dreamteam.breakloop.ui.account.auth.AuthUiState
 import com.dreamteam.breakloop.ui.main.stats.StatsUiState
@@ -38,7 +44,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         aggregateUsageEventsUseCase = AggregateUsageEventsUseCase(),
         appUsageDao = db.appUsageDao(),
         dailyUsageStatsDao = db.dailyUsageStatsDao(),
-        calculateBaselineUseCase = CalculateBaselineUseCase()
+        calculateBaselineUseCase = CalculateBaselineUseCase(),
+        calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
+        flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(db.flaggedAppDao()),
+        remote = UsageRemoteDataSource(RetrofitInstance.usageApi, FirebaseAuth.getInstance()),
+        syncScheduler = WorkManagerSyncScheduler(application.applicationContext)
     )
     private val goalRepository: GoalRepository = DataStoreGoalRepository(application)
     private val calculateGoalProgress = CalculateGoalProgressUseCase()

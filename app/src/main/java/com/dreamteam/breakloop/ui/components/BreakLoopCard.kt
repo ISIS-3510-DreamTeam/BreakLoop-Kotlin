@@ -11,32 +11,38 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 
 @Composable
 fun BreakLoopCard(
     modifier: Modifier = Modifier,
+    containerColor: Color = ColorPalette.Neutral.Snow,
+    elevated: Boolean = true,
+    contentPadding: Dp = 16.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(16.dp)
     val ink = ColorPalette.Neutral.t1000
 
     Box(modifier) {
-        // make shadow?
+        // sombra sólida estilo pixel art: grande en tarjetas destacadas, pequeña en las secundarias
+        val shadow = if (elevated) 4.dp else 2.dp
         Box(
             Modifier
                 .matchParentSize()
-                .offset(x = 4.dp, y = 4.dp)
+                .offset(x = shadow, y = shadow)
                 .background(ink, shape)
         )
         // card
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ColorPalette.Neutral.Snow, shape)
+                .background(containerColor, shape)
                 .border(2.dp, ink, shape)
-                .padding(16.dp),
+                .padding(contentPadding),
             content = content,
         )
     }

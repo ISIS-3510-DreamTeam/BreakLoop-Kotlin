@@ -3,15 +3,29 @@ package com.dreamteam.breakloop.ui.main.stats
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.pm.PackageManager
+import com.dreamteam.breakloop.domain.InstalledApp
+import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppRow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
+import com.dreamteam.breakloop.data.remote.UsageRemoteDataSource
+import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
 import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
+import com.google.firebase.auth.FirebaseAuth
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.BuildWeeklySummaryUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateReductionUseCase
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,8 +48,30 @@ class StatsViewModel(
         aggregateUsageEventsUseCase = AggregateUsageEventsUseCase(),
         appUsageDao = db.appUsageDao(),
         dailyUsageStatsDao = db.dailyUsageStatsDao(),
-        calculateBaselineUseCase = CalculateBaselineUseCase()
+        calculateBaselineUseCase = CalculateBaselineUseCase(),
+        calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
+        flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(flaggedAppsDao = db.flaggedAppDao()),
+        remote = UsageRemoteDataSource(RetrofitInstance.usageApi, FirebaseAuth.getInstance()),
+        syncScheduler = WorkManagerSyncScheduler(application.applicationContext)
     )
+
+    private val flaggedAppsRepository = FlaggedAppsRepositoryImpl(flaggedAppsDao = db.flaggedAppDao())
+
+    // Solo las apps marcadas (y aún instaladas); null mientras carga.
+    val flaggedRows: StateFlow<List<FlaggedAppRow>?> = flaggedAppsRepository.getFlaggedApps()
+        .map { flagged ->
+            val pm = application.packageManager
+            flagged.mapNotNull { app ->
+                try {
+                    val label = pm.getApplicationLabel(pm.getApplicationInfo(app.packageName, 0)).toString()
+                    FlaggedAppRow(InstalledApp(app.packageName, label), app)
+                } catch (e: PackageManager.NameNotFoundException) {
+                    null
+                }
+            }.sortedBy { it.app.label.lowercase() }
+        }
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val buildWeeklySummaryUseCase = BuildWeeklySummaryUseCase()
     private val calculateReductionUseCase = CalculateReductionUseCase()
