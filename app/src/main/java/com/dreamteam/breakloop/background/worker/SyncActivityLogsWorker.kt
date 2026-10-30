@@ -17,12 +17,15 @@ import java.io.IOException
 class SyncActivityLogsWorker(
     context: Context,
     workerParams: WorkerParameters
-): CoroutineWorker(context, workerParams) {
+) : CoroutineWorker(context, workerParams) {
     override suspend fun doWork(): Result {
         val db = AppDatabase.getInstance(applicationContext)
         val repository = ActivityLogRepositoryImpl(
             db.activityLogDao(),
-            remote = ActivityLogRemoteDataSource(RetrofitInstance.activityLogApi, FirebaseAuth.getInstance()),
+            remote = ActivityLogRemoteDataSource(
+                RetrofitInstance.activityLogApi,
+                FirebaseAuth.getInstance()
+            ),
             syncScheduler = WorkManagerSyncScheduler(applicationContext)
         )
         Log.w("SyncActivityLogs", "Intentando sincronizar")

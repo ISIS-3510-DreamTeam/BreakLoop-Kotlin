@@ -29,4 +29,9 @@ object RetrofitInstance {
         retrofit
             .create(ActivityLogApi::class.java)
     }
+
+    val suggestionInteractionApi: SuggestionInteractionApi by lazy {
+        retrofit
+            .create(SuggestionInteractionApi::class.java)
+    }
 }

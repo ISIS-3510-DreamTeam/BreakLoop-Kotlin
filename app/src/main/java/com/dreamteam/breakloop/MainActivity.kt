@@ -17,10 +17,13 @@ import com.dreamteam.breakloop.data.system.LocationDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.domain.enums.WeatherCondition
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        Log.d("UID", FirebaseAuth.getInstance().currentUser?.uid ?: "sin sesión")
         UsageWorkScheduler.schedule(this)
         WorkManager.getInstance(this).enqueueUniqueWork("usage_aggregation_on_open",
             ExistingWorkPolicy.KEEP,OneTimeWorkRequestBuilder<UsageAggregationWorker>().build(),)

@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.MonoLabel
@@ -19,10 +20,11 @@ fun BreakLoopChip(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
+    selectedColor: Color = ColorPalette.SpicyPaprika.t500
 ){
     val shape = RoundedCornerShape(50)
-    val background = if (selected) ColorPalette.SpicyPaprika.t500 else ColorPalette.Neutral.Snow
+    val background = if (selected) selectedColor else ColorPalette.Neutral.Snow
     val textColor = if (selected) ColorPalette.Neutral.Snow else ColorPalette.Neutral.t1000
 
     Box(
