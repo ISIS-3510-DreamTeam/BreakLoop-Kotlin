@@ -13,11 +13,15 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.dreamteam.breakloop.data.local.AppDatabase
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
+import com.dreamteam.breakloop.data.remote.UsageRemoteDataSource
 import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
 import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.data.system.UsageEventsDataSource
+import com.google.firebase.auth.FirebaseAuth
 import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.BuildWeeklySummaryUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
@@ -46,7 +50,9 @@ class StatsViewModel(
         dailyUsageStatsDao = db.dailyUsageStatsDao(),
         calculateBaselineUseCase = CalculateBaselineUseCase(),
         calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
-        flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(flaggedAppsDao = db.flaggedAppDao())
+        flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(flaggedAppsDao = db.flaggedAppDao()),
+        remote = UsageRemoteDataSource(RetrofitInstance.usageApi, FirebaseAuth.getInstance()),
+        syncScheduler = WorkManagerSyncScheduler(application.applicationContext)
     )
 
     private val flaggedAppsRepository = FlaggedAppsRepositoryImpl(flaggedAppsDao = db.flaggedAppDao())

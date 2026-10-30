@@ -20,6 +20,7 @@ import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         UsageWorkScheduler.schedule(this)
         WorkManager.getInstance(this).enqueueUniqueWork("usage_aggregation_on_open",

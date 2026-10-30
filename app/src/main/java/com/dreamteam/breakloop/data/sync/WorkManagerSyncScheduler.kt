@@ -7,6 +7,8 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.dreamteam.breakloop.background.worker.SyncActivityLogsWorker
+import com.dreamteam.breakloop.background.worker.SyncDailyUsageWorker
+import com.dreamteam.breakloop.background.worker.SyncSuggestionInteractionsWorker
 import com.dreamteam.breakloop.domain.sync.SyncScheduler
 
 class WorkManagerSyncScheduler(
@@ -22,6 +24,32 @@ class WorkManagerSyncScheduler(
             .build()
 
         WorkManager.getInstance(context.applicationContext).enqueueUniqueWork("sync_activity_logs",
+            ExistingWorkPolicy.APPEND_OR_REPLACE, request)
+    }
+
+    override fun enqueueUsageSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<SyncDailyUsageWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork("sync_daily_usage",
+            ExistingWorkPolicy.APPEND_OR_REPLACE, request)
+    }
+
+    override fun enqueueSuggestionInteractionSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val request = OneTimeWorkRequestBuilder<SyncSuggestionInteractionsWorker>()
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork("sync_suggestion_interactions",
             ExistingWorkPolicy.APPEND_OR_REPLACE, request)
     }
 }

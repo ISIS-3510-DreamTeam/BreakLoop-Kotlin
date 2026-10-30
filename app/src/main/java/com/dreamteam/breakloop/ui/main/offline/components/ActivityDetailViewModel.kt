@@ -18,10 +18,13 @@ import com.dreamteam.breakloop.data.system.ActivityCatalogDataSource
 import com.dreamteam.breakloop.data.system.InterestsDataSource
 import com.dreamteam.breakloop.data.system.LocationDataSource
 import com.dreamteam.breakloop.data.system.PermissionsDataSource
+import com.dreamteam.breakloop.data.system.PlacePreferenceDataSource
+import com.dreamteam.breakloop.data.remote.SuggestionInteractionRemoteDataSource
+import com.dreamteam.breakloop.data.repository.SuggestionInteractionRepositoryImpl
+import com.dreamteam.breakloop.domain.enums.InteractionOutcome
 import com.google.firebase.auth.FirebaseAuth
 import com.dreamteam.breakloop.domain.enums.ActivityPhase
 import com.dreamteam.breakloop.domain.enums.ActivitySource
-import com.dreamteam.breakloop.domain.repository.ActivityLogRepository
 import com.dreamteam.breakloop.ui.navigation.OfflineActivityDetail
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -45,6 +48,15 @@ class ActivityDetailViewModel(
     private val activityLogRepository = ActivityLogRepositoryImpl(
         db.activityLogDao(),
         remote = ActivityLogRemoteDataSource(RetrofitInstance.activityLogApi, FirebaseAuth.getInstance()),
+        syncScheduler = WorkManagerSyncScheduler(application.applicationContext)
+    )
+    private val placeDataSource = PlacePreferenceDataSource(application.applicationContext)
+    private val suggestionInteractionRepository = SuggestionInteractionRepositoryImpl(
+        db.suggestionInteractionDao(),
+        remote = SuggestionInteractionRemoteDataSource(
+            RetrofitInstance.suggestionInteractionApi,
+            FirebaseAuth.getInstance()
+        ),
         syncScheduler = WorkManagerSyncScheduler(application.applicationContext)
     )
     private val weatherRepository = WeatherRepositoryImpl(
@@ -147,7 +159,23 @@ class ActivityDetailViewModel(
         _uiState.value = current.copy(phase = ActivityPhase.RUNNING, remainingSeconds = ((endAt!! - System.currentTimeMillis()) / 1000).toInt())
         startJob = viewModelScope.launch {
             val snapshot = contextProvider.getSnapshot(current.activity.durationMin)
-            logId = activityLogRepository.startLog(current.activity.id, current.activity.category, source, snapshot)
+            logId = activityLogRepository.startLog(
+                current.activity.id,
+                current.activity.category,
+                source,
+                snapshot,
+                interactionId = route.interactionId,
+                placeLabel = placeDataSource.getPlace()
+            )
+            route.interactionId?.let { interactionId ->
+                val accepted = route.fromSuggestion
+                suggestionInteractionRepository.closeInteraction(
+                    id = interactionId,
+                    outcome = if (accepted) InteractionOutcome.ACCEPTED else InteractionOutcome.OTHER_ACTIVITY,
+                    acceptedActivityId = if (accepted) current.activity.id else null,
+                    chosenActivityId = current.activity.id
+                )
+            }
         }
 
         startTicker()
