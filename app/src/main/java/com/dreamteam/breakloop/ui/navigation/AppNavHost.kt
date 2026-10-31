@@ -13,6 +13,7 @@ import com.dreamteam.breakloop.ui.main.home.HomeScreen
 import com.dreamteam.breakloop.ui.main.offline.OfflineScreen
 import com.dreamteam.breakloop.ui.main.offline.components.ActivityDetailScreen
 import com.dreamteam.breakloop.ui.main.stats.StatsScreen
+import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppsRoute
 import com.dreamteam.breakloop.ui.main.stats.deepstats.DeepStatsScreen
 
 @Composable
@@ -51,6 +52,17 @@ fun AppNavHost(
                 StatsScreen(
                     onDeepStatsClick = {
                         navController.navigate(DeepStats)
+                    },
+                    onConfigureFlaggedAppsClick = {
+                        navController.navigate(FlaggedApps)
+                    }
+                )
+            }
+
+            composable<FlaggedApps> {
+                FlaggedAppsRoute(
+                    onBack = {
+                        navController.popBackStack()
                     }
                 )
             }
@@ -65,11 +77,12 @@ fun AppNavHost(
 
             composable<Offline> {
                 OfflineScreen(
-                    onActivityClick = { id, fromSuggestion ->
+                    onActivityClick = { id, fromSuggestion, interactionId ->
                         navController.navigate(
                             OfflineActivityDetail(
                                 activityId = id,
-                                fromSuggestion = fromSuggestion
+                                fromSuggestion = fromSuggestion,
+                                interactionId = interactionId
                             )
                         )
                     }
@@ -84,6 +97,13 @@ fun AppNavHost(
                 ActivityDetailScreen(
                     onBack = {
                         navController.popBackStack()
+                    },
+                    onGoToActivity = {
+                        id -> navController.navigate(OfflineActivityDetail(id, fromSuggestion = false)){
+                            // reemplaza el detalle actual: con launchSingleTop reutilizaría la misma entrada
+                            // (y su ViewModel) y la pantalla no cambiaría
+                            popUpTo<OfflineActivityDetail> { inclusive = true }
+                        }
                     }
                 )
             }

@@ -4,38 +4,34 @@ import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ListAlt
-import androidx.compose.material.icons.outlined.WifiOff
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.domain.enums.ActivityCategory
+import com.dreamteam.breakloop.domain.enums.PlaceLabel
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.components.BreakLoopChip
 import com.dreamteam.breakloop.ui.components.LoadingContent
 import com.dreamteam.breakloop.ui.main.offline.components.ActivityCard
 import com.dreamteam.breakloop.ui.main.offline.components.CategoryChips
 import com.dreamteam.breakloop.ui.main.offline.components.SuggestedCard
+import com.dreamteam.breakloop.ui.main.offline.components.TimeSelector
+import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 import com.dreamteam.breakloop.ui.theme.ColorPalette.Neutral.Snow
 
@@ -43,7 +39,7 @@ import com.dreamteam.breakloop.ui.theme.ColorPalette.Neutral.Snow
 fun OfflineScreen(
     modifier: Modifier = Modifier,
     viewModel: OfflineViewModel = viewModel(),
-    onActivityClick: (String, Boolean) -> Unit = { _, _ -> }
+    onActivityClick: (String, Boolean, String?) -> Unit = { _, _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (val state = uiState) {
@@ -52,6 +48,7 @@ fun OfflineScreen(
             state,
             viewModel::onAvailableTimeSelected,
             viewModel::onCategorySelected,
+            viewModel::onPlaceSelected,
             onActivityClick = onActivityClick,
             onLocationPermissionResult = viewModel::onLocationPermissionResult
         )
@@ -64,7 +61,8 @@ fun OfflineContent(
     state: OfflineUiState.Content,
     onAvailableTimeSelected: (Int) -> Unit,
     onCategorySelected: (ActivityCategory?) -> Unit,
-    onActivityClick: (String, Boolean) -> Unit,
+    onPlaceSelected: (PlaceLabel?) -> Unit,
+    onActivityClick: (String, Boolean, String?) -> Unit,
     onLocationPermissionResult: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -79,45 +77,21 @@ fun OfflineContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        BreakLoopCard(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(ColorPalette.SpicyPaprika.t100, RoundedCornerShape(12.dp))
-                        .border(2.dp, ColorPalette.Neutral.t1000, RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.WifiOff,
-                        contentDescription = null,
-                        tint = ColorPalette.SpicyPaprika.t700,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "OFFLINE MODE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ColorPalette.SpicyPaprika.t700
-                    )
-                    Text(
-                        text = "What will you do offline?",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = ColorPalette.Neutral.t1000
-                    )
-                }
-            }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
-                text = "Pick something screen-free to recharge.",
+                text = "SCREEN-FREE SESSION",
+                style = MaterialTheme.typography.labelSmall,
+                color = ColorPalette.SpicyPaprika.t700
+            )
+            Text(
+                text = "What will you do offline?",
+                style = MaterialTheme.typography.titleLarge,
+                color = ColorPalette.Neutral.t1000
+            )
+            Text(
+                text = "How much time do you have right now?",
                 style = MaterialTheme.typography.bodyMedium,
-                color = ColorPalette.Neutral.t700,
-                modifier = Modifier.padding(top = 8.dp)
+                color = ColorPalette.Neutral.t700
             )
         }
         if (state.needsLocationPermission) {
@@ -142,40 +116,98 @@ fun OfflineContent(
                 )
             }
         }
+        TimeSelector(
+            availableMin = state.availableMin,
+            onTimeSelected = onAvailableTimeSelected
+        )
+        PlaceSelector(
+            selectedPlace = state.selectedPlace,
+            onPlaceSelected = onPlaceSelected
+        )
         SuggestedCard(
             suggestion = state.suggestion,
             availableMin = state.availableMin,
             isWeatherAvailable = state.isWeatherAvailable,
-            onTimeSelected = onAvailableTimeSelected,
-            onActivityClick = { id -> onActivityClick(id, true) }
-        )
-        CategoryChips(
-            selectedCategory = state.selectedCategory,
-            onCategorySelected = onCategorySelected
+            onActivityClick = { id -> onActivityClick(id, true, state.interactionId) }
         )
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.ListAlt,
-                    contentDescription = null,
-                    tint = ColorPalette.Neutral.t700,
-                    modifier = Modifier.size(14.dp)
-                )
-                Text(
-                    text = "ALL ACTIVITIES",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = ColorPalette.Neutral.t700
-                )
-            }
+            Text(
+                text = "OR EXPLORE ALL ACTIVITIES",
+                style = MaterialTheme.typography.labelSmall,
+                color = ColorPalette.Neutral.t700
+            )
+            CategoryChips(
+                selectedCategory = state.selectedCategory,
+                onCategorySelected = onCategorySelected
+            )
             for (activity in state.activities) {
                 ActivityCard(
                     activity = activity,
-                    onClick = { onActivityClick(activity.id, false) }
+                    onClick = { onActivityClick(activity.id, false, state.interactionId) }
                 )
             }
         }
+    }
+}
+
+
+@Composable
+private fun PlaceSelector(
+    selectedPlace: PlaceLabel?,
+    onPlaceSelected: (PlaceLabel?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Where are you?",
+                style = MaterialTheme.typography.labelMedium,
+                color = ColorPalette.Neutral.t850
+            )
+            for (place in PlaceLabel.entries) {
+                BreakLoopChip(
+                    text = place.name.lowercase().replaceFirstChar { it.uppercase() },
+                    selected = selectedPlace == place,
+                    onClick = { onPlaceSelected(if (selectedPlace == place) null else place) },
+                    modifier = Modifier,
+                    selectedColor = ColorPalette.Fern.t500
+                )
+            }
+        }
+        Text(
+            text = "Used anonymously to improve suggestions.",
+            style = MaterialTheme.typography.bodySmall,
+            color = ColorPalette.Neutral.t700
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Place selected")
+@Composable
+private fun PlaceSelectorSelectedPreview() {
+    BreakLoopTheme {
+        PlaceSelector(
+            selectedPlace = PlaceLabel.HOME,
+            onPlaceSelected = {},
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "No place selected")
+@Composable
+private fun PlaceSelectorEmptyPreview() {
+    BreakLoopTheme {
+        PlaceSelector(
+            selectedPlace = null,
+            onPlaceSelected = {},
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

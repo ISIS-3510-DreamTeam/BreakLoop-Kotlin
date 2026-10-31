@@ -1,5 +1,6 @@
-package com.dreamteam.breakloop.remote
+package com.dreamteam.breakloop.data.remote
 
+import com.dreamteam.breakloop.data.remote.dto.FocusSessionRequest
 import kotlinx.coroutines.runBlocking
 
 fun testFocusApi() = runBlocking {

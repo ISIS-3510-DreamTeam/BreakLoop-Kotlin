@@ -136,3 +136,18 @@ val Typography = Typography(
         letterSpacing = 0.5.sp
     )
 )
+
+// 4. Estilos mono de uso común (botones, chips, etiquetas de marca)
+val MonoLabel = TextStyle(
+    fontFamily = SpaceMono,
+    fontWeight = FontWeight.Bold,
+    fontSize = 13.sp,
+    letterSpacing = 1.sp,
+)
+
+val MonoTitle = TextStyle(
+    fontFamily = SpaceMono,
+    fontWeight = FontWeight.Bold,
+    fontSize = 22.sp,
+    letterSpacing = 1.sp,
+)

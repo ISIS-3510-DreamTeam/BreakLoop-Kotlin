@@ -5,7 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.dreamteam.breakloop.data.local.AppDatabase
 import com.dreamteam.breakloop.data.local.repository.FocusSessionRepository
-import com.dreamteam.breakloop.remote.RetrofitInstance
+import com.dreamteam.breakloop.data.remote.RetrofitInstance
 
 class FocusSessionWorker(
     appContext: Context,

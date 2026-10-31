@@ -9,6 +9,12 @@ sealed interface ActivityDetailUiState {
     data class Content(
         val activity: OfflineActivity,
         val phase: ActivityPhase,
-        val remainingSeconds: Int
+        val remainingSeconds: Int,
+        val blockedBy: BlockingActivity? = null
     ): ActivityDetailUiState
 }
+
+data class BlockingActivity (
+    val activityId: String,
+    val title: String
+)

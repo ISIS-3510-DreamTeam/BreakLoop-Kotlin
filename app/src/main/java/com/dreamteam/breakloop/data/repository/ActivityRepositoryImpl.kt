@@ -19,4 +19,6 @@ class ActivityRepositoryImpl(
     override fun getActivity(id: String): OfflineActivity? {
         return getCatalog().firstOrNull { it.id == id }
     }
+
+
 }

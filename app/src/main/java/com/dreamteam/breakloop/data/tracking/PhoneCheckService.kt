@@ -1,6 +1,7 @@
 package com.dreamteam.breakloop.data.tracking
 
 import com.dreamteam.breakloop.data.local.repository.PhoneCheckRepository
+import com.dreamteam.breakloop.data.local.worker.PhonePickupSyncScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,6 +20,7 @@ import kotlin.math.sqrt
 class PhoneCheckService(
     private val sensorDataSource: SensorDataSource,
     private val repository: PhoneCheckRepository,
+    private val syncScheduler: PhonePickupSyncScheduler,
     private val threshold: Double = 12.0
 ) {
 
@@ -31,9 +33,7 @@ class PhoneCheckService(
         private const val MINDFUL_DURATION_MS = 5000L
     }
 
-    private val scope = CoroutineScope(
-        Dispatchers.Default
-    )
+    private val scope = CoroutineScope(Dispatchers.Default)
 
     private var detectionJob: Job? = null
     private var intentionalityJob: Job? = null
@@ -96,15 +96,13 @@ class PhoneCheckService(
         val deltaY = abs(y - lastY)
         val deltaZ = abs(z - lastZ)
 
-        val totalDelta =
-            deltaX + deltaY + deltaZ
+        val totalDelta = deltaX + deltaY + deltaZ
 
         lastX = x
         lastY = y
         lastZ = z
 
         if (magnitude > threshold) {
-
             if (
                 now - lastDetectionTime >=
                 MIN_DETECTION_INTERVAL_MS
@@ -129,7 +127,6 @@ class PhoneCheckService(
             isCurrentlyPickedUp &&
             pickupStartTime != null
         ) {
-
             if (totalDelta > MOVEMENT_THRESHOLD) {
                 lastMovementTime = now
             }
@@ -140,12 +137,10 @@ class PhoneCheckService(
                 lastMovement != null &&
                 now - lastMovement >= STILLNESS_DURATION_MS
             ) {
-
                 val secondsElapsed =
                     (now - pickupStartTime!!) / 1000
 
                 if (secondsElapsed < 5) {
-
                     intentionalityJob?.cancel()
 
                     isCurrentlyPickedUp = false
@@ -165,11 +160,9 @@ class PhoneCheckService(
         intentionalityJob?.cancel()
 
         intentionalityJob = scope.launch {
-
             delay(MINDFUL_DURATION_MS)
 
             if (isCurrentlyPickedUp) {
-
                 registerUnlockType(
                     isMindful = true
                 )
@@ -185,96 +178,69 @@ class PhoneCheckService(
     private fun registerUnlockType(
         isMindful: Boolean
     ) {
+        repository.updateLastPickupIntentionality(isMindful)
+
         if (isMindful) {
             repository.incrementMindfulCount()
         } else {
             repository.incrementImpulsiveCount()
         }
+
+        syncScheduler.scheduleSync()
     }
 
     fun getMindfulPercentage(): Int {
-        val mindful =
-            repository.getMindfulCount()
-
-        val impulsive =
-            repository.getImpulsiveCount()
-
+        val mindful = repository.getMindfulCount()
+        val impulsive = repository.getImpulsiveCount()
         val total = mindful + impulsive
 
-        if (total == 0) {
-            return 0
-        }
+        if (total == 0) return 0
 
         return (
-                mindful.toDouble() /
-                        total.toDouble() *
-                        100
+                mindful.toDouble() / total.toDouble() * 100
                 ).roundToInt()
     }
 
     fun getImpulsivePercentage(): Int {
-        val mindful =
-            repository.getMindfulCount()
-
-        val impulsive =
-            repository.getImpulsiveCount()
-
+        val mindful = repository.getMindfulCount()
+        val impulsive = repository.getImpulsiveCount()
         val total = mindful + impulsive
 
-        if (total == 0) {
-            return 0
-        }
+        if (total == 0) return 0
 
         return (
-                impulsive.toDouble() /
-                        total.toDouble() *
-                        100
+                impulsive.toDouble() / total.toDouble() * 100
                 ).roundToInt()
     }
 
     fun getTodayPickupCount(): Int {
-        return repository
-            .getTodayPickups()
-            .size
+        return repository.getTodayPickups().size
     }
 
     fun getBaselineDifferenceText(): String {
-        val currentPickups =
-            getTodayPickupCount()
-
-        val difference =
-            currentPickups - BASELINE_PICKUPS
+        val currentPickups = getTodayPickupCount()
+        val difference = currentPickups - BASELINE_PICKUPS
 
         return when {
-            difference < 0 ->
-                "$difference vs baseline"
-
-            difference > 0 ->
-                "+$difference vs baseline"
-
-            else ->
-                "Same as baseline"
+            difference < 0 -> "$difference vs baseline"
+            difference > 0 -> "+$difference vs baseline"
+            else -> "Same as baseline"
         }
     }
 
     fun getAverageIntervalMinutes(): Int {
-        val pickups =
-            repository.getTodayPickups()
+        val pickups = repository.getTodayPickups()
 
-        if (pickups.size < 2) {
-            return 0
-        }
+        if (pickups.size < 2) return 0
 
         val firstPickup = pickups.first()
         val lastPickup = pickups.last()
 
         val totalMinutes =
-            (lastPickup - firstPickup) /
-                    60_000.0
+            (lastPickup - firstPickup) / 60_000.0
 
         return (
-                totalMinutes /
-                        (pickups.size - 1)
+                totalMinutes / (pickups.size - 1)
                 ).roundToInt()
     }
 
