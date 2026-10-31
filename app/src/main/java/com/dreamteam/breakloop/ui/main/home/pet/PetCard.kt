@@ -27,7 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import com.dreamteam.breakloop.domain.PetMood
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
-import com.dreamteam.breakloop.ui.components.MonoLabel
+import com.dreamteam.breakloop.ui.theme.MonoLabel
 import com.dreamteam.breakloop.ui.theme.ColorPalette
 
 @Composable
