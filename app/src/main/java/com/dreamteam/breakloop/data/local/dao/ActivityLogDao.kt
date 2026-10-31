@@ -32,4 +32,8 @@ interface ActivityLogDao {
 
     @Query("SELECT * FROM activity_log WHERE completedAt IS NULL ORDER BY startedAt DESC LIMIT 1")
     fun observeOpenLog(): Flow<ActivityLogEntity?>
+
+    @Query("SELECT COALESCE(SUM(xp), 0) FROM activity_log WHERE completedAt >= :startOfDay")
+    fun observeXpSince(startOfDay: Long): Flow<Int>
+
 }
