@@ -37,6 +37,7 @@ fun HomeScreen(
     val petState by petViewModel.uiState.collectAsStateWithLifecycle()
     var showGoalDialog by rememberSaveable { mutableStateOf(false) }
     var showPetPicker by rememberSaveable { mutableStateOf(false) }
+    val forecast by viewModel.forecast.collectAsStateWithLifecycle()
     val askNotificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -55,10 +56,14 @@ fun HomeScreen(
                 is HomeUiState.Loading -> LoadingContent()
                 is HomeUiState.NoPermission -> NoPermissionContent()
                 is HomeUiState.Content -> {
-                    HomeContent(content = current, onEditGoal = { showGoalDialog = true })
+                    HomeContent(content = current, onEditGoal = {
+                        viewModel.loadStreakSimulation()
+                        showGoalDialog = true
+                    })
                     if (showGoalDialog) {
                         GoalDialog(
                             initialGoalMs = current.goalMs,
+                            forecast = forecast,
                             onSave = { hours, minutes ->
                                 viewModel.saveGoal(hours, minutes)
                                 showGoalDialog = false
