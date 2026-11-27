@@ -1,7 +1,6 @@
 package com.dreamteam.breakloop.data.repository
 
 import android.net.Uri
-import com.dreamteam.breakloop.data.auth.AuthRepository
 import com.dreamteam.breakloop.data.local.files.ProfilePhotoDataSource
 import com.dreamteam.breakloop.data.local.preferences.ProfilePreferences
 import com.dreamteam.breakloop.domain.MyProfile
