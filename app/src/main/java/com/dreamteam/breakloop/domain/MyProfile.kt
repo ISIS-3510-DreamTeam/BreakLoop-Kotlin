@@ -6,5 +6,6 @@ data class MyProfile(
     val localPhotoPath: String?,
     val remotePhotoUrl: String?,
     val pendingUpload: Boolean,
+    val updatedAt: Long
 
 )

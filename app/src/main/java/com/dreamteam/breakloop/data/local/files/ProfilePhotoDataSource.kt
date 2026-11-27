@@ -1,4 +1,11 @@
 package com.dreamteam.breakloop.data.local.files
 
-class ProfilePhotoDataSource {
+import android.content.Context
+
+
+
+class ProfilePhotoDataSource (
+    private val context: Context
+){
+
 }
