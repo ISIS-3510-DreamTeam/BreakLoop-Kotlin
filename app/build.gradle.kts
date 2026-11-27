@@ -80,4 +80,5 @@ dependencies {
     implementation(libs.retrofit.converter.kotlinx.serialization)
 
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.coil.compose)
 }

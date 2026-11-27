@@ -21,6 +21,12 @@ data object Home
 data object Profile
 
 @Serializable
+data object MyProfile
+
+@Serializable
+data object EditProfile
+
+@Serializable
 data object Focus
 
 //@Serializable
