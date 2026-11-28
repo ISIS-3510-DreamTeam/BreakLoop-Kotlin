@@ -82,7 +82,7 @@ class AchievementRepository(
         }
     }
 
-    /** Wraps the evaluation in a named section, so it appears as "AchievementsEvaluate" in a profiler system trace. */
+    // Wraps the evaluation in a named section, so it appears as "AchievementsEvaluate" in a profiler system trace.
     suspend fun evaluate(uid: String, catalog: List<Achievement>): List<AchievementProgress> {
         val cookie = traceCookie.incrementAndGet() // tells apart two evaluations running at the same time
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) Trace.beginAsyncSection(TRACE_NAME, cookie)
@@ -93,7 +93,7 @@ class AchievementRepository(
         }
     }
 
-    /** Usage rules only change when one of these changes. */
+    // Usage rules only change when one of these changes.
     private data class UsageKey(val day: LocalDate, val goalMs: Long?, val todayOverGoal: Boolean)
 
     /**
@@ -101,11 +101,6 @@ class AchievementRepository(
      * the rules run on Default, and the unlocks are stored in Room.
      *
      * Micro-optimization: only the rules affected by what changed are evaluated.
-     * - An unlocked achievement never locks again, so it is never evaluated again.
-     * - Usage rules only change when the day changes, the goal changes or today goes over the goal
-     *   (CalculateStreakUseCase returns 0 then). Otherwise their last result is reused from the
-     *   LruCache and the usage history is not read at all.
-     * - The focus rule is always evaluated: a session may have just finished, and it is one COUNT.
      */
     private suspend fun evaluateRules(uid: String, catalog: List<Achievement>): List<AchievementProgress> {
         val startNs = System.nanoTime() // measured for the micro-optimization (Logcat tag AchievementsPerf)
@@ -198,7 +193,7 @@ class AchievementRepository(
         }
     }
 
-    /** Only called by AchievementSyncWorker. Throws when the upload must be retried. */
+    // Only called by AchievementSyncWorker
     suspend fun syncUnlocks() {
         val dao = db.userAchievementDao()
         for (row in dao.getUnsynced()) {
@@ -212,14 +207,14 @@ class AchievementRepository(
         }
     }
 
-    /** LruCache first; on a miss (for example, the app was killed) the rules are evaluated again. */
+    // LruCache first
     suspend fun getProgress(uid: String, achievementId: String): AchievementProgress? {
         AchievementProgressCache.get(uid, achievementId)?.let { return it }
         val catalog = loadCatalog()
         return evaluate(uid, catalog.achievements).firstOrNull { it.achievement.id == achievementId }
     }
 
-    /** Unlocked achievements whose celebration the user has not seen yet. */
+    // Unlocked achievements whose celebration the user has not seen yet.
     suspend fun pendingCelebrations(uid: String, progress: List<AchievementProgress>): List<AchievementProgress> {
         val seen = preferences.getSeenCelebrations(uid)
         return progress.filter { it.unlocked && it.achievement.id !in seen }
@@ -237,7 +232,6 @@ class AchievementRepository(
     private fun parse(text: String): List<Achievement> =
         json.decodeFromString<List<AchievementDto>>(text).toDomain()
 
-    /** An unknown rule (added later in the backend) is skipped instead of breaking the app. */
     private fun List<AchievementDto>.toDomain(): List<Achievement> = mapNotNull { dto ->
         val rule = AchievementRule.entries.firstOrNull { it.name == dto.rule } ?: return@mapNotNull null
         Achievement(dto.id, dto.name, dto.description, dto.image, rule, dto.target)

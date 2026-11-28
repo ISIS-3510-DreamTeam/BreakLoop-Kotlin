@@ -35,7 +35,7 @@ import com.dreamteam.breakloop.data.local.entity.UserAchievementEntity
         PendingProfileViewEntity::class,
         UserAchievementEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 
