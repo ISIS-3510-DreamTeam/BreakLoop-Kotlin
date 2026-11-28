@@ -47,3 +47,10 @@ data class OfflineActivityDetail(
 
 @Serializable
 data object Friends
+
+
+@Serializable
+data object Achievements
+
+@Serializable
+data class AchievementDetail(val achievementId: String)

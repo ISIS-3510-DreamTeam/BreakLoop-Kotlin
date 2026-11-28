@@ -55,7 +55,7 @@ fun PetCard(
             AnimatedPet(
                 image = image,
                 mood = state.mood,
-                modifier = Modifier.fillMaxWidth().height(180.dp),
+                modifier = Modifier.fillMaxWidth().height(140.dp),
             )
         } else {
             Text("Your pet is on its way. It will appear once you're online.")

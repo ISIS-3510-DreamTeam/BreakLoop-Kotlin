@@ -28,11 +28,24 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
+import com.dreamteam.breakloop.data.remote.UsageRemoteDataSource
+import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
+import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
+import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
+import com.dreamteam.breakloop.data.system.PermissionsDataSource
+import com.dreamteam.breakloop.data.system.UsageEventsDataSource
+import com.dreamteam.breakloop.domain.repository.UsageRepository
+import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
+import com.google.firebase.auth.FirebaseAuth
 
 class AchievementRepository(
     private val context: Context,
     private val api: AchievementApi = RetrofitInstance.achievementApi,
     private val db: AppDatabase = AppDatabase.getInstance(context),
+    private val usageRepository: UsageRepository = buildUsageRepository(context, db),
     private val goalRepository: GoalRepository = DataStoreGoalRepository(context),
     private val catalogStorage: AchievementCatalogStorage = AchievementCatalogStorage(context),
     private val preferences: AchievementPreferences = AchievementPreferences(context),
@@ -73,7 +86,12 @@ class AchievementRepository(
 
         val input = withContext(Dispatchers.IO) {
             coroutineScope {
-                val days = async { loadDays(today) }
+                val days = async {
+                    // The days must be in Room before reading them; otherwise the first evaluation
+                    // at app start sees no history (streak 0). Same 7 days as StreakViewModel.
+                    usageRepository.backfillMissingDays(today.minusDays(BACKFILL_DAYS), today.minusDays(1))
+                    loadDays(today)
+                }
                 val goalMs = async { goalRepository.observeDailyGoalMs().first() }
                 val focus = async { db.focusSessionDao().countCompleted(uid) }
                 val streak = async { calculateStreak.calculate(days.await(), goalMs.await(), today) }
@@ -149,5 +167,26 @@ class AchievementRepository(
 
     companion object {
         private const val HISTORY_DAYS = 60L
+        private const val BACKFILL_DAYS = 7L
     }
+}
+
+/** Same construction as StreakViewModel and HomeViewModel. */
+private fun buildUsageRepository(context: Context, db: AppDatabase): UsageRepository {
+    val appContext = context.applicationContext
+    return UsageRepositoryImpl(
+        usageEventsDataSource = UsageEventsDataSource(
+            appContext,
+            permissionsDataSource = PermissionsDataSource(appContext)
+        ),
+        installedAppsDataSource = InstalledAppsDataSource(appContext),
+        aggregateUsageEventsUseCase = AggregateUsageEventsUseCase(),
+        appUsageDao = db.appUsageDao(),
+        dailyUsageStatsDao = db.dailyUsageStatsDao(),
+        calculateBaselineUseCase = CalculateBaselineUseCase(),
+        calculateFlaggedTimeUseCase = CalculateFlaggedTimeUseCase(),
+        flaggedAppsRepositoryImpl = FlaggedAppsRepositoryImpl(db.flaggedAppDao()),
+        remote = UsageRemoteDataSource(RetrofitInstance.usageApi, FirebaseAuth.getInstance()),
+        syncScheduler = WorkManagerSyncScheduler(appContext)
+    )
 }
