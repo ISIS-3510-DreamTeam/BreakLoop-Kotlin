@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.StorageException
 import kotlinx.coroutines.flow.first
 import retrofit2.HttpException
+import java.io.File
 import java.io.IOException
 
 class MyProfileSyncWorker(
@@ -27,7 +28,10 @@ class MyProfileSyncWorker(
         if( !profile.pendingUpload) return Result.success()
         try {
             val photoUrl = profile.localPhotoPath?.let { path ->
-                photoRemote.upload(uid, path, profile.updatedAt)
+                // para que no se me duplique en la subida la imagen , mejor poner solo este
+                val version = File(path).nameWithoutExtension.substringAfter('_').toLongOrNull()
+                    ?: profile.updatedAt
+                photoRemote.upload(uid, path, version)
             }
             remote.updateMyProfile(profile.name, photoUrl)
             preferences.markSynced(uid, profile.updatedAt)

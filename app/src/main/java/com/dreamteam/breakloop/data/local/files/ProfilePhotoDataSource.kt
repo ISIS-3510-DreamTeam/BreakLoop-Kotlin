@@ -3,6 +3,8 @@ package com.dreamteam.breakloop.data.local.files
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -47,7 +49,8 @@ class ProfilePhotoDataSource (
         val stamp = System.currentTimeMillis()
         val tmp = File(folder, "avatar_$stamp.tmp")
         try {
-            val bitmap = decodeScaled(uri) ?: return@withContext null
+            val decoded = decodeScaled(uri) ?: return@withContext null
+            val bitmap = applyOrientation(uri, decoded)
             val fileOutputStream = FileOutputStream(tmp)
             bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fileOutputStream)
             fileOutputStream.close()
@@ -60,6 +63,24 @@ class ProfilePhotoDataSource (
             tmp.delete()
             null
         }
+    }
+
+    // sin esta kk se me rotaba la imagen, que le pasaba
+    private fun applyOrientation(uri: Uri, bitmap: Bitmap): Bitmap {
+        val orientation = context.contentResolver.openInputStream(uri)?.use {
+            ExifInterface(it).getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            )
+        }
+        val degrees = when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+            else -> return bitmap
+        }
+        val matrix = Matrix().apply { postRotate(degrees) }
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
     private fun calculateSample(wide: Int, tall: Int, target: Int ): Int {
