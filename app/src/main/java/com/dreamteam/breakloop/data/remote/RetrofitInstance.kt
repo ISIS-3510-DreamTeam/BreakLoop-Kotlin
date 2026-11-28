@@ -5,10 +5,10 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.dreamteam.breakloop.remote.PetApi
-import com.dreamteam.breakloop.ui.navigation.Profile
+import com.dreamteam.breakloop.remote.AchievementApi
 
 object RetrofitInstance {
-    private const val BASE_URL = "https://breakloop-backend-14746672383.southamerica-west1.run.app/"
+    const val BASE_URL = "https://breakloop-backend-14746672383.southamerica-west1.run.app/"
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -55,6 +55,11 @@ object RetrofitInstance {
     val profileApi: ProfileApi by lazy {
         retrofit
             .create(ProfileApi::class.java)
+    }
+
+    val achievementApi: AchievementApi by lazy {
+        retrofit
+            .create(AchievementApi::class.java)
     }
 
 }

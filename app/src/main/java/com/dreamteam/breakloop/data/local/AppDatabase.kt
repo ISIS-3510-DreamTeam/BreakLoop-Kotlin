@@ -20,6 +20,8 @@ import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
 import com.dreamteam.breakloop.data.local.entity.FriendProfileEntity
 import com.dreamteam.breakloop.data.local.entity.PendingProfileViewEntity
 import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
+import com.dreamteam.breakloop.data.local.dao.UserAchievementDao
+import com.dreamteam.breakloop.data.local.entity.UserAchievementEntity
 
 @Database(
     entities = [
@@ -30,9 +32,10 @@ import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
         FlaggedAppEntity::class,
         SuggestionInteractionEntity::class,
         FriendProfileEntity::class,
-        PendingProfileViewEntity::class
+        PendingProfileViewEntity::class,
+        UserAchievementEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -49,6 +52,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun friendProfileDao(): FriendProfileDao
 
     abstract fun pendingProfileViewDao(): PendingProfileViewDao
+
+    abstract fun userAchievementDao(): UserAchievementDao
 
     companion object {
 

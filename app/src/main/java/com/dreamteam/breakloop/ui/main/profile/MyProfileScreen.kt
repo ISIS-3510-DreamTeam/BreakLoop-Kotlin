@@ -2,7 +2,10 @@ package com.dreamteam.breakloop.ui.main.profile
 
 import androidx.compose.foundation.layout.Row
 import com.dreamteam.breakloop.ui.main.profile.components.ProfileHeader
+import com.dreamteam.breakloop.ui.main.achievements.AchievementsUiState
+import com.dreamteam.breakloop.ui.main.achievements.AchievementsViewModel
 import com.dreamteam.breakloop.ui.main.friends.FriendsViewModel
+import com.dreamteam.breakloop.ui.main.profile.components.BadgesCard
 import com.dreamteam.breakloop.ui.main.home.pet.PetUiState
 import com.dreamteam.breakloop.ui.main.home.pet.PetViewModel
 import com.dreamteam.breakloop.ui.main.profile.components.FriendCodeCard
@@ -29,7 +32,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dreamteam.breakloop.domain.MyProfile
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
-import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.components.LoadingContent
 import com.dreamteam.breakloop.ui.main.profile.components.AvatarWithPet
 import com.dreamteam.breakloop.ui.theme.ColorPalette
@@ -39,13 +41,16 @@ fun MyProfileScreen(
     streakDays: Int,
     onEditClick: () -> Unit,
     onBack: () -> Unit,
+    onBadgesClick: () -> Unit,
     viewModel: ProfileViewModel = viewModel(),
     petViewModel: PetViewModel = viewModel(),
     friendsViewModel: FriendsViewModel = viewModel(),
+    achievementsViewModel: AchievementsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val petState by petViewModel.uiState.collectAsStateWithLifecycle()
     val friendsState by friendsViewModel.state.collectAsStateWithLifecycle()
+    val achievementsState by achievementsViewModel.uiState.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -62,6 +67,8 @@ fun MyProfileScreen(
                 streakDays = streakDays,
                 friendCode = friendsState.myFriendCode,
                 petState = petState,
+                achievementsState = achievementsState,
+                onBadgesClick = onBadgesClick,
                 onEditClick = onEditClick,
             )
         }
@@ -91,6 +98,8 @@ private fun MyProfileContent(
     streakDays: Int,
     friendCode: String?,
     petState: PetUiState,
+    achievementsState: AchievementsUiState,
+    onBadgesClick: () -> Unit,
     onEditClick: () -> Unit,
 ) {
     val name = profile?.name.orEmpty()
@@ -143,10 +152,7 @@ private fun MyProfileContent(
             FriendCodeCard(friendCode, modifier = Modifier.weight(1f))
         }
 
-        ProfileCard(title = "Badges") {
-            // TODO: list the latest badges once they exist
-            Hint("Your latest badges will show up here.")
-        }
+        BadgesCard(state = achievementsState, onClick = onBadgesClick)
 
         BreakLoopButton(text = "Edit profile", onClick = onEditClick)
 
@@ -157,20 +163,6 @@ private fun MyProfileContent(
                 color = ColorPalette.Neutral.t700,
                 textAlign = TextAlign.Center,
             )
-        }
-    }
-}
-
-@Composable
-private fun ProfileCard(title: String, content: @Composable () -> Unit) {
-    BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                title.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = ColorPalette.Neutral.t700,
-            )
-            content()
         }
     }
 }

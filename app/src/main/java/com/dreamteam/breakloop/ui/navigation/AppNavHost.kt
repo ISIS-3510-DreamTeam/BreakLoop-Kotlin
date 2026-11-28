@@ -28,12 +28,15 @@ import com.dreamteam.breakloop.ui.main.profile.MyProfileScreen
 import com.dreamteam.breakloop.ui.main.stats.StatsScreen
 import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppsRoute
 import com.dreamteam.breakloop.ui.main.stats.deepstats.DeepStatsScreen
+import com.dreamteam.breakloop.ui.main.achievements.AchievementsScreen
+import com.dreamteam.breakloop.ui.main.achievements.detail.AchievementDetailScreen
 
 // the default cross-fade lasts 700 ms, which feels like lag
 private const val FADE_MS = 150
 
 private fun NavBackStackEntry.isFullScreen(): Boolean =
-    destination.hasRoute<MyProfile>() || destination.hasRoute<EditProfile>()
+    destination.hasRoute<MyProfile>() || destination.hasRoute<EditProfile>() ||
+        destination.hasRoute<Achievements>() || destination.hasRoute<AchievementDetail>()
 
 // going in or out of a screen without bars resizes the content, so switch without animating
 private fun AnimatedContentTransitionScope<NavBackStackEntry>.togglesBars(): Boolean =
@@ -74,7 +77,30 @@ fun AppNavHost(
         navigation<MainGraph>(startDestination = Home) {
 
             composable<Home> {
-                HomeScreen()
+                HomeScreen(
+                    onAchievementsClick = {
+                        navController.navigate(Achievements)
+                    }
+                )
+            }
+
+            composable<Achievements> {
+                AchievementsScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                    onAchievementClick = { id ->
+                        navController.navigate(AchievementDetail(id))
+                    }
+                )
+            }
+
+            composable<AchievementDetail> {
+                AchievementDetailScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
 
             composable<Focus> {
@@ -146,6 +172,9 @@ fun AppNavHost(
                     },
                     onBack = {
                         navController.popBackStack<MyProfile>(inclusive = true)
+                    },
+                    onBadgesClick = {
+                        navController.navigate(Achievements) { launchSingleTop = true }
                     }
                 )
             }

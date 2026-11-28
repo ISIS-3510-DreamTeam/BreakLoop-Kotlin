@@ -4,7 +4,7 @@ import com.dreamteam.breakloop.ui.components.StreakIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,23 +28,30 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.dreamteam.breakloop.domain.Achievement
+import com.dreamteam.breakloop.domain.AchievementProgress
+import com.dreamteam.breakloop.domain.AchievementRule
 import com.dreamteam.breakloop.domain.FriendProfile
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
-import com.dreamteam.breakloop.ui.components.BreakLoopChip
 import com.dreamteam.breakloop.ui.components.LoadingContent
 import com.dreamteam.breakloop.ui.components.PixelArt
 import com.dreamteam.breakloop.ui.components.PixelIcon
+import com.dreamteam.breakloop.ui.main.profile.components.MedalTile
 import com.dreamteam.breakloop.ui.main.profile.components.ProfileAvatar
 import com.dreamteam.breakloop.ui.main.profile.components.ProfileHeader
 import com.dreamteam.breakloop.ui.theme.ColorPalette
+
+private const val BADGES_PER_ROW = 3
 
 @Composable
 fun FriendProfileScreen(
     onBack: () -> Unit,
     viewModel: FriendProfileViewModel = viewModel(),
+    badgeCatalogViewModel: BadgeCatalogViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val catalog by badgeCatalogViewModel.catalog.collectAsStateWithLifecycle()
 
     // the header stays outside the when, so going back works in every state
     Column(
@@ -67,6 +74,7 @@ fun FriendProfileScreen(
             )
             is FriendProfileUiState.Content -> FriendProfileContent(
                 profile = current.profile,
+                catalog = catalog,
                 isStale = current.isStale,
                 onRetry = viewModel::load,
             )
@@ -77,6 +85,7 @@ fun FriendProfileScreen(
 @Composable
 private fun FriendProfileContent(
     profile: FriendProfile,
+    catalog: List<Achievement>?,
     isStale: Boolean,
     onRetry: () -> Unit,
 ) {
@@ -122,7 +131,7 @@ private fun FriendProfileContent(
             }
         }
 
-        BadgesCard(profile.badges)
+        BadgesCard(profile.badges, catalog)
     }
 }
 
@@ -168,33 +177,42 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun BadgesCard(badges: List<String>) {
+private fun BadgesCard(badges: List<String>, catalog: List<Achievement>?) {
     BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionLabel("Badges")
-            if (badges.isEmpty()) {
-                Text(
+            when {
+                badges.isEmpty() -> Text(
                     "No badges yet",
                     style = MaterialTheme.typography.bodyMedium,
                     color = ColorPalette.Neutral.t700,
                 )
-            } else {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    badges.forEach { id ->
-                        BreakLoopChip(
-                            text = badgeLabel(id),
-                            selected = false,
-                            onClick = {},
-                            modifier = Modifier,
-                        )
+                catalog == null -> Text(
+                    "Loading badges…",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ColorPalette.Neutral.t700,
+                )
+                else -> badges.map { earnedBadge(it, catalog) }
+                    .chunked(BADGES_PER_ROW)
+                    .forEach { row ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            row.forEach { MedalTile(progress = it, modifier = Modifier.weight(1f)) }
+                            repeat(BADGES_PER_ROW - row.size) { Spacer(Modifier.weight(1f)) }
+                        }
                     }
-                }
             }
         }
     }
+}
+
+// a badge the catalog doesn't know still shows, with a readable name and the placeholder trophy
+private fun earnedBadge(id: String, catalog: List<Achievement>): AchievementProgress {
+    val achievement = catalog.firstOrNull { it.id == id }
+        ?: Achievement(id, badgeLabel(id), "", "", AchievementRule.STREAK_DAYS, 1)
+    return AchievementProgress(achievement, current = achievement.target, unlocked = true)
 }
 
 @Composable

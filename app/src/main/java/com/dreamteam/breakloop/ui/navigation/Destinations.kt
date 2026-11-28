@@ -56,3 +56,9 @@ data object Friends
 
 @Serializable
 data class FriendProfileRoute(val uid: String)
+
+@Serializable
+data object Achievements
+
+@Serializable
+data class AchievementDetail(val achievementId: String)
