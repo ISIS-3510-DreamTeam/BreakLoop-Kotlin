@@ -27,11 +27,12 @@ import com.dreamteam.breakloop.data.local.entity.UserAchievementEntity
         FocusSessionEntity::class,
         FlaggedAppEntity::class,
         SuggestionInteractionEntity::class,
-        UserAchievementEntity::class
+        UserAchievementEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
+
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun dailyUsageStatsDao(): DailyUsageStatsDao

@@ -68,5 +68,24 @@ interface FocusSessionDao {
     @Query("SELECT * FROM focus_sessions WHERE uid = :uid AND synced = 0 ORDER BY startTime ASC")
     suspend fun getPendingSessions(uid: String): List<FocusSessionEntity>
 
-    //
+    //Sprint 4: Registrar recuperación de una sesión
+    @Query("""
+        UPDATE focus_sessions
+        SET recoveryCount = recoveryCount + 1,
+            lastRecoveredAt = :recoveredAt,
+            synced = 0
+        WHERE id = :id AND status = 'IN_PROGRESS'
+    """)
+    suspend fun registerRecovery(
+        id: String,
+        recoveredAt: Long
+    )
+
+    // Obtener sesión por ID
+    @Query("""
+        SELECT * FROM focus_sessions
+        WHERE id = :id
+        LIMIT 1
+    """)
+        suspend fun getSessionById(id: String): FocusSessionEntity?
 }

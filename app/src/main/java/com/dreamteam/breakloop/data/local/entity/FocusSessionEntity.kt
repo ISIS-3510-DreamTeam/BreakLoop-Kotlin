@@ -1,3 +1,4 @@
+
 package com.dreamteam.breakloop.data.local.entity
 
 import androidx.room.Entity
@@ -28,5 +29,9 @@ data class FocusSessionEntity(
 
     val isPaused: Boolean = false,
 
-    val lastUpdatedAt: Long = System.currentTimeMillis()
+    val lastUpdatedAt: Long = System.currentTimeMillis(),
+
+    val recoveryCount: Int = 0,
+
+    val lastRecoveredAt: Long? = null
 )

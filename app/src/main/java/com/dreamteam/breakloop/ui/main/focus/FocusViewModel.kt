@@ -115,6 +115,12 @@ class FocusViewModel(
                 sessionId = session.id
                 sessionStartTime = session.startTime
 
+                if (tiempoRestante > 0) {
+                    focusSessionRepository.registerRecovery(
+                        id = session.id,
+                        recoveredAt = System.currentTimeMillis()
+                    )
+                }
                 _uiState.update {
                     it.copy(
                         selectedDuration = session.duration,

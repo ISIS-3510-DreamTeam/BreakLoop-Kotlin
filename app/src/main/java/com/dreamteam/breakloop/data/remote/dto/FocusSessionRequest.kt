@@ -9,5 +9,7 @@ data class FocusSessionRequest(
     val duration: Int,
     val type: String,
     val status: String,
-    val xpEarned: Int
+    val xpEarned: Int,
+    val recoveryCount: Int = 0,
+    val lastRecoveredAt: Long? = null
 )
