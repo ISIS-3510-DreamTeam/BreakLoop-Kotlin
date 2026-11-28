@@ -1,24 +1,40 @@
 package com.dreamteam.breakloop.data.achievement
 
 import android.content.Context
+import android.os.Build
+import android.os.Trace
 import android.util.Log
 import com.dreamteam.breakloop.data.goal.DataStoreGoalRepository
 import com.dreamteam.breakloop.data.local.AppDatabase
 import com.dreamteam.breakloop.data.local.entity.UserAchievementEntity
 import com.dreamteam.breakloop.data.local.mapper.toDomain
 import com.dreamteam.breakloop.data.remote.RetrofitInstance
+import com.dreamteam.breakloop.data.remote.UsageRemoteDataSource
+import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
+import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
+import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
+import com.dreamteam.breakloop.data.system.PermissionsDataSource
+import com.dreamteam.breakloop.data.system.UsageEventsDataSource
 import com.dreamteam.breakloop.domain.Achievement
 import com.dreamteam.breakloop.domain.AchievementCatalog
 import com.dreamteam.breakloop.domain.AchievementInput
 import com.dreamteam.breakloop.domain.AchievementProgress
 import com.dreamteam.breakloop.domain.AchievementRule
 import com.dreamteam.breakloop.domain.CatalogSource
+import com.dreamteam.breakloop.domain.DailyUsageStats
 import com.dreamteam.breakloop.domain.DayUsage
 import com.dreamteam.breakloop.domain.repository.GoalRepository
+import com.dreamteam.breakloop.domain.repository.UsageRepository
+import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
+import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateStreakUseCase
 import com.dreamteam.breakloop.domain.usecase.EvaluateAchievementsUseCase
 import com.dreamteam.breakloop.remote.AchievementApi
 import com.dreamteam.breakloop.remote.AchievementDto
+import com.dreamteam.breakloop.remote.AchievementUnlockRequest
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -28,19 +44,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
-import com.dreamteam.breakloop.data.remote.UsageRemoteDataSource
-import com.dreamteam.breakloop.data.repository.FlaggedAppsRepositoryImpl
-import com.dreamteam.breakloop.data.repository.UsageRepositoryImpl
-import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
-import com.dreamteam.breakloop.data.system.InstalledAppsDataSource
-import com.dreamteam.breakloop.data.system.PermissionsDataSource
-import com.dreamteam.breakloop.data.system.UsageEventsDataSource
-import com.dreamteam.breakloop.domain.repository.UsageRepository
-import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
-import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
-import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
-import com.google.firebase.auth.FirebaseAuth
-import com.dreamteam.breakloop.remote.AchievementUnlockRequest
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 class AchievementRepository(
     private val context: Context,
@@ -77,44 +82,88 @@ class AchievementRepository(
         }
     }
 
+    /** Wraps the evaluation in a named section, so it appears as "AchievementsEvaluate" in a profiler system trace. */
+    suspend fun evaluate(uid: String, catalog: List<Achievement>): List<AchievementProgress> {
+        val cookie = traceCookie.incrementAndGet() // tells apart two evaluations running at the same time
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) Trace.beginAsyncSection(TRACE_NAME, cookie)
+        try {
+            return evaluateRules(uid, catalog)
+        } finally {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) Trace.endAsyncSection(TRACE_NAME, cookie)
+        }
+    }
+
+    /** Usage rules only change when one of these changes. */
+    private data class UsageKey(val day: LocalDate, val goalMs: Long?, val todayOverGoal: Boolean)
+
     /**
      * Rule engine: a parent coroutine on IO launches one child per metric in parallel,
      * the rules run on Default, and the unlocks are stored in Room.
+     *
+     * Micro-optimization: only the rules affected by what changed are evaluated.
+     * - An unlocked achievement never locks again, so it is never evaluated again.
+     * - Usage rules only change when the day changes, the goal changes or today goes over the goal
+     *   (CalculateStreakUseCase returns 0 then). Otherwise their last result is reused from the
+     *   LruCache and the usage history is not read at all.
+     * - The focus rule is always evaluated: a session may have just finished, and it is one COUNT.
      */
-    suspend fun evaluate(uid: String, catalog: List<Achievement>): List<AchievementProgress> {
+    private suspend fun evaluateRules(uid: String, catalog: List<Achievement>): List<AchievementProgress> {
         val startNs = System.nanoTime() // measured for the micro-optimization (Logcat tag AchievementsPerf)
         val today = LocalDate.now()
+        val dao = db.userAchievementDao()
+
+        // What changed since the last evaluation: three small reads
+        val (unlockedIds, usageKey) = withContext(Dispatchers.IO) {
+            val unlocked = dao.getForUser(uid).map { it.achievementId }.toSet()
+            val goalMs = goalRepository.observeDailyGoalMs().first()
+            val usedToday = db.dailyUsageStatsDao().getDailyUsageStatsOnce(today.toString())?.screenTimeMs ?: 0L
+            unlocked to UsageKey(today, goalMs, goalMs != null && usedToday > goalMs)
+        }
+        val usageChanged = lastUsageKey[uid] != usageKey
+
+        val toEvaluate = catalog.filter { achievement ->
+            achievement.id !in unlockedIds && (
+                    achievement.rule == AchievementRule.FOCUS_SESSIONS_COMPLETED ||
+                            usageChanged ||
+                            AchievementProgressCache.get(uid, achievement.id) == null
+                    )
+        }
+        val needsUsage = toEvaluate.any { it.rule != AchievementRule.FOCUS_SESSIONS_COMPLETED }
+        val needsFocus = toEvaluate.any { it.rule == AchievementRule.FOCUS_SESSIONS_COMPLETED }
 
         val input = withContext(Dispatchers.IO) {
             coroutineScope {
                 val days = async {
-                    // The days must be in Room before reading them; otherwise the first evaluation
-                    // at app start sees no history (streak 0). Same 7 days as StreakViewModel.
-                    usageRepository.backfillMissingDays(today.minusDays(BACKFILL_DAYS), today.minusDays(1))
-                    loadDays(today)
+                    if (needsUsage) {
+                        // The days must be in Room before reading them (same 7 days as StreakViewModel)
+                        usageRepository.backfillMissingDays(today.minusDays(BACKFILL_DAYS), today.minusDays(1))
+                        loadDays(today)
+                    } else {
+                        emptyList<DailyUsageStats>()
+                    }
                 }
-                val goalMs = async { goalRepository.observeDailyGoalMs().first() }
-                val focus = async { db.focusSessionDao().countCompleted(uid) }
-                val streak = async { calculateStreak.calculate(days.await(), goalMs.await(), today) }
+                val focus = async { if (needsFocus) db.focusSessionDao().countCompleted(uid) else 0 }
+                val streak = async {
+                    if (needsUsage) calculateStreak.calculate(days.await(), usageKey.goalMs, today) else 0
+                }
 
                 AchievementInput(
                     days = days.await()
                         .filter { !it.isPartial && LocalDate.parse(it.date).isBefore(today) }
                         .map { DayUsage(LocalDate.parse(it.date), (it.screenTimeMs / 60_000).toInt()) },
-                    dailyLimitMinutes = goalMs.await()?.let { (it / 60_000).toInt() },
+                    dailyLimitMinutes = usageKey.goalMs?.let { (it / 60_000).toInt() },
                     streak = streak.await(),
                     completedFocusSessions = focus.await(),
                 )
             }
         }
 
-        // CPU work: the rules run on the pool meant for calculations
+        // CPU work: only the affected rules run, on the pool meant for calculations
         val evaluated = withContext(Dispatchers.Default) {
-            evaluateAchievements.evaluate(catalog, input)
+            evaluateAchievements.evaluate(toEvaluate, input)
         }
 
         return withContext(Dispatchers.IO) {
-            val dao = db.userAchievementDao()
             val now = System.currentTimeMillis()
 
             // Once unlocked, an achievement stays unlocked even if the streak breaks later
@@ -123,16 +172,28 @@ class AchievementRepository(
                     .map { UserAchievementEntity(uid = uid, achievementId = it.achievement.id, unlockedAt = now) }
             )
             val stored = dao.getForUser(uid).associateBy { it.achievementId }
+            val evaluatedById = evaluated.associateBy { it.achievement.id }
 
-            val result = evaluated.map { progress ->
-                val row = stored[progress.achievement.id]
+            // Keeps the catalog order. Achievements that were not affected keep their last result
+            val result = catalog.map { achievement ->
+                val progress = evaluatedById[achievement.id]
+                    ?: AchievementProgressCache.get(uid, achievement.id)
+                    ?: AchievementProgress(achievement, current = achievement.target, unlocked = true)
+                val row = stored[achievement.id]
                 if (row == null) progress
                 else progress.copy(unlocked = true, unlockedAt = row.unlockedAt, synced = row.synced)
             }
             result.forEach { AchievementProgressCache.put(uid, it) }
+            if (needsUsage) lastUsageKey[uid] = usageKey
+
             // Eventual connectivity: new unlocks are uploaded later by the worker, only with network
             if (stored.values.any { !it.synced }) AchievementSyncWorker.schedule(context)
-            Log.d("AchievementsPerf", "evaluate took ${(System.nanoTime() - startNs) / 1_000_000.0} ms")
+
+            Log.d(
+                "AchievementsPerf",
+                "evaluate took ${(System.nanoTime() - startNs) / 1_000_000.0} ms " +
+                        "(rules evaluated: ${toEvaluate.size}/${catalog.size}, usage read: $needsUsage)"
+            )
             result
         }
     }
@@ -185,6 +246,11 @@ class AchievementRepository(
     companion object {
         private const val HISTORY_DAYS = 60L
         private const val BACKFILL_DAYS = 7L
+        private const val TRACE_NAME = "AchievementsEvaluate"
+        private val traceCookie = AtomicInteger(0)
+
+        // Shared by every repository instance (Home and the grid each create one) while the app process lives
+        private val lastUsageKey = ConcurrentHashMap<String, UsageKey>()
     }
 }
 
