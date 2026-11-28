@@ -24,4 +24,7 @@ interface FocusSessionDao {
 
     @Query("SELECT COALESCE(SUM(xpEarned), 0) FROM focus_sessions WHERE startTime >= :startOfDay")
     fun observeXpSince(startOfDay: Long): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM focus_sessions WHERE uid = :uid AND status = 'COMPLETED'")
+    suspend fun countCompleted(uid: String): Int
 }
