@@ -57,5 +57,10 @@ interface FocusSessionDao {
         LIMIT 1
     """)
     suspend fun getActiveSession(uid: String): FocusSessionEntity?
+
+    //Obtener sesiones pendientes de sincronización por usuario
+    @Query("SELECT * FROM focus_sessions WHERE uid = :uid AND synced = 0 ORDER BY startTime ASC")
+    suspend fun getPendingSessions(uid: String): List<FocusSessionEntity>
+
     //
 }

@@ -84,4 +84,10 @@ class FocusSessionRepository(
     suspend fun getActiveSession(uid: String): FocusSessionEntity? {
         return focusSessionDao.getActiveSession(uid)
     }
+
+    suspend fun getPendingSessions(uid: String): List<FocusSessionEntity> {
+        return focusSessionDao.getPendingSessions(uid)
+    }
+
+
 }
