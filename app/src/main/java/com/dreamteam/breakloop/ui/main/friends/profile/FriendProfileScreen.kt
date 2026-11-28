@@ -22,18 +22,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.dreamteam.breakloop.R
 import com.dreamteam.breakloop.domain.FriendProfile
 import com.dreamteam.breakloop.ui.components.BreakLoopButton
 import com.dreamteam.breakloop.ui.components.BreakLoopCard
 import com.dreamteam.breakloop.ui.components.BreakLoopChip
 import com.dreamteam.breakloop.ui.components.LoadingContent
+import com.dreamteam.breakloop.ui.components.PixelArt
+import com.dreamteam.breakloop.ui.components.PixelIcon
 import com.dreamteam.breakloop.ui.main.profile.components.ProfileAvatar
 import com.dreamteam.breakloop.ui.main.profile.components.ProfileHeader
 import com.dreamteam.breakloop.ui.theme.ColorPalette
@@ -112,16 +112,11 @@ private fun FriendProfileContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             StatCard(label = "Current streak", modifier = Modifier.weight(1f)) {
-                // same icon as the top bar
-                Icon(
-                    painter = painterResource(R.drawable.ic_streak),
-                    contentDescription = null,
-                    tint = ColorPalette.Neutral.t1000,
-                    modifier = Modifier.size(22.dp),
-                )
+                PixelIcon(PixelArt.FLAME, size = 24.dp)
                 StatValue("${profile.streak} d")
             }
             StatCard(label = "Pet level", modifier = Modifier.weight(1f)) {
+                PixelIcon(PixelArt.PAW, size = 24.dp)
                 StatValue("${profile.petLevel}")
             }
         }

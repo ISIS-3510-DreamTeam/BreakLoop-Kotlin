@@ -1,5 +1,7 @@
 package com.dreamteam.breakloop.ui.layout
 
+import com.dreamteam.breakloop.ui.components.PixelArt
+import com.dreamteam.breakloop.ui.components.PixelIcon
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -73,7 +75,7 @@ fun TopBar(
 
             HeaderBadge(text = null, icon = R.drawable.ic_shield)
             Spacer(Modifier.width(6.dp))
-            HeaderBadge(text = "${streakDays}d", icon = R.drawable.ic_streak)
+            StreakBadge(streakDays)
 
             ProfileMenu(onProfileClick = onProfileClick, onSignOut = onSignOut)
         }
@@ -141,6 +143,20 @@ private fun ProfileMenu(
                 },
             )
         }
+    }
+}
+
+@Composable
+private fun StreakBadge(streakDays: Int) {
+    Row(
+        modifier = Modifier
+            .border(1.5.dp, ColorPalette.Neutral.t1000, RoundedCornerShape(50))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PixelIcon(PixelArt.FLAME, size = 14.dp)
+        Spacer(Modifier.width(4.dp))
+        Text(text = "${streakDays}d", style = MonoLabel, color = ColorPalette.Neutral.t1000)
     }
 }
 
