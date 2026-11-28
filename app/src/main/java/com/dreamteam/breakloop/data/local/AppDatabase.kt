@@ -15,6 +15,7 @@ import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
 import com.dreamteam.breakloop.data.local.entity.FlaggedAppEntity
 import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
+import com.dreamteam.breakloop.data.local.entity.FriendProfileEntity
 import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
 
 @Database(
@@ -24,9 +25,10 @@ import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
         ActivityLogEntity::class,
         FocusSessionEntity::class,
         FlaggedAppEntity::class,
-        SuggestionInteractionEntity::class
+        SuggestionInteractionEntity::class,
+        FriendProfileEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

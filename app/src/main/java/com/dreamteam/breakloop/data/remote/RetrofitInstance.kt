@@ -5,6 +5,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.dreamteam.breakloop.remote.PetApi
+import com.dreamteam.breakloop.ui.navigation.Profile
 
 object RetrofitInstance {
     private const val BASE_URL = "https://breakloop-backend-14746672383.southamerica-west1.run.app/"
@@ -49,6 +50,11 @@ object RetrofitInstance {
     val petApi: PetApi by lazy {
         retrofit
             .create(PetApi::class.java)
+    }
+
+    val profileApi: ProfileApi by lazy {
+        retrofit
+            .create(ProfileApi::class.java)
     }
 
 }
