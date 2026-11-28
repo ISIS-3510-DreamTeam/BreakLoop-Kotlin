@@ -10,7 +10,7 @@ data class FriendProfileEntity (
     var displayName: String,
     var photoUrl: String?,
     var streak: Int,
-    val petLevel: String,
+    val petLevel: Int,
     val badgesJson: String,
     val fetchedAt: Long
 )
