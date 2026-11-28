@@ -40,6 +40,7 @@ import com.dreamteam.breakloop.domain.usecase.AggregateUsageEventsUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateBaselineUseCase
 import com.dreamteam.breakloop.domain.usecase.CalculateFlaggedTimeUseCase
 import com.google.firebase.auth.FirebaseAuth
+import com.dreamteam.breakloop.remote.AchievementUnlockRequest
 
 class AchievementRepository(
     private val context: Context,
@@ -129,8 +130,24 @@ class AchievementRepository(
                 else progress.copy(unlocked = true, unlockedAt = row.unlockedAt, synced = row.synced)
             }
             result.forEach { AchievementProgressCache.put(uid, it) }
+            // Eventual connectivity: new unlocks are uploaded later by the worker, only with network
+            if (stored.values.any { !it.synced }) AchievementSyncWorker.schedule(context)
             Log.d("AchievementsPerf", "evaluate took ${(System.nanoTime() - startNs) / 1_000_000.0} ms")
             result
+        }
+    }
+
+    /** Only called by AchievementSyncWorker. Throws when the upload must be retried. */
+    suspend fun syncUnlocks() {
+        val dao = db.userAchievementDao()
+        for (row in dao.getUnsynced()) {
+            val response = api.unlock(row.uid, row.achievementId, AchievementUnlockRequest(row.unlockedAt))
+            when {
+                response.isSuccessful -> dao.markSynced(row.uid, row.achievementId)
+                // The backend no longer knows this achievement: retrying would never work
+                response.code() == 404 -> dao.markSynced(row.uid, row.achievementId)
+                else -> throw IllegalStateException("Achievement sync failed: HTTP ${response.code()}")
+            }
         }
     }
 
