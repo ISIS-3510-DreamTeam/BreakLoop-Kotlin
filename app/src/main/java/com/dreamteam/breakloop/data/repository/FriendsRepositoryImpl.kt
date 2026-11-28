@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.data.repository
 
+import com.dreamteam.breakloop.data.local.cache.FriendProfileMemoryCache
 import com.dreamteam.breakloop.data.local.mapper.toDomain
 import com.dreamteam.breakloop.data.remote.FriendsRemoteDataSource
 import com.dreamteam.breakloop.data.system.ConnectivityDataSource
@@ -68,6 +69,7 @@ class FriendsRepositoryImpl(
         localDataSource.saveFriends(uid,dtos,now)
 
         val friends = dtos.map { it.toDomain() }
+        friends.forEach { FriendProfileMemoryCache.removeIfOutdated(it) }
 
         mutex.withLock {
             cache = friends

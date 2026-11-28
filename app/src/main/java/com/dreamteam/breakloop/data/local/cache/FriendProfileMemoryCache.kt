@@ -1,6 +1,7 @@
 package com.dreamteam.breakloop.data.local.cache
 
 import androidx.collection.LruCache
+import com.dreamteam.breakloop.domain.Friend
 import com.dreamteam.breakloop.domain.FriendProfile
 
 object FriendProfileMemoryCache {
@@ -19,6 +20,16 @@ object FriendProfileMemoryCache {
 
     fun put(profile: FriendProfile) {
         cache.put(profile.uid, profile)
+    }
+
+    fun removeIfOutdated(friend: Friend) {
+        val profile = cache[friend.uid] ?: return
+        if (profile.displayName != friend.displayName ||
+            profile.streak != friend.streak ||
+            profile.petLevel != friend.petLevel
+        ) {
+            cache.remove(friend.uid)
+        }
     }
 
 
