@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import android.util.Log
+import com.dreamteam.breakloop.monitoring.AppLifecycleEvents
 
 class FocusViewModel(
     private val focusSessionRepository: FocusSessionRepository,
@@ -51,6 +53,8 @@ class FocusViewModel(
 
     private var sessionStartTime: Long? = null
 
+    private var interruptionDetected  = false
+
     private val soundscapeCache = SoundscapeCache(appContext)
 
     private var mediaPlayer: MediaPlayer? = null
@@ -58,6 +62,122 @@ class FocusViewModel(
     private var soundscapeJob: Job? = null
 
     private val connectivityObserver = ConnectivityObserver(appContext)
+
+    //Sprint 4
+
+    //Sprint 4
+    init {
+        restoreActiveSession()
+
+        viewModelScope.launch {
+            AppLifecycleEvents.appReturned.collect { timeInBackground ->
+
+                if (
+                    timeInBackground > 120_000L &&
+                    _uiState.value.isSessionActive
+                ) {
+                    interruptionDetected = true
+
+                    Log.d(
+                        "FocusInterruption",
+                        "Focus session interrupted. Time outside app: ${timeInBackground / 1000} seconds"
+                    )
+                }
+            }
+        }
+    }
+
+
+    private fun restoreActiveSession() {
+        viewModelScope.launch {
+            val uid = firebaseAuth.currentUser?.uid ?: return@launch
+
+            try {
+                val session = focusSessionRepository.getActiveSession(uid)
+                    ?: return@launch
+
+                val ahora = System.currentTimeMillis()
+
+                val segundosTranscurridos = if (session.isPaused) {
+                    0L
+                } else {
+                    ((ahora - session.lastUpdatedAt) / 1000).coerceAtLeast(0)
+                }
+
+                val tiempoRestante = (
+                        session.remainingSeconds - segundosTranscurridos.toInt()
+                        ).coerceAtLeast(0)
+
+                val tiempoTranscurrido = (
+                        session.elapsedSeconds + segundosTranscurridos.toInt()
+                        ).coerceAtMost(session.duration * 60)
+
+                sessionId = session.id
+                sessionStartTime = session.startTime
+
+                if (tiempoRestante > 0) {
+                    focusSessionRepository.registerRecovery(
+                        id = session.id,
+                        recoveredAt = System.currentTimeMillis()
+                    )
+                }
+                _uiState.update {
+                    it.copy(
+                        selectedDuration = session.duration,
+                        isSessionActive = false,
+                        isPaused = session.isPaused,
+                        remainingSeconds = tiempoRestante,
+                        elapsedSeconds = tiempoTranscurrido,
+                        isRecoveryPending = tiempoRestante > 0,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+
+                if (tiempoRestante == 0) {
+                    completeSession()
+                }
+
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        error = "Could not restore focus session"
+                    )
+                }
+            }
+        }
+    }
+
+    fun continueFocus() {
+        if (!_uiState.value.isRecoveryPending) {
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isRecoveryPending = false,
+                isSessionActive = true,
+                isPaused = false,
+                error = null
+            )
+        }
+
+        viewModelScope.launch {
+            sessionId?.let { currentId ->
+                focusSessionRepository.updateSessionProgress(
+                    id = currentId,
+                    elapsedSeconds = _uiState.value.elapsedSeconds,
+                    remainingSeconds = _uiState.value.remainingSeconds,
+                    isPaused = false,
+                    lastUpdatedAt = System.currentTimeMillis(),
+                    status = "IN_PROGRESS"
+                )
+            }
+
+            startTimer()
+        }
+    }
+
 
     val connectivityStatus: StateFlow<ConnectivityStatus> =
         connectivityObserver.status
@@ -124,19 +244,19 @@ class FocusViewModel(
         }
     }
 
+    //Mod sprint 4
+    //La sesión se inserta en Room desde el principio, con estado INPROGRESS
     fun startFocus() {
         val duration = _uiState.value.selectedDuration
 
         if (duration <= 0) {
             _uiState.update {
-                it.copy(
-                    error = "Select a valid session duration"
-                )
+                it.copy(error = "Select a valid session duration")
             }
             return
         }
 
-        if (_uiState.value.isCustomDurationSelected && duration > 5) {
+        if (_uiState.value.isCustomDurationSelected && duration > 120) {
             _uiState.update {
                 it.copy(error = "Pomodoro, it's all about taking breaks!")
             }
@@ -155,30 +275,73 @@ class FocusViewModel(
         }
 
         timerJob?.cancel()
-
+        interruptionDetected = false
         sessionId = UUID.randomUUID().toString()
         sessionStartTime = System.currentTimeMillis()
 
         val totalSeconds = duration * 60
 
+        val session = FocusSessionEntity(
+            id = sessionId!!,
+            uid = uid,
+            startTime = sessionStartTime!!,
+            duration = duration,
+            type = "FOCUS",
+            status = "IN_PROGRESS",
+            xpEarned = 0,
+            synced = false,
+            elapsedSeconds = 0,
+            remainingSeconds = totalSeconds,
+            isPaused = false,
+            lastUpdatedAt = System.currentTimeMillis()
+        )
+
         _uiState.update {
             it.copy(
                 isSessionActive = true,
+                isLoading = true,
                 isPaused = false,
+                isRecoveryPending = false,
+                isCompletionPending = false,
                 remainingSeconds = totalSeconds,
                 elapsedSeconds = 0,
-                isLoading = false,
                 error = null
             )
         }
 
-        startTimer()
+        viewModelScope.launch {
+            try {
+                focusSessionRepository.saveSession(session)
+
+                _uiState.update {
+                    it.copy(isLoading = false)
+                }
+
+                startTimer()
+
+            } catch (e: Exception) {
+                sessionId = null
+                sessionStartTime = null
+
+                _uiState.update {
+                    it.copy(
+                        isSessionActive = false,
+                        isLoading = false,
+                        error = "Could not start focus session"
+                    )
+                }
+            }
+        }
     }
 
+    //Mod sprint 4
+    //Se guarda cada segundo para evitar perdidas si Android termina el proceso inesperadamente
     private fun startTimer() {
         timerJob?.cancel()
 
         timerJob = viewModelScope.launch {
+            var lastSaveTime = System.currentTimeMillis()
+
             while (_uiState.value.remainingSeconds > 0) {
                 delay(1000)
 
@@ -188,11 +351,38 @@ class FocusViewModel(
 
                 _uiState.update {
                     it.copy(
-                        remainingSeconds = (
-                                it.remainingSeconds - 1
-                                ).coerceAtLeast(0),
+                        remainingSeconds = (it.remainingSeconds - 1)
+                            .coerceAtLeast(0),
                         elapsedSeconds = it.elapsedSeconds + 1
                     )
+                }
+
+                val now = System.currentTimeMillis()
+
+                if (now - lastSaveTime >= 1000) {
+                    val currentId = sessionId ?: break
+                    val currentState = _uiState.value
+
+                    try {
+                        focusSessionRepository.updateSessionProgress(
+                            id = currentId,
+                            elapsedSeconds = currentState.elapsedSeconds,
+                            remainingSeconds = currentState.remainingSeconds,
+                            isPaused = currentState.isPaused,
+                            lastUpdatedAt = now,
+                            status = "IN_PROGRESS"
+                        )
+
+                        lastSaveTime = now
+                    } catch (e: CancellationException) {
+                        throw e
+
+                    } catch (e: Exception) {
+                        _uiState.update {
+                            it.copy(error = "Could not save focus progress")
+                        }
+                    }
+
                 }
             }
 
@@ -211,18 +401,18 @@ class FocusViewModel(
 
 
 
-
     fun stopFocus() {
-        if (!_uiState.value.isSessionActive) {
+        if (
+            !_uiState.value.isSessionActive &&
+            !_uiState.value.isRecoveryPending
+        ) {
             return
         }
 
-        saveSession(
-            status = "ABANDONED"
-        )
-
         timerJob?.cancel()
         timerJob = null
+
+        saveSession(status = "ABANDONED")
 
         detenerSonido()
 
@@ -230,11 +420,13 @@ class FocusViewModel(
             it.copy(
                 isSessionActive = false,
                 isPaused = false,
+                isRecoveryPending = false,
+                isCompletionPending = false,
                 remainingSeconds = 0,
                 elapsedSeconds = 0
             )
         }
-
+        interruptionDetected = false
         sessionId = null
         sessionStartTime = null
     }
@@ -247,39 +439,47 @@ class FocusViewModel(
 
         detenerSonido()
 
+        _uiState.update {
+            it.copy(
+                isSessionActive = false,
+                isPaused = false,
+                isRecoveryPending = false,
+                isCompletionPending = true,
+                remainingSeconds = 0,
+                error = null
+            )
+        }
+
         saveSession(
             status = "COMPLETED"
         )
     }
 
-    private fun saveSession(status: String) {
-        val currentSessionId = sessionId
-        val currentStartTime = sessionStartTime
-        val currentState = _uiState.value
-
-        val uid = firebaseAuth.currentUser?.uid
-
-        println(
-            "FOCUS DEBUG: id=$currentSessionId " +
-                    "uid=$uid " +
-                    "duration=${currentState.selectedDuration}"
-        )
-
-        if (
-            currentSessionId == null ||
-            currentStartTime == null ||
-            uid == null
-        ) {
-            _uiState.update {
-                it.copy(
-                    isSessionActive = false,
-                    isPaused = false,
-                    remainingSeconds = 0,
-                    error = "Could not save focus session"
-                )
-            }
+    fun dismissCompletion() {
+        if (!_uiState.value.isCompletionPending) {
             return
         }
+
+        _uiState.update {
+            it.copy(
+                isCompletionPending = false,
+                isSessionActive = false,
+                isPaused = false,
+                isRecoveryPending = false,
+                remainingSeconds = 0,
+                elapsedSeconds = 0,
+                error = null
+            )
+        }
+    }
+
+    //Mod sprint 4
+    //
+    private fun saveSession(status: String) {
+        val currentSessionId = sessionId ?: return
+        val currentStartTime = sessionStartTime ?: return
+        val currentState = _uiState.value
+        val uid = firebaseAuth.currentUser?.uid ?: return
 
         val session = FocusSessionEntity(
             id = currentSessionId,
@@ -288,37 +488,41 @@ class FocusViewModel(
             duration = currentState.selectedDuration,
             type = "FOCUS",
             status = status,
-            xpEarned = 2,
-            synced = false
+            xpEarned = if (status == "COMPLETED") 2 else 0,
+            synced = false,
+            elapsedSeconds = currentState.elapsedSeconds,
+            remainingSeconds = currentState.remainingSeconds,
+            isPaused = false,
+            lastUpdatedAt = System.currentTimeMillis()
         )
 
         viewModelScope.launch {
             try {
                 focusSessionRepository.saveSession(session)
 
-                scheduleSync()
+                if (status != "IN_PROGRESS") {
+                    scheduleSync()
 
-                _uiState.update {
-                    it.copy(
-                        isSessionActive = false,
-                        isPaused = false,
-                        remainingSeconds = 0,
-                        error = null
-                    )
+                    _uiState.update {
+                        it.copy(
+                            isSessionActive = false,
+                            isPaused = false,
+                            remainingSeconds = 0,
+                            error = null
+                        )
+                    }
+
+                    sessionId = null
+                    sessionStartTime = null
                 }
+
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(
-                        isSessionActive = false,
-                        isPaused = false,
-                        remainingSeconds = 0,
-                        error = "Could not save focus session"
-                    )
+                    it.copy(error = "Could not save focus session")
                 }
             }
         }
     }
-
     private fun scheduleSync() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

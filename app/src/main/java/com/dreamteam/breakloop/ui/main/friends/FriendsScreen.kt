@@ -1,13 +1,20 @@
 package com.dreamteam.breakloop.ui.main.friends
 
+import androidx.compose.material3.HorizontalDivider
+import com.dreamteam.breakloop.ui.components.StreakIcon
+import androidx.compose.ui.text.style.TextOverflow
+import com.dreamteam.breakloop.ui.components.PixelArt
+import com.dreamteam.breakloop.ui.components.PixelIcon
+import com.dreamteam.breakloop.ui.main.profile.components.ProfileAvatar
+import com.dreamteam.breakloop.ui.theme.MonoTitle
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
@@ -62,6 +67,7 @@ private const val CODE_LENGTH = 4
 fun FriendsScreen(
     modifier: Modifier = Modifier,
     viewModel: FriendsViewModel = viewModel(),
+    onFriendClick: (String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     FriendsContent(
@@ -70,6 +76,7 @@ fun FriendsScreen(
         onRefresh = { viewModel.loadFriends(forceRefresh = true) },
         onMessageShown = viewModel::clearMessage,
         modifier = modifier,
+        onFriendClick = onFriendClick,
     )
 }
 
@@ -80,6 +87,7 @@ fun FriendsContent(
     onRefresh: () -> Unit,
     onMessageShown: () -> Unit,
     modifier: Modifier = Modifier,
+    onFriendClick: (String) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -116,7 +124,7 @@ fun FriendsContent(
                 if (state.friends.isEmpty()) {
                     item(key = "empty") { EmptyState(state.isLoading) }
                 } else {
-                    items(state.friends, key = { it.uid }) { FriendRow(it) }
+                    item(key = "friends") { FriendList(state.friends, onFriendClick) }
                 }
             }
         }
@@ -126,24 +134,36 @@ fun FriendsContent(
 @Composable
 private fun FriendCodeCard(code: String?) {
     val clipboard = LocalClipboardManager.current
-    BreakLoopCard(modifier = Modifier.fillMaxWidth()) {
-        Text("YOUR FRIEND CODE", style = MonoLabel, color = ColorPalette.Neutral.t1000)
-        Spacer(Modifier.height(8.dp))
-        if (code == null) {
-            Text(
-                "Connect to the internet to get your code",
-                style = MaterialTheme.typography.bodyMedium,
-                color = ColorPalette.Neutral.t700,
-            )
-        } else {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+    BreakLoopCard(
+        modifier = Modifier.fillMaxWidth(),
+        elevated = false,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(
-                    text = code,
-                    fontFamily = SpaceMono,
-                    style = MaterialTheme.typography.displaySmall,
-                    color = ColorPalette.SpicyPaprika.t500,
-                    modifier = Modifier.weight(1f),
+                    "FRIEND CODE",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ColorPalette.Neutral.t700,
                 )
+                if (code == null) {
+                    Text(
+                        "Connect to the internet to get your code",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = ColorPalette.Neutral.t700,
+                    )
+                } else {
+                    Text(text = code, style = MonoTitle, color = ColorPalette.SpicyPaprika.t700)
+                    Text(
+                        "Share it so friends can add you",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ColorPalette.Neutral.t700,
+                    )
+                }
+            }
+            if (code != null) {
                 IconButton(onClick = { clipboard.setText(AnnotatedString(code)) }) {
                     Icon(
                         Icons.Filled.ContentCopy,
@@ -152,11 +172,6 @@ private fun FriendCodeCard(code: String?) {
                     )
                 }
             }
-            Text(
-                "Share it so friends can add you",
-                style = MaterialTheme.typography.bodySmall,
-                color = ColorPalette.Neutral.t700,
-            )
         }
     }
 }
@@ -251,15 +266,17 @@ private fun updatedAgo(lastUpdated: Long?): String {
 
 @Composable
 private fun EmptyState(isLoading: Boolean) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 48.dp),
-        contentAlignment = Alignment.Center,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         if (isLoading) {
             CircularProgressIndicator(color = ColorPalette.SpicyPaprika.t500)
         } else {
+            PixelIcon(PixelArt.PAW, size = 48.dp)
             Text(
                 "No friends yet. Share your code to get started.",
                 style = MaterialTheme.typography.bodyMedium,
@@ -271,40 +288,71 @@ private fun EmptyState(isLoading: Boolean) {
 }
 
 @Composable
-private fun FriendRow(friend: Friend) {
-    BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(ColorPalette.GoldenOrange.t500, CircleShape)
-                    .border(2.dp, ColorPalette.Neutral.t1000, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = friend.displayName.firstOrNull()?.uppercase() ?: "?",
-                    style = MonoLabel,
-                    color = ColorPalette.Neutral.t1000,
-                )
+private fun FriendList(friends: List<Friend>, onFriendClick: (String) -> Unit) {
+    // longest streak first; ties by name so the order doesn't jump around
+    val ranked = remember(friends) {
+        friends.sortedWith(
+            compareByDescending<Friend> { it.streak }.thenBy { it.displayName.lowercase() }
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            "YOUR FRIENDS · ${friends.size} · BY STREAK",
+            style = MaterialTheme.typography.labelSmall,
+            color = ColorPalette.Neutral.t700,
+        )
+        BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false, contentPadding = 2.dp) {
+            ranked.forEachIndexed { index, friend ->
+                if (index > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        color = ColorPalette.Neutral.t100,
+                    )
+                }
+                FriendRow(friend, onClick = { onFriendClick(friend.uid) })
             }
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(
-                    friend.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = ColorPalette.Neutral.t1000,
-                )
-                Text(
-                    "🔥 ${friend.streak}-day streak",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = ColorPalette.Neutral.t850,
-                )
-                Text(
-                    "Pet level ${friend.petLevel}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ColorPalette.Neutral.t700,
-                )
-            }
+        }
+    }
+}
+
+@Composable
+private fun FriendRow(friend: Friend, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClickLabel = "Open profile", onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        // same avatar as the friend's profile
+        ProfileAvatar(name = friend.displayName, localPhotoPath = null, size = 48.dp)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                friend.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                color = ColorPalette.Neutral.t1000,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                "Pet level ${friend.petLevel}",
+                style = MaterialTheme.typography.bodySmall,
+                color = ColorPalette.Neutral.t700,
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            StreakIcon(size = 18.dp)
+            Text(
+                "${friend.streak} d",
+                style = MonoLabel,
+                color = ColorPalette.Neutral.t1000,
+            )
         }
     }
 }

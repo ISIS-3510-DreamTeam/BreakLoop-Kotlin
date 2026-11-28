@@ -21,6 +21,12 @@ data object Home
 data object Profile
 
 @Serializable
+data object MyProfile
+
+@Serializable
+data object EditProfile
+
+@Serializable
 data object Focus
 
 //@Serializable
@@ -47,3 +53,12 @@ data class OfflineActivityDetail(
 
 @Serializable
 data object Friends
+
+@Serializable
+data class FriendProfileRoute(val uid: String)
+
+@Serializable
+data object Achievements
+
+@Serializable
+data class AchievementDetail(val achievementId: String)

@@ -22,6 +22,7 @@ import com.dreamteam.breakloop.ui.layout.TopBar
 import com.dreamteam.breakloop.ui.main.offline.components.activeactivity.ActiveActivityBanner
 import com.dreamteam.breakloop.ui.main.offline.components.activeactivity.ActiveActivityViewModel
 import com.dreamteam.breakloop.ui.navigation.AppNavHost
+import com.dreamteam.breakloop.ui.navigation.MyProfile
 import com.dreamteam.breakloop.ui.navigation.OfflineActivityDetail
 import com.dreamteam.breakloop.ui.navigation.currentTopLevelDestination
 import com.dreamteam.breakloop.ui.navigation.navigateToTopLevel
@@ -59,6 +60,12 @@ fun BreakLoopAppContent(isLoggedIn: Boolean, onSignOut: () -> Unit = {},
                         title = stringResource(currentTab.label),
                         onSignOut = onSignOut,
                         streakDays = streakDays,
+                        onProfileClick = {
+                            navController.navigate(MyProfile) {
+                                popUpTo<MyProfile> { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        },
                     )
                     if (!isOnDetail) {
                         ActiveActivityBanner(
@@ -82,6 +89,6 @@ fun BreakLoopAppContent(isLoggedIn: Boolean, onSignOut: () -> Unit = {},
             }
         }
     ) { padding ->
-        AppNavHost(navController, isLoggedIn, Modifier.padding(padding))
+        AppNavHost(navController, isLoggedIn, streakDays, Modifier.padding(padding))
     }
 }

@@ -47,8 +47,8 @@ class FlaggedAppsViewModel(
             )
         }
 
-        // Las marcadas van arriba, pero según el estado al abrir la pantalla: si el orden
-        // cambiara al marcar/desmarcar, la lista seguiría la fila movida y se "saltaría".
+        // Las marcadas van arriba, pero según el estado al abrir la pantalla si el orden
+        // cambiara al marcar/desmarcar, la lista seguiría la fila movida y se "saltaría" unu (muerte)
         val pinnedOnTop = pinnedPackages ?: flaggedByPackage.keys.also { pinnedPackages = it }
         val (flaggedRows, unflaggedRows) = unSortedRows.partition { it.app.packageName in pinnedOnTop }
         val rows = flaggedRows.sortedBy { it.app.label.lowercase() } +
