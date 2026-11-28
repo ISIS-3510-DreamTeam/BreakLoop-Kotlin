@@ -64,6 +64,8 @@ class FocusViewModel(
     private val connectivityObserver = ConnectivityObserver(appContext)
 
     //Sprint 4
+
+    //Sprint 4
     init {
         restoreActiveSession()
 
@@ -83,7 +85,17 @@ class FocusViewModel(
                 }
             }
         }
+
+        viewModelScope.launch {
+            connectivityStatus.collect { status ->
+
+                if (status == ConnectivityStatus.CONNECTED) {
+                    scheduleSync()
+                }
+            }
+        }
     }
+
 
     private fun restoreActiveSession() {
         viewModelScope.launch {

@@ -14,7 +14,13 @@ interface FocusSessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(session: FocusSessionEntity)
 
-    @Query("SELECT * FROM focus_sessions WHERE synced = 0")
+    //Excluye sesiones como in progress
+    @Query("""
+        SELECT * FROM focus_sessions
+        WHERE synced = 0
+        AND status IN ('COMPLETED', 'ABANDONED')
+        ORDER BY startTime ASC
+    """)
     suspend fun getUnsyncedSessions(): List<FocusSessionEntity>
 
     @Query("UPDATE focus_sessions SET synced = 1 WHERE id = :id")
