@@ -15,6 +15,8 @@ import com.dreamteam.breakloop.ui.main.offline.components.ActivityDetailScreen
 import com.dreamteam.breakloop.ui.main.stats.StatsScreen
 import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppsRoute
 import com.dreamteam.breakloop.ui.main.stats.deepstats.DeepStatsScreen
+import com.dreamteam.breakloop.ui.main.achievements.AchievementsScreen
+import com.dreamteam.breakloop.ui.main.achievements.detail.AchievementDetailScreen
 
 @Composable
 fun AppNavHost(
@@ -41,7 +43,30 @@ fun AppNavHost(
         navigation<MainGraph>(startDestination = Home) {
 
             composable<Home> {
-                HomeScreen()
+                HomeScreen(
+                    onAchievementsClick = {
+                        navController.navigate(Achievements)
+                    }
+                )
+            }
+
+            composable<Achievements> {
+                AchievementsScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                    onAchievementClick = { id ->
+                        navController.navigate(AchievementDetail(id))
+                    }
+                )
+            }
+
+            composable<AchievementDetail> {
+                AchievementDetailScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
 
             composable<Focus> {
