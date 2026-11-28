@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.ui.navigation
 
+import com.dreamteam.breakloop.ui.main.friends.profile.FriendProfileScreen
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -122,7 +123,19 @@ fun AppNavHost(
             }
 
             composable<Friends> {
-                FriendsScreen()
+                FriendsScreen(
+                    onFriendClick = { uid ->
+                        navController.navigate(FriendProfileRoute(uid)) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            composable<FriendProfileRoute> {
+                FriendProfileScreen(
+                    onBack = {
+                        navController.popBackStack<FriendProfileRoute>(inclusive = true)
+                    }
+                )
             }
 
             composable<MyProfile> {

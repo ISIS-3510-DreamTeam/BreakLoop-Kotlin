@@ -1,5 +1,10 @@
 package com.dreamteam.breakloop.ui.main.profile.components
 
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -26,6 +31,7 @@ fun ProfileAvatar(
     localPhotoPath: String?,
     modifier: Modifier = Modifier,
     size: Dp = 112.dp,
+    remotePhotoUrl: String? = null,
 ) {
     Box(
         modifier = modifier
@@ -46,13 +52,40 @@ fun ProfileAvatar(
                     .border(2.dp, ColorPalette.Neutral.t1000, CircleShape),
             )
         } else {
+            // initials stay underneath while the remote photo loads, or if it can't
             Text(
                 text = initials(name),
                 style = MonoTitle.copy(fontSize = (size.value * 0.28f).sp),
                 color = ColorPalette.Neutral.t1000,
             )
+            if (!remotePhotoUrl.isNullOrBlank()) {
+                RemotePhoto(url = remotePhotoUrl, size = size)
+            }
         }
     }
+}
+
+@Composable
+private fun RemotePhoto(url: String, size: Dp) {
+    val context = LocalContext.current
+    val sizePx = with(LocalDensity.current) { size.roundToPx() }
+    // asking for the on-screen size keeps the decoded image in memory small
+    val request = remember(context, url, sizePx) {
+        ImageRequest.Builder(context)
+            .data(url)
+            .size(sizePx)
+            .crossfade(true)
+            .build()
+    }
+    AsyncImage(
+        model = request,
+        contentDescription = "Profile photo",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(CircleShape)
+            .border(2.dp, ColorPalette.Neutral.t1000, CircleShape),
+    )
 }
 
 // first letter of the first two words, "?" when there is no name yet

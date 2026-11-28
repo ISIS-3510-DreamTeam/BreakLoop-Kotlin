@@ -47,7 +47,7 @@ class FriendProfileRepositoryImpl (
             fromRoom(friendUid)
         }
         catch (e: HttpException){
-            fromRoom(friendUid)
+            if (e.code() == 404) FriendProfileResult.NotFound else fromRoom(friendUid)
         }
     }
 

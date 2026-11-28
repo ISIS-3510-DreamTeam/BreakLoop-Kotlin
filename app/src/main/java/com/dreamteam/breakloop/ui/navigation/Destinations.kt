@@ -53,3 +53,6 @@ data class OfflineActivityDetail(
 
 @Serializable
 data object Friends
+
+@Serializable
+data class FriendProfileRoute(val uid: String)

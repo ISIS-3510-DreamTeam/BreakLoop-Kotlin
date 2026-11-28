@@ -25,6 +25,7 @@ fun NavController.currentTopLevelDestination(): TopLevelDestination? {
         destination.hasRoute(OfflineActivityDetail::class) -> TopLevelDestination.OFFLINE
         destination.hasRoute(DeepStats::class) -> TopLevelDestination.STATS
         destination.hasRoute(FlaggedApps::class) -> TopLevelDestination.STATS
+        destination.hasRoute(FriendProfileRoute::class) -> TopLevelDestination.FRIENDS
         else -> null
 
     }) as TopLevelDestination?

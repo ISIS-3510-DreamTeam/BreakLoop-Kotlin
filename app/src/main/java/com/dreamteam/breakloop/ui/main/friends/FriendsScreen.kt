@@ -1,5 +1,8 @@
 package com.dreamteam.breakloop.ui.main.friends
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -62,6 +65,7 @@ private const val CODE_LENGTH = 4
 fun FriendsScreen(
     modifier: Modifier = Modifier,
     viewModel: FriendsViewModel = viewModel(),
+    onFriendClick: (String) -> Unit = {},
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     FriendsContent(
@@ -70,6 +74,7 @@ fun FriendsScreen(
         onRefresh = { viewModel.loadFriends(forceRefresh = true) },
         onMessageShown = viewModel::clearMessage,
         modifier = modifier,
+        onFriendClick = onFriendClick,
     )
 }
 
@@ -80,6 +85,7 @@ fun FriendsContent(
     onRefresh: () -> Unit,
     onMessageShown: () -> Unit,
     modifier: Modifier = Modifier,
+    onFriendClick: (String) -> Unit = {},
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -116,7 +122,9 @@ fun FriendsContent(
                 if (state.friends.isEmpty()) {
                     item(key = "empty") { EmptyState(state.isLoading) }
                 } else {
-                    items(state.friends, key = { it.uid }) { FriendRow(it) }
+                    items(state.friends, key = { it.uid }) { friend ->
+                        FriendRow(friend, onClick = { onFriendClick(friend.uid) })
+                    }
                 }
             }
         }
@@ -271,9 +279,17 @@ private fun EmptyState(isLoading: Boolean) {
 }
 
 @Composable
-private fun FriendRow(friend: Friend) {
-    BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+private fun FriendRow(friend: Friend, onClick: () -> Unit) {
+    BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false, contentPadding = 0.dp) {
+        // padding goes after clickable so the whole card responds to the tap
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(onClickLabel = "Open profile", onClick = onClick)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Box(
                 modifier = Modifier
                     .size(44.dp)

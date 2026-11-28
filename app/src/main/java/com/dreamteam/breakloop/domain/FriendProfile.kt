@@ -14,4 +14,6 @@ sealed interface FriendProfileResult {
     data class Fresh(val profile: FriendProfile) : FriendProfileResult
     data class Stale(val profile: FriendProfile) : FriendProfileResult
     data object NeverLoaded : FriendProfileResult
+
+    data object NotFound: FriendProfileResult
 }
