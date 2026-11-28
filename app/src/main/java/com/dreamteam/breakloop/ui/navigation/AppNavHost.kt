@@ -1,6 +1,17 @@
 package com.dreamteam.breakloop.ui.navigation
 
+import com.dreamteam.breakloop.ui.main.friends.profile.FriendProfileScreen
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -12,22 +23,45 @@ import com.dreamteam.breakloop.ui.main.friends.FriendsScreen
 import com.dreamteam.breakloop.ui.main.home.HomeScreen
 import com.dreamteam.breakloop.ui.main.offline.OfflineScreen
 import com.dreamteam.breakloop.ui.main.offline.components.ActivityDetailScreen
+import com.dreamteam.breakloop.ui.main.profile.EditProfileScreen
+import com.dreamteam.breakloop.ui.main.profile.MyProfileScreen
 import com.dreamteam.breakloop.ui.main.stats.StatsScreen
 import com.dreamteam.breakloop.ui.main.stats.flaggedapps.FlaggedAppsRoute
 import com.dreamteam.breakloop.ui.main.stats.deepstats.DeepStatsScreen
 import com.dreamteam.breakloop.ui.main.achievements.AchievementsScreen
 import com.dreamteam.breakloop.ui.main.achievements.detail.AchievementDetailScreen
 
+// the default cross-fade lasts 700 ms, which feels like lag
+private const val FADE_MS = 150
+
+private fun NavBackStackEntry.isFullScreen(): Boolean =
+    destination.hasRoute<MyProfile>() || destination.hasRoute<EditProfile>() ||
+        destination.hasRoute<Achievements>() || destination.hasRoute<AchievementDetail>()
+
+// going in or out of a screen without bars resizes the content, so switch without animating
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.togglesBars(): Boolean =
+    initialState.isFullScreen() != targetState.isFullScreen()
+
 @Composable
 fun AppNavHost(
     navController: NavHostController,
     isLoggedIn: Boolean,
+    streakDays: Int,
     modifier: Modifier = Modifier
 ) {
+    // read through a State so a streak change doesn't rebuild the navigation graph
+    val currentStreakDays by rememberUpdatedState(streakDays)
+
     NavHost(
         navController = navController,
         startDestination = if (isLoggedIn) MainGraph else AuthGraph,
-        modifier = modifier
+        modifier = modifier,
+        enterTransition = {
+            if (togglesBars()) EnterTransition.None else fadeIn(tween(FADE_MS))
+        },
+        exitTransition = {
+            if (togglesBars()) ExitTransition.None else fadeOut(tween(FADE_MS))
+        }
     ) {
         navigation<AuthGraph>(startDestination = Login) {
 
@@ -115,7 +149,43 @@ fun AppNavHost(
             }
 
             composable<Friends> {
-                FriendsScreen()
+                FriendsScreen(
+                    onFriendClick = { uid ->
+                        navController.navigate(FriendProfileRoute(uid)) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            composable<FriendProfileRoute> {
+                FriendProfileScreen(
+                    onBack = {
+                        navController.popBackStack<FriendProfileRoute>(inclusive = true)
+                    }
+                )
+            }
+
+            composable<MyProfile> {
+                MyProfileScreen(
+                    streakDays = currentStreakDays,
+                    onEditClick = {
+                        navController.navigate(EditProfile) { launchSingleTop = true }
+                    },
+                    onBack = {
+                        navController.popBackStack<MyProfile>(inclusive = true)
+                    },
+                    onBadgesClick = {
+                        navController.navigate(Achievements) { launchSingleTop = true }
+                    }
+                )
+            }
+
+            composable<EditProfile> {
+                EditProfileScreen(
+                    onBack = {
+                        // popping by route makes a double tap harmless
+                        navController.popBackStack<EditProfile>(inclusive = true)
+                    }
+                )
             }
 
             composable<OfflineActivityDetail> {
