@@ -3,6 +3,7 @@ package com.dreamteam.breakloop.data.repository
 import android.net.Uri
 import com.dreamteam.breakloop.data.local.files.ProfilePhotoDataSource
 import com.dreamteam.breakloop.data.local.preferences.ProfilePreferences
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.domain.MyProfile
 import com.dreamteam.breakloop.domain.repository.ProfileRepository
 import kotlinx.coroutines.flow.Flow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 class ProfileRepositoryImpl(
     private val preferences: ProfilePreferences,
     private val photos: ProfilePhotoDataSource,
+    private val scheduler: WorkManagerSyncScheduler
 ) : ProfileRepository {
     override fun observeMyProfile(uid: String): Flow<MyProfile?> {
         return preferences.observe(uid)
@@ -17,12 +19,13 @@ class ProfileRepositoryImpl(
 
     override suspend fun updateName(uid: String, name: String) {
         preferences.saveName(uid, name)
-
+        scheduler.enqueueMyProfileSync()
     }
 
     override suspend fun updatePhoto(uid: String, uri: Uri): Boolean {
         val path = photos.save(uri) ?: return false
         preferences.saveLocalPhoto(uid, path)
+        scheduler.enqueueMyProfileSync()
         return true
     }
 

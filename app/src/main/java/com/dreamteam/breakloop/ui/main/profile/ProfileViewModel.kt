@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.dreamteam.breakloop.data.local.files.ProfilePhotoDataSource
 import com.dreamteam.breakloop.data.local.preferences.ProfilePreferences
 import com.dreamteam.breakloop.data.repository.ProfileRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,7 +22,8 @@ class ProfileViewModel (
 ): AndroidViewModel(application) {
     private val repository = ProfileRepositoryImpl(
         ProfilePreferences(application.applicationContext),
-        ProfilePhotoDataSource(application.applicationContext)
+        ProfilePhotoDataSource(application.applicationContext),
+        WorkManagerSyncScheduler(application.applicationContext)
     )
 
     private val uid = FirebaseAuth.getInstance().currentUser?.uid
