@@ -16,6 +16,8 @@ import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
 import com.dreamteam.breakloop.data.local.entity.FlaggedAppEntity
 import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
 import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
+import com.dreamteam.breakloop.data.local.dao.UserAchievementDao
+import com.dreamteam.breakloop.data.local.entity.UserAchievementEntity
 
 @Database(
     entities = [
@@ -24,9 +26,10 @@ import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
         ActivityLogEntity::class,
         FocusSessionEntity::class,
         FlaggedAppEntity::class,
-        SuggestionInteractionEntity::class
+        SuggestionInteractionEntity::class,
+        UserAchievementEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -39,6 +42,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun flaggedAppDao(): FlaggedAppDao
 
     abstract fun suggestionInteractionDao(): SuggestionInteractionDao
+
+    abstract fun userAchievementDao(): UserAchievementDao
 
     companion object {
 
