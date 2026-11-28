@@ -20,6 +20,7 @@ import com.dreamteam.breakloop.domain.enums.WeatherCondition
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import kotlinx.coroutines.launch
 import com.dreamteam.breakloop.monitoring.AppLifecycleObserver
+import com.dreamteam.breakloop.monitoring.AppLifecycleEvents
 
 class MainActivity : ComponentActivity() {
 
@@ -32,8 +33,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         appLifecycleObserver = AppLifecycleObserver(
-            onAppForeground = {
-                Log.d("AppLifecycle", "BreakLoop entered foreground")
+            onAppForeground = { tiempoEnSegundoPlano ->
+                Log.d(
+                    "AppLifecycle",
+                    "BreakLoop entered foreground. Time in background: ${tiempoEnSegundoPlano / 1000} seconds"
+                )
+
+                AppLifecycleEvents.notifyAppReturned(tiempoEnSegundoPlano)
             },
             onAppBackground = {
                 Log.d("AppLifecycle", "BreakLoop entered background")

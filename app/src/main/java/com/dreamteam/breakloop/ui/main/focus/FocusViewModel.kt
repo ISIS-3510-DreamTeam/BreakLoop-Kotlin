@@ -31,6 +31,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import android.util.Log
+import com.dreamteam.breakloop.monitoring.AppLifecycleEvents
 
 class FocusViewModel(
     private val focusSessionRepository: FocusSessionRepository,
@@ -51,6 +53,8 @@ class FocusViewModel(
 
     private var sessionStartTime: Long? = null
 
+    private var interruptionDetected  = false
+
     private val soundscapeCache = SoundscapeCache(appContext)
 
     private var mediaPlayer: MediaPlayer? = null
@@ -62,6 +66,23 @@ class FocusViewModel(
     //Sprint 4
     init {
         restoreActiveSession()
+
+        viewModelScope.launch {
+            AppLifecycleEvents.appReturned.collect { timeInBackground ->
+
+                if (
+                    timeInBackground > 120_000L &&
+                    _uiState.value.isSessionActive
+                ) {
+                    interruptionDetected = true
+
+                    Log.d(
+                        "FocusInterruption",
+                        "Focus session interrupted. Time outside app: ${timeInBackground / 1000} seconds"
+                    )
+                }
+            }
+        }
     }
 
     private fun restoreActiveSession() {
@@ -217,7 +238,7 @@ class FocusViewModel(
         }
 
         timerJob?.cancel()
-
+        interruptionDetected = false
         sessionId = UUID.randomUUID().toString()
         sessionStartTime = System.currentTimeMillis()
 
@@ -361,7 +382,7 @@ class FocusViewModel(
                 elapsedSeconds = 0
             )
         }
-
+        interruptionDetected = false
         sessionId = null
         sessionStartTime = null
     }
