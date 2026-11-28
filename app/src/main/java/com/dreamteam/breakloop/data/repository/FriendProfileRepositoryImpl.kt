@@ -2,9 +2,12 @@ package com.dreamteam.breakloop.data.repository
 
 import com.dreamteam.breakloop.data.local.cache.FriendProfileMemoryCache
 import com.dreamteam.breakloop.data.local.dao.FriendProfileDao
+import com.dreamteam.breakloop.data.local.dao.PendingProfileViewDao
+import com.dreamteam.breakloop.data.local.entity.PendingProfileViewEntity
 import com.dreamteam.breakloop.data.local.mapper.toDomain
 import com.dreamteam.breakloop.data.local.mapper.toEntity
 import com.dreamteam.breakloop.data.remote.ProfileRemoteDataSource
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.data.system.ConnectivityDataSource
 import com.dreamteam.breakloop.domain.FriendProfileResult
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +21,9 @@ class FriendProfileRepositoryImpl (
     private val remote: ProfileRemoteDataSource,
     private val dao: FriendProfileDao,
     private val memoryCache: FriendProfileMemoryCache,
-    private val connectivity: ConnectivityDataSource
+    private val connectivity: ConnectivityDataSource,
+    private val pendingViewDao : PendingProfileViewDao,
+    private val scheduler: WorkManagerSyncScheduler
 ) {
     suspend fun getFriendProfile(friendUid: String): FriendProfileResult {
         memoryCache.get(friendUid)?.let { friend -> return FriendProfileResult.Fresh(friend)}
@@ -54,5 +59,10 @@ class FriendProfileRepositoryImpl (
     private suspend fun fromRoom(friendUid: String): FriendProfileResult{
         val entity = dao.getFriendProfileByUid(friendUid) ?: return FriendProfileResult.NeverLoaded
         return FriendProfileResult.Stale(entity.toDomain())
+    }
+
+    suspend fun logVisit() {
+        pendingViewDao.insert(PendingProfileViewEntity(System.currentTimeMillis()))
+        scheduler.enqueueProfileViewSync()
     }
 }

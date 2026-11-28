@@ -10,6 +10,7 @@ import com.dreamteam.breakloop.data.local.cache.FriendProfileMemoryCache
 import com.dreamteam.breakloop.data.remote.ProfileRemoteDataSource
 import com.dreamteam.breakloop.data.remote.RetrofitInstance
 import com.dreamteam.breakloop.data.repository.FriendProfileRepositoryImpl
+import com.dreamteam.breakloop.data.sync.WorkManagerSyncScheduler
 import com.dreamteam.breakloop.data.system.ConnectivityDataSource
 import com.dreamteam.breakloop.domain.FriendProfileResult
 import com.dreamteam.breakloop.ui.main.offline.components.ActivityDetailUiState
@@ -28,7 +29,9 @@ class FriendProfileViewModel(
         ProfileRemoteDataSource(RetrofitInstance.profileApi, FirebaseAuth.getInstance()),
         dao = AppDatabase.getInstance(application.applicationContext).friendProfileDao(),
         memoryCache = FriendProfileMemoryCache,
-        connectivity = ConnectivityDataSource(application.applicationContext)
+        connectivity = ConnectivityDataSource(application.applicationContext),
+        pendingViewDao = AppDatabase.getInstance(application.applicationContext).pendingProfileViewDao(),
+        scheduler = WorkManagerSyncScheduler(application.applicationContext)
     )
 
     private val _state = MutableStateFlow<FriendProfileUiState>(FriendProfileUiState.Loading)
@@ -36,6 +39,7 @@ class FriendProfileViewModel(
 
     init {
         load()
+        viewModelScope.launch { repository.logVisit() }
     }
 
     fun load() {

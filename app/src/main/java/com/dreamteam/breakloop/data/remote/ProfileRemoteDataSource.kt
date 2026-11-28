@@ -4,7 +4,6 @@ import com.dreamteam.breakloop.data.remote.dto.ProfileViewRequestDto
 import com.dreamteam.breakloop.data.remote.dto.PublicProfileDto
 import com.dreamteam.breakloop.data.remote.dto.UpdateProfileRequestDto
 import com.google.firebase.auth.FirebaseAuth
-import retrofit2.http.Url
 
 class ProfileRemoteDataSource(
     private val api: ProfileApi,
@@ -26,8 +25,8 @@ class ProfileRemoteDataSource(
         api.updateMyProfile(authHeader, UpdateProfileRequestDto(name,photoUrl))
     }
 
-    suspend fun logProfileView() {
+    suspend fun logProfileView(viewedAt: Long) {
         val (uid, authHeader) = auth.authorized()
-        api.logProfileView(authHeader, ProfileViewRequestDto(System.currentTimeMillis()))
+        api.logProfileView(authHeader, ProfileViewRequestDto(viewedAt))
     }
 }

@@ -10,6 +10,7 @@ import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao
 import com.dreamteam.breakloop.data.local.dao.FlaggedAppDao
 import com.dreamteam.breakloop.data.local.dao.FocusSessionDao
 import com.dreamteam.breakloop.data.local.dao.FriendProfileDao
+import com.dreamteam.breakloop.data.local.dao.PendingProfileViewDao
 import com.dreamteam.breakloop.data.local.dao.SuggestionInteractionDao
 import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
@@ -17,6 +18,7 @@ import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
 import com.dreamteam.breakloop.data.local.entity.FlaggedAppEntity
 import com.dreamteam.breakloop.data.local.entity.FocusSessionEntity
 import com.dreamteam.breakloop.data.local.entity.FriendProfileEntity
+import com.dreamteam.breakloop.data.local.entity.PendingProfileViewEntity
 import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
 
 @Database(
@@ -27,9 +29,10 @@ import com.dreamteam.breakloop.data.local.entity.SuggestionInteractionEntity
         FocusSessionEntity::class,
         FlaggedAppEntity::class,
         SuggestionInteractionEntity::class,
-        FriendProfileEntity::class
+        FriendProfileEntity::class,
+        PendingProfileViewEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -44,6 +47,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun suggestionInteractionDao(): SuggestionInteractionDao
 
     abstract fun friendProfileDao(): FriendProfileDao
+
+    abstract fun pendingProfileViewDao(): PendingProfileViewDao
 
     companion object {
 
