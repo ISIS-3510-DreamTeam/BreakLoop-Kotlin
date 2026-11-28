@@ -3,13 +3,18 @@ package com.dreamteam.breakloop.data.local.mapper
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
 import com.dreamteam.breakloop.data.local.entity.DailyUsageStatsEntity
 import com.dreamteam.breakloop.data.local.entity.FlaggedAppEntity
+import com.dreamteam.breakloop.data.local.entity.FriendProfileEntity
 import com.dreamteam.breakloop.data.remote.dto.FriendDto
+import com.dreamteam.breakloop.data.remote.dto.PublicProfileDto
 import com.dreamteam.breakloop.data.remote.dto.UserProfileDto
 import com.dreamteam.breakloop.domain.AppUsage
 import com.dreamteam.breakloop.domain.DailyUsageStats
 import com.dreamteam.breakloop.domain.FlaggedApp
 import com.dreamteam.breakloop.domain.Friend
+import com.dreamteam.breakloop.domain.FriendProfile
 import com.dreamteam.breakloop.domain.UserProfile
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 fun AppUsage.toEntity(): AppUsageEntity{
     return AppUsageEntity(
@@ -100,5 +105,46 @@ fun UserProfile.toDto(): UserProfileDto {
         email = email,
         displayName = displayName,
         friendCode = friendCode,
+    )
+}
+
+fun PublicProfileDto.toDomain(badges: List<String>, fetchedAt: Long): FriendProfile {
+    return FriendProfile(
+        uid = uid,
+        displayName = displayName,
+        photoUrl = photoUrl,
+        streak = streak,
+        petLevel = petLevel,
+        badges = badges,
+        fetchedAt = fetchedAt
+    )
+}
+
+fun FriendProfile.toEntity(): FriendProfileEntity {
+    return FriendProfileEntity(
+        uid = uid,
+        displayName = displayName,
+        photoUrl = photoUrl,
+        streak = streak,
+        petLevel = petLevel,
+        badgesJson = Json.encodeToString(badges),
+        fetchedAt = fetchedAt
+    )
+}
+
+fun FriendProfileEntity.toDomain(): FriendProfile {
+    val badgesList = try {
+        Json.decodeFromString<List<String>>(badgesJson)
+    } catch (_: Exception) {
+        emptyList()
+    }
+    return FriendProfile(
+        uid = uid,
+        displayName = displayName,
+        photoUrl = photoUrl,
+        streak = streak,
+        petLevel = petLevel,
+        badges = badgesList,
+        fetchedAt = fetchedAt
     )
 }

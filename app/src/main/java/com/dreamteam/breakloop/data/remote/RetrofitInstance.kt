@@ -52,6 +52,11 @@ object RetrofitInstance {
             .create(PetApi::class.java)
     }
 
+    val profileApi: ProfileApi by lazy {
+        retrofit
+            .create(ProfileApi::class.java)
+    }
+
     val achievementApi: AchievementApi by lazy {
         retrofit
             .create(AchievementApi::class.java)
