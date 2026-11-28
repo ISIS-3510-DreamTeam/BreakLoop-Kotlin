@@ -156,6 +156,7 @@ fun FocusScreen(
             onStartFocus = viewModel::startFocus,
             onStopFocus = viewModel::stopFocus,
             onContinueFocus = viewModel::continueFocus,
+            onBackToFocus = viewModel::dismissCompletion,
             modifier = Modifier.weight(1f)
 
         )
@@ -216,9 +217,16 @@ private fun FocusContent(
     onStartFocus: () -> Unit,
     onStopFocus: () -> Unit,
     onContinueFocus: () -> Unit,
+    onBackToFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (state.isRecoveryPending) {
+    if (state.isCompletionPending) {
+        FocusCompletedContent(
+            state = state,
+            onBackToFocus = onBackToFocus,
+            modifier = modifier
+        )
+    } else if (state.isRecoveryPending) {
         FocusRecoveryContent(
             state = state,
             onContinue = onContinueFocus,
@@ -244,6 +252,118 @@ private fun FocusContent(
             onAppShieldChange = onAppShieldChange,
             onStartFocus = onStartFocus,
             modifier = modifier
+        )
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+// Focus Completed
+// -----------------------------------------------------------------------------
+
+@Composable
+private fun FocusCompletedContent(
+    state: FocusSessionUiState,
+    onBackToFocus: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val minutos = state.selectedDuration
+    val segundos = state.elapsedSeconds
+    val tiempoMinutos = segundos / 60
+    val tiempoSegundos = segundos % 60
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(ColorPalette.Neutral.Snow)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier.size(112.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_nav_focus_selected),
+                contentDescription = "Completed focus session",
+                modifier = Modifier.size(82.dp)
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(30.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(ColorPalette.SpicyPaprika.t500),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "✓",
+                    color = ColorPalette.Neutral.Snow,
+                    style = Typography.titleMedium
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Text(
+            text = "FOCUS COMPLETED!",
+            style = Typography.headlineMedium.copy(fontFamily = FocusTitleFont),
+            color = ColorPalette.Neutral.t1000,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Great job! You completed your focus session.",
+            style = Typography.bodyMedium.copy(fontFamily = FocusBodyFont),
+            color = ColorPalette.Neutral.t700,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        Text(
+            text = "FOCUS TIME",
+            style = Typography.labelLarge.copy(fontFamily = FocusBodyFont),
+            color = ColorPalette.Neutral.t850
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = "%02d:%02d".format(tiempoMinutos, tiempoSegundos),
+            style = Typography.headlineLarge.copy(
+                fontFamily = FocusTitleFont,
+                fontWeight = FontWeight.Bold
+            ),
+            color = ColorPalette.Neutral.t1000
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "+2 XP",
+            style = Typography.headlineMedium.copy(
+                fontFamily = FocusTitleFont,
+                fontWeight = FontWeight.Bold
+            ),
+            color = ColorPalette.SpicyPaprika.t500
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        BreakLoopButton(
+            text = "BACK TO FOCUS",
+            onClick = onBackToFocus,
+            loading = false,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp)
         )
     }
 }
@@ -1371,8 +1491,42 @@ private fun FocusScreenPreview() {
             onAppShieldChange = {},
             onStartFocus = {},
             onStopFocus = {},
-            onContinueFocus = {}
+            onContinueFocus = {},
+            onBackToFocus = {}
+        )
+    }
+}
 
+
+// -----------------------------------------------------------------------------
+// Focus Completed Preview
+// -----------------------------------------------------------------------------
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
+@Composable
+private fun FocusCompletedPreview() {
+    BreakLoopTheme {
+        FocusCompletedContent(
+            state = FocusSessionUiState(
+                selectedDuration = 25,
+                customDuration = 25,
+                isCustomDurationSelected = false,
+                focusGoal = "Study Economics Reading",
+                selectedSoundscape = Soundscape.HEARTH,
+                appShieldEnabled = true,
+                isSessionActive = false,
+                isPaused = false,
+                isRecoveryPending = false,
+                isCompletionPending = true,
+                remainingSeconds = 0,
+                elapsedSeconds = 25 * 60,
+                isLoading = false,
+                error = null
+            ),
+            onBackToFocus = {}
         )
     }
 }

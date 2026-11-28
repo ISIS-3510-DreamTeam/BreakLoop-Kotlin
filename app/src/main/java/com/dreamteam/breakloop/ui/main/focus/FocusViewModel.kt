@@ -295,6 +295,8 @@ class FocusViewModel(
                 isSessionActive = true,
                 isLoading = true,
                 isPaused = false,
+                isRecoveryPending = false,
+                isCompletionPending = false,
                 remainingSeconds = totalSeconds,
                 elapsedSeconds = 0,
                 error = null
@@ -413,6 +415,7 @@ class FocusViewModel(
                 isSessionActive = false,
                 isPaused = false,
                 isRecoveryPending = false,
+                isCompletionPending = false,
                 remainingSeconds = 0,
                 elapsedSeconds = 0
             )
@@ -435,6 +438,7 @@ class FocusViewModel(
                 isSessionActive = false,
                 isPaused = false,
                 isRecoveryPending = false,
+                isCompletionPending = true,
                 remainingSeconds = 0,
                 error = null
             )
@@ -443,6 +447,24 @@ class FocusViewModel(
         saveSession(
             status = "COMPLETED"
         )
+    }
+
+    fun dismissCompletion() {
+        if (!_uiState.value.isCompletionPending) {
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isCompletionPending = false,
+                isSessionActive = false,
+                isPaused = false,
+                isRecoveryPending = false,
+                remainingSeconds = 0,
+                elapsedSeconds = 0,
+                error = null
+            )
+        }
     }
 
     //Mod sprint 4
