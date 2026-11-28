@@ -9,6 +9,7 @@ import com.dreamteam.breakloop.data.local.dao.AppUsageDao
 import com.dreamteam.breakloop.data.local.dao.DailyUsageStatsDao
 import com.dreamteam.breakloop.data.local.dao.FlaggedAppDao
 import com.dreamteam.breakloop.data.local.dao.FocusSessionDao
+import com.dreamteam.breakloop.data.local.dao.FriendProfileDao
 import com.dreamteam.breakloop.data.local.dao.SuggestionInteractionDao
 import com.dreamteam.breakloop.data.local.entity.ActivityLogEntity
 import com.dreamteam.breakloop.data.local.entity.AppUsageEntity
@@ -41,6 +42,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun flaggedAppDao(): FlaggedAppDao
 
     abstract fun suggestionInteractionDao(): SuggestionInteractionDao
+
+    abstract fun friendProfileDao(): FriendProfileDao
 
     companion object {
 

@@ -3,7 +3,7 @@ package com.dreamteam.breakloop.data.local.cache
 import androidx.collection.LruCache
 import com.dreamteam.breakloop.domain.FriendProfile
 
-class FriendProfileMemoryCache {
+object FriendProfileMemoryCache {
 
     private val cache = LruCache<String, FriendProfile>(MAX_ENTRIES)
 
@@ -22,8 +22,6 @@ class FriendProfileMemoryCache {
     }
 
 
-    companion object {
         const val MAX_ENTRIES = 20
         const val TTL_MS = 5 * 60 * 1000L
-    }
 }
