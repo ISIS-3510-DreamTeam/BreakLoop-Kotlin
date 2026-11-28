@@ -20,5 +20,13 @@ data class FocusSessionEntity(
 
     val xpEarned: Int,
 
-    val synced: Boolean = false
+    val synced: Boolean = false,
+
+    val elapsedSeconds: Int = 0,
+
+    val remainingSeconds: Int = 0,
+
+    val isPaused: Boolean = false,
+
+    val lastUpdatedAt: Long = System.currentTimeMillis()
 )

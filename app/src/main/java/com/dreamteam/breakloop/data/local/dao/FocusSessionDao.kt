@@ -1,3 +1,4 @@
+
 package com.dreamteam.breakloop.data.local.dao
 
 import androidx.room.Dao
@@ -27,4 +28,34 @@ interface FocusSessionDao {
 
     @Query("SELECT COUNT(*) FROM focus_sessions WHERE uid = :uid AND status = 'COMPLETED'")
     suspend fun countCompleted(uid: String): Int
+
+    //Update sprint 4
+    //Actualizar sesión en progreso
+    @Query("""
+        UPDATE focus_sessions
+        SET elapsedSeconds = :elapsedSeconds,
+            remainingSeconds = :remainingSeconds,
+            isPaused = :isPaused,
+            lastUpdatedAt = :lastUpdatedAt,
+            status = :status
+        WHERE id = :id AND status = 'IN_PROGRESS'
+    """)
+    suspend fun updateSessionProgress(
+        id: String,
+        elapsedSeconds: Int,
+        remainingSeconds: Int,
+        isPaused: Boolean,
+        lastUpdatedAt: Long,
+        status: String
+    )
+
+    //Obtener la sesión en progreso
+    @Query("""
+        SELECT * FROM focus_sessions
+        WHERE uid = :uid AND status = 'IN_PROGRESS'
+        ORDER BY startTime DESC
+        LIMIT 1
+    """)
+    suspend fun getActiveSession(uid: String): FocusSessionEntity?
+    //
 }

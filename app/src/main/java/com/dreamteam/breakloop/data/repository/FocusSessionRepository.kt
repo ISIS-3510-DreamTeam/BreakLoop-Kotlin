@@ -61,4 +61,27 @@ class FocusSessionRepository(
             )
         }
     }
+
+    //Sprint 4
+    suspend fun updateSessionProgress(
+        id: String,
+        elapsedSeconds: Int,
+        remainingSeconds: Int,
+        isPaused: Boolean,
+        lastUpdatedAt: Long,
+        status: String
+    ) {
+        focusSessionDao.updateSessionProgress(
+            id = id,
+            elapsedSeconds = elapsedSeconds,
+            remainingSeconds = remainingSeconds,
+            isPaused = isPaused,
+            lastUpdatedAt = lastUpdatedAt,
+            status = status
+        )
+    }
+
+    suspend fun getActiveSession(uid: String): FocusSessionEntity? {
+        return focusSessionDao.getActiveSession(uid)
+    }
 }

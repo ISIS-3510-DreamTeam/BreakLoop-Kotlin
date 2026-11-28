@@ -825,9 +825,11 @@ private fun ActiveFocusContent(
             modifier = Modifier.height(14.dp)
         )
 
+        //Mod sprint 4
         BreakLoopButton(
             text = "END SESSION EARLY",
             onClick = onStopFocus,
+            loading = state.isLoading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(58.dp)
