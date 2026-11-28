@@ -14,7 +14,14 @@ class FocusSessionRepository(
     suspend fun saveSession(
         session: FocusSessionEntity
     ) {
-        focusSessionDao.insert(session)
+        val sesionExistente = focusSessionDao.getSessionById(session.id)
+
+        val sesionActualizada = session.copy(
+            recoveryCount = sesionExistente?.recoveryCount ?: session.recoveryCount,
+            lastRecoveredAt = sesionExistente?.lastRecoveredAt ?: session.lastRecoveredAt
+        )
+
+        focusSessionDao.insert(sesionActualizada)
     }
 
     suspend fun getUnsyncedSessions(): List<FocusSessionEntity> {
@@ -41,7 +48,9 @@ class FocusSessionRepository(
                 duration = session.duration,
                 type = session.type,
                 status = session.status,
-                xpEarned = session.xpEarned
+                xpEarned = session.xpEarned,
+                recoveryCount = session.recoveryCount,
+                lastRecoveredAt = session.lastRecoveredAt
             )
 
             val response = focusApi.saveSession(
@@ -61,4 +70,44 @@ class FocusSessionRepository(
             )
         }
     }
+
+    //Sprint 4
+    suspend fun updateSessionProgress(
+        id: String,
+        elapsedSeconds: Int,
+        remainingSeconds: Int,
+        isPaused: Boolean,
+        lastUpdatedAt: Long,
+        status: String
+    ) {
+        focusSessionDao.updateSessionProgress(
+            id = id,
+            elapsedSeconds = elapsedSeconds,
+            remainingSeconds = remainingSeconds,
+            isPaused = isPaused,
+            lastUpdatedAt = lastUpdatedAt,
+            status = status
+        )
+    }
+
+    suspend fun getActiveSession(uid: String): FocusSessionEntity? {
+        return focusSessionDao.getActiveSession(uid)
+    }
+
+    suspend fun getPendingSessions(uid: String): List<FocusSessionEntity> {
+        return focusSessionDao.getPendingSessions(uid)
+    }
+
+    //Sprint 4: Registrar recuperación de una sesión
+    suspend fun registerRecovery(
+        id: String,
+        recoveredAt: Long
+    ) {
+        focusSessionDao.registerRecovery(
+            id = id,
+            recoveredAt = recoveredAt
+        )
+    }
+
+
 }

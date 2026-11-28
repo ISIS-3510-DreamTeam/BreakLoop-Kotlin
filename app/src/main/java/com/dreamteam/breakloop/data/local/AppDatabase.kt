@@ -38,6 +38,7 @@ import com.dreamteam.breakloop.data.local.entity.UserAchievementEntity
     version = 11,
     exportSchema = false
 )
+
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun dailyUsageStatsDao(): DailyUsageStatsDao
