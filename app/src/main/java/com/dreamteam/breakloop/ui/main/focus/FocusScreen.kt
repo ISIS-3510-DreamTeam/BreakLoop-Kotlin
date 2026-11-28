@@ -1044,6 +1044,7 @@ private fun AppShieldCard(
 // Active Focus Session
 // -----------------------------------------------------------------------------
 
+
 @Composable
 private fun ActiveFocusContent(
     state: FocusSessionUiState,
@@ -1061,8 +1062,17 @@ private fun ActiveFocusContent(
 
     val totalSeconds = state.selectedDuration * 60
 
+    // Micro-optimization: update the visual progress every 5 seconds.
+    // Keep the exact progress when the session is paused or completed.
+    val elapsedSecondsForProgress = when {
+        totalSeconds <= 0 -> 0
+        state.isPaused || state.elapsedSeconds >= totalSeconds ->
+            state.elapsedSeconds.coerceIn(0, totalSeconds)
+        else -> (state.elapsedSeconds / 5) * 5
+    }
+
     val progress = if (totalSeconds > 0) {
-        state.elapsedSeconds.toFloat() / totalSeconds.toFloat()
+        elapsedSecondsForProgress.toFloat() / totalSeconds.toFloat()
     } else {
         0f
     }
