@@ -1,10 +1,12 @@
 package com.dreamteam.breakloop.data.remote
 
+import com.dreamteam.breakloop.data.remote.dto.ProfileViewRequestDto
 import com.dreamteam.breakloop.data.remote.dto.PublicProfileDto
 import com.dreamteam.breakloop.data.remote.dto.UpdateProfileRequestDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
@@ -28,4 +30,9 @@ interface ProfileApi {
         @Body request: UpdateProfileRequestDto
         ): Unit
 
+    @POST("/api/users/me/profile-views")
+    suspend fun logProfileView(
+        @Header("Authorization") token: String,
+        @Body requestDto: ProfileViewRequestDto
+    )
 }

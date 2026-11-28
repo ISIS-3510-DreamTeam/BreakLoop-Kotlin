@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.data.remote
 
+import com.dreamteam.breakloop.data.remote.dto.ProfileViewRequestDto
 import com.dreamteam.breakloop.data.remote.dto.PublicProfileDto
 import com.dreamteam.breakloop.data.remote.dto.UpdateProfileRequestDto
 import com.google.firebase.auth.FirebaseAuth
@@ -23,5 +24,10 @@ class ProfileRemoteDataSource(
     suspend fun updateMyProfile(name: String?, photoUrl: String?){
         val (uid, authHeader) = auth.authorized()
         api.updateMyProfile(authHeader, UpdateProfileRequestDto(name,photoUrl))
+    }
+
+    suspend fun logProfileView() {
+        val (uid, authHeader) = auth.authorized()
+        api.logProfileView(authHeader, ProfileViewRequestDto(System.currentTimeMillis()))
     }
 }

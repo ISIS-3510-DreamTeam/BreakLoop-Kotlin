@@ -1,7 +1,7 @@
 package com.dreamteam.breakloop.ui.main.friends
 
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.HorizontalDivider
+import com.dreamteam.breakloop.ui.components.StreakIcon
 import androidx.compose.ui.text.style.TextOverflow
 import com.dreamteam.breakloop.ui.components.PixelArt
 import com.dreamteam.breakloop.ui.components.PixelIcon
@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
@@ -122,22 +121,10 @@ fun FriendsContent(
                 }
                 item(key = "status") { StatusBar(state, onRefresh) }
 
-                if (state.friends.isNotEmpty()) {
-                    item(key = "title") {
-                        Text(
-                            "YOUR FRIENDS · ${state.friends.size}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ColorPalette.Neutral.t700,
-                        )
-                    }
-                }
-
                 if (state.friends.isEmpty()) {
                     item(key = "empty") { EmptyState(state.isLoading) }
                 } else {
-                    items(state.friends, key = { it.uid }) { friend ->
-                        FriendRow(friend, onClick = { onFriendClick(friend.uid) })
-                    }
+                    item(key = "friends") { FriendList(state.friends, onFriendClick) }
                 }
             }
         }
@@ -301,56 +288,72 @@ private fun EmptyState(isLoading: Boolean) {
 }
 
 @Composable
-private fun FriendRow(friend: Friend, onClick: () -> Unit) {
-    BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false, contentPadding = 0.dp) {
-        // padding goes after clickable so the whole card responds to the tap
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .clickable(onClickLabel = "Open profile", onClick = onClick)
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            // same avatar as the friend's profile
-            ProfileAvatar(name = friend.displayName, localPhotoPath = null, size = 52.dp)
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    friend.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = ColorPalette.Neutral.t1000,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatPill(PixelArt.FLAME, "${friend.streak} d", ColorPalette.SpicyPaprika.t100)
-                    StatPill(PixelArt.PAW, "Lv ${friend.petLevel}", ColorPalette.Fern.t100)
+private fun FriendList(friends: List<Friend>, onFriendClick: (String) -> Unit) {
+    // longest streak first; ties by name so the order doesn't jump around
+    val ranked = remember(friends) {
+        friends.sortedWith(
+            compareByDescending<Friend> { it.streak }.thenBy { it.displayName.lowercase() }
+        )
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            "YOUR FRIENDS · ${friends.size} · BY STREAK",
+            style = MaterialTheme.typography.labelSmall,
+            color = ColorPalette.Neutral.t700,
+        )
+        BreakLoopCard(modifier = Modifier.fillMaxWidth(), elevated = false, contentPadding = 2.dp) {
+            ranked.forEachIndexed { index, friend ->
+                if (index > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 12.dp),
+                        color = ColorPalette.Neutral.t100,
+                    )
                 }
+                FriendRow(friend, onClick = { onFriendClick(friend.uid) })
             }
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = ColorPalette.Neutral.t500,
-            )
         }
     }
 }
 
 @Composable
-private fun StatPill(art: PixelArt, text: String, background: Color) {
+private fun FriendRow(friend: Friend, onClick: () -> Unit) {
     Row(
         modifier = Modifier
-            .background(background, RoundedCornerShape(50))
-            .padding(horizontal = 10.dp, vertical = 3.dp),
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClickLabel = "Open profile", onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        PixelIcon(art, size = 14.dp)
-        Text(text, style = MaterialTheme.typography.labelMedium, color = ColorPalette.Neutral.t1000)
+        // same avatar as the friend's profile
+        ProfileAvatar(name = friend.displayName, localPhotoPath = null, size = 48.dp)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                friend.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                color = ColorPalette.Neutral.t1000,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                "Pet level ${friend.petLevel}",
+                style = MaterialTheme.typography.bodySmall,
+                color = ColorPalette.Neutral.t700,
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            StreakIcon(size = 18.dp)
+            Text(
+                "${friend.streak} d",
+                style = MonoLabel,
+                color = ColorPalette.Neutral.t1000,
+            )
+        }
     }
 }
 

@@ -1,7 +1,6 @@
 package com.dreamteam.breakloop.ui.main.profile.components
 
-import com.dreamteam.breakloop.ui.components.PixelArt
-import com.dreamteam.breakloop.ui.components.PixelIcon
+import com.dreamteam.breakloop.ui.components.StreakIcon
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +32,7 @@ fun StreakCard(streakDays: Int, modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                PixelIcon(PixelArt.FLAME, size = 24.dp)
+                StreakIcon()
                 Text(
                     text = "$streakDays d",
                     style = MaterialTheme.typography.headlineSmall,

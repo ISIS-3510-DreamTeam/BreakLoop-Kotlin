@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.ui.main.friends.profile
 
+import com.dreamteam.breakloop.ui.components.StreakIcon
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -112,7 +113,7 @@ private fun FriendProfileContent(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             StatCard(label = "Current streak", modifier = Modifier.weight(1f)) {
-                PixelIcon(PixelArt.FLAME, size = 24.dp)
+                StreakIcon()
                 StatValue("${profile.streak} d")
             }
             StatCard(label = "Pet level", modifier = Modifier.weight(1f)) {

@@ -1,5 +1,6 @@
 package com.dreamteam.breakloop.ui.main.profile.components
 
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -33,11 +34,13 @@ fun ProfileAvatar(
     size: Dp = 112.dp,
     remotePhotoUrl: String? = null,
 ) {
+    val colors = avatarColors(name)
+
     Box(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(ColorPalette.GoldenOrange.t500)
+            .background(colors.background)
             .border(2.dp, ColorPalette.Neutral.t1000, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
@@ -56,7 +59,7 @@ fun ProfileAvatar(
             Text(
                 text = initials(name),
                 style = MonoTitle.copy(fontSize = (size.value * 0.28f).sp),
-                color = ColorPalette.Neutral.t1000,
+                color = colors.text,
             )
             if (!remotePhotoUrl.isNullOrBlank()) {
                 RemotePhoto(url = remotePhotoUrl, size = size)
@@ -87,6 +90,18 @@ private fun RemotePhoto(url: String, size: Dp) {
             .border(2.dp, ColorPalette.Neutral.t1000, CircleShape),
     )
 }
+
+private data class AvatarColors(val background: Color, val text: Color)
+
+private val avatarPalette = listOf(
+    AvatarColors(ColorPalette.SpicyPaprika.t100, ColorPalette.SpicyPaprika.t700),
+    AvatarColors(ColorPalette.Fern.t100, ColorPalette.Fern.t500),
+    AvatarColors(ColorPalette.GoldenOrange.t100, ColorPalette.Neutral.t1000),
+)
+
+// the same name always gets the same color, in the list and in the profile
+private fun avatarColors(name: String): AvatarColors =
+    avatarPalette[name.trim().lowercase().hashCode().mod(avatarPalette.size)]
 
 // first letter of the first two words, "?" when there is no name yet
 private fun initials(name: String): String =
