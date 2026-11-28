@@ -1,3 +1,4 @@
+
 package com.dreamteam.breakloop
 
 import android.os.Bundle
@@ -18,14 +19,29 @@ import com.dreamteam.breakloop.data.system.PermissionsDataSource
 import com.dreamteam.breakloop.domain.enums.WeatherCondition
 import com.dreamteam.breakloop.ui.theme.BreakLoopTheme
 import kotlinx.coroutines.launch
+import com.dreamteam.breakloop.monitoring.AppLifecycleObserver
 
 class MainActivity : ComponentActivity() {
+
+    private lateinit var appLifecycleObserver: AppLifecycleObserver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         UsageWorkScheduler.schedule(this)
         WorkManager.getInstance(this).enqueueUniqueWork("usage_aggregation_on_open",
-            ExistingWorkPolicy.KEEP,OneTimeWorkRequestBuilder<UsageAggregationWorker>().build(),)
+            ExistingWorkPolicy.KEEP, OneTimeWorkRequestBuilder<UsageAggregationWorker>().build(),)
         super.onCreate(savedInstanceState)
+
+        appLifecycleObserver = AppLifecycleObserver(
+            onAppForeground = {
+                Log.d("AppLifecycle", "BreakLoop entered foreground")
+            },
+            onAppBackground = {
+                Log.d("AppLifecycle", "BreakLoop entered background")
+            }
+        )
+
+        appLifecycleObserver.start()
+
         enableEdgeToEdge()
 
         lifecycleScope.launch {
@@ -57,5 +73,11 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onDestroy() {
+        appLifecycleObserver.stop()
+        super.onDestroy()
+    }
 }
+
 // TODO: acá debe vivir el splash
