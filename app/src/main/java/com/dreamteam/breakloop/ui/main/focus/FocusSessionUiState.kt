@@ -1,3 +1,4 @@
+
 package com.dreamteam.breakloop.ui.main.focus
 
 data class FocusSessionUiState(
@@ -11,6 +12,7 @@ data class FocusSessionUiState(
 
     val isSessionActive: Boolean = false,
     val isPaused: Boolean = false,
+    val isRecoveryPending: Boolean = false,
 
     val remainingSeconds: Int = 0,
     val elapsedSeconds: Int = 0,

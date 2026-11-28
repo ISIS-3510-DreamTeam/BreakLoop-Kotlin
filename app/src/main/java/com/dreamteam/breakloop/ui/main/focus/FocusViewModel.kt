@@ -85,15 +85,6 @@ class FocusViewModel(
                 }
             }
         }
-
-        viewModelScope.launch {
-            connectivityStatus.collect { status ->
-
-                if (status == ConnectivityStatus.CONNECTED) {
-                    scheduleSync()
-                }
-            }
-        }
     }
 
 
@@ -121,17 +112,17 @@ class FocusViewModel(
                         session.elapsedSeconds + segundosTranscurridos.toInt()
                         ).coerceAtMost(session.duration * 60)
 
-
                 sessionId = session.id
                 sessionStartTime = session.startTime
 
                 _uiState.update {
                     it.copy(
                         selectedDuration = session.duration,
-                        isSessionActive = true,
+                        isSessionActive = false,
                         isPaused = session.isPaused,
                         remainingSeconds = tiempoRestante,
                         elapsedSeconds = tiempoTranscurrido,
+                        isRecoveryPending = tiempoRestante > 0,
                         isLoading = false,
                         error = null
                     )
@@ -139,8 +130,6 @@ class FocusViewModel(
 
                 if (tiempoRestante == 0) {
                     completeSession()
-                } else if (!session.isPaused) {
-                    startTimer()
                 }
 
             } catch (e: Exception) {
@@ -150,6 +139,36 @@ class FocusViewModel(
                     )
                 }
             }
+        }
+    }
+
+    fun continueFocus() {
+        if (!_uiState.value.isRecoveryPending) {
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                isRecoveryPending = false,
+                isSessionActive = true,
+                isPaused = false,
+                error = null
+            )
+        }
+
+        viewModelScope.launch {
+            sessionId?.let { currentId ->
+                focusSessionRepository.updateSessionProgress(
+                    id = currentId,
+                    elapsedSeconds = _uiState.value.elapsedSeconds,
+                    remainingSeconds = _uiState.value.remainingSeconds,
+                    isPaused = false,
+                    lastUpdatedAt = System.currentTimeMillis(),
+                    status = "IN_PROGRESS"
+                )
+            }
+
+            startTimer()
         }
     }
 
@@ -375,7 +394,10 @@ class FocusViewModel(
 
 
     fun stopFocus() {
-        if (!_uiState.value.isSessionActive) {
+        if (
+            !_uiState.value.isSessionActive &&
+            !_uiState.value.isRecoveryPending
+        ) {
             return
         }
 
@@ -390,6 +412,7 @@ class FocusViewModel(
             it.copy(
                 isSessionActive = false,
                 isPaused = false,
+                isRecoveryPending = false,
                 remainingSeconds = 0,
                 elapsedSeconds = 0
             )
@@ -406,6 +429,16 @@ class FocusViewModel(
         timerJob = null
 
         detenerSonido()
+
+        _uiState.update {
+            it.copy(
+                isSessionActive = false,
+                isPaused = false,
+                isRecoveryPending = false,
+                remainingSeconds = 0,
+                error = null
+            )
+        }
 
         saveSession(
             status = "COMPLETED"

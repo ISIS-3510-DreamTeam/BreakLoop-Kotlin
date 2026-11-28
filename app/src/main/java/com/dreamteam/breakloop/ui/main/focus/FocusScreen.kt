@@ -155,7 +155,9 @@ fun FocusScreen(
             onAppShieldChange = viewModel::onAppShieldChange,
             onStartFocus = viewModel::startFocus,
             onStopFocus = viewModel::stopFocus,
+            onContinueFocus = viewModel::continueFocus,
             modifier = Modifier.weight(1f)
+
         )
     }
 }
@@ -213,9 +215,17 @@ private fun FocusContent(
     onAppShieldChange: (Boolean) -> Unit,
     onStartFocus: () -> Unit,
     onStopFocus: () -> Unit,
+    onContinueFocus: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (state.isSessionActive) {
+    if (state.isRecoveryPending) {
+        FocusRecoveryContent(
+            state = state,
+            onContinue = onContinueFocus,
+            onStartNewSession = onStopFocus,
+            modifier = modifier
+        )
+    } else if (state.isSessionActive) {
         ActiveFocusContent(
             state = state,
             onStopFocus = onStopFocus,
@@ -235,6 +245,151 @@ private fun FocusContent(
             onStartFocus = onStartFocus,
             modifier = modifier
         )
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+// Focus Recovery
+// -----------------------------------------------------------------------------
+
+@Composable
+private fun FocusRecoveryContent(
+    state: FocusSessionUiState,
+    onContinue: () -> Unit,
+    onStartNewSession: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val totalSeconds = state.selectedDuration * 60
+    val progress = if (totalSeconds > 0) {
+        state.elapsedSeconds.toFloat() / totalSeconds.toFloat()
+    } else {
+        0f
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(ColorPalette.Neutral.Snow)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier.size(84.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.ic_nav_focus_selected),
+                contentDescription = "Interrupted focus session",
+                modifier = Modifier.size(64.dp)
+            )
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(25.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(ColorPalette.SpicyPaprika.t500),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "!",
+                    color = ColorPalette.Neutral.Snow,
+                    style = Typography.labelLarge
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        Text(
+            text = "FOCUS INTERRUPTED",
+            style = Typography.headlineMedium.copy(fontFamily = FocusTitleFont),
+            color = ColorPalette.Neutral.t1000,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "Your previous focus session was interrupted. Would you like to continue?",
+            style = Typography.bodyMedium.copy(fontFamily = FocusBodyFont),
+            color = ColorPalette.Neutral.t700,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(36.dp))
+
+        Text(
+            text = "SESSION PROGRESS",
+            style = Typography.labelLarge.copy(fontFamily = FocusBodyFont),
+            color = ColorPalette.Neutral.t850
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        FocusProgressBar(progress = progress)
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = "${(progress.coerceIn(0f, 1f) * 100).toInt()}% completed",
+            style = Typography.bodyMedium.copy(fontFamily = FocusBodyFont),
+            color = ColorPalette.Neutral.t700
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        BreakLoopButton(
+            text = "CONTINUE",
+            onClick = onContinue,
+            loading = state.isLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp)
+        )
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        OutlinedButton(
+            onClick = onStartNewSession,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.5.dp,
+                color = ColorPalette.Neutral.t850
+            )
+        ) {
+            Text(
+                text = "START A NEW SESSION",
+                style = Typography.labelMedium.copy(fontFamily = FocusBodyFont),
+                color = ColorPalette.Neutral.t850
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        OutlinedButton(
+            onClick = onStartNewSession,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp),
+            shape = RoundedCornerShape(16.dp),
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.5.dp,
+                color = ColorPalette.SpicyPaprika.t500
+            )
+        ) {
+            Text(
+                text = "ABANDON SESSION",
+                style = Typography.labelMedium.copy(fontFamily = FocusBodyFont),
+                color = ColorPalette.SpicyPaprika.t500
+            )
+        }
     }
 }
 
@@ -1215,7 +1370,43 @@ private fun FocusScreenPreview() {
             onStopSound = {},
             onAppShieldChange = {},
             onStartFocus = {},
-            onStopFocus = {}
+            onStopFocus = {},
+            onContinueFocus = {}
+
+        )
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+// Focus Recovery Preview
+// -----------------------------------------------------------------------------
+
+@Preview(
+    showBackground = true,
+    showSystemUi = true
+)
+@Composable
+private fun FocusRecoveryPreview() {
+    BreakLoopTheme {
+        FocusRecoveryContent(
+            state = FocusSessionUiState(
+                selectedDuration = 25,
+                customDuration = 25,
+                isCustomDurationSelected = false,
+                focusGoal = "Study Economics Reading",
+                selectedSoundscape = Soundscape.HEARTH,
+                appShieldEnabled = true,
+                isSessionActive = false,
+                isPaused = false,
+                isRecoveryPending = true,
+                remainingSeconds = 18 * 60 + 30,
+                elapsedSeconds = 6 * 60 + 30,
+                isLoading = false,
+                error = null
+            ),
+            onContinue = {},
+            onStartNewSession = {}
         )
     }
 }
@@ -1250,3 +1441,4 @@ private fun ActiveFocusPreview() {
         )
     }
 }
+
