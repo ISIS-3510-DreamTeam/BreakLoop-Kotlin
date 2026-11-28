@@ -7,6 +7,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.dreamteam.breakloop.background.worker.MyProfileSyncWorker
 import com.dreamteam.breakloop.background.worker.ProfileViewSyncWorker
 import com.dreamteam.breakloop.background.worker.SyncActivityLogsWorker
 import com.dreamteam.breakloop.background.worker.SyncDailyUsageWorker
@@ -72,6 +73,26 @@ class WorkManagerSyncScheduler(
         WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
             "sync_profile_views",
             ExistingWorkPolicy.APPEND_OR_REPLACE,
+            request
+        )
+    }
+
+    override fun enqueueMyProfileSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val request = OneTimeWorkRequestBuilder<MyProfileSyncWorker>()
+            .setConstraints(constraints)
+            .setBackoffCriteria(
+                BackoffPolicy.EXPONENTIAL,
+                30,
+                TimeUnit.SECONDS
+            )
+            .build()
+
+        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(
+            "sync_my_profile",
+            ExistingWorkPolicy.REPLACE,
             request
         )
     }

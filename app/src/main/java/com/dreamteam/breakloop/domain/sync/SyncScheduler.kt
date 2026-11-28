@@ -10,4 +10,6 @@ interface SyncScheduler {
     fun enqueueSuggestionInteractionSync()
 
     fun enqueueProfileViewSync()
+
+    fun enqueueMyProfileSync()
 }

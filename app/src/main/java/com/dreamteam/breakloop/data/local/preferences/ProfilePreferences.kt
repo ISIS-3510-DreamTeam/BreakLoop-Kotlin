@@ -77,4 +77,12 @@ class ProfilePreferences(
         }
     }
 
+    suspend fun markSynced(uid: String, updatedAtRead: Long) {
+        context.dataStore.edit {
+            if (it[profileUpdatedAtKey(uid)]==updatedAtRead) {
+                it[profilePendingKey(uid)] = false
+            }
+        }
+    }
+
 }
